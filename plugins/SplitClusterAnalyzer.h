@@ -40,7 +40,7 @@
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 // Tracks
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "../interface/TrajAnalyzer.h"
+#include "../TrajAnalyzer/interface/TrajAnalyzer.h"
 // Hits
 #include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHit.h"
 

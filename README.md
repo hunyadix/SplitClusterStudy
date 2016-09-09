@@ -1,5 +1,5 @@
-# SplitClusterMerger
-Split Cluster Merger plugin for CMSSW
+# SplitClusterStudy
+SplitClusterStudy plugin for CMSSW
 
 ### &#x1F539; Base recipe:
 
@@ -13,6 +13,12 @@ git cms-addpkg RecoLocalTracker/SiPixelClusterizer
 git remote add hunyadix git@github.com:hunyadix/cmssw.git
 git fetch hunyadix
 git checkout -t hunyadix/CMSSW_8_0_18_for_SplitClusterMerger
+git clone git@github.com:hunyadix/SplitClusterStudy.git DPGAnalysis/SplitClusterStudy
+cd DPGAnalysis/SplitClusterStudy
+git submodule init && git submodule update
+
+cmsenv
+scram b -j 20
 ```
 
 ### &#x1F539; Generating MinBias events using cmsDriver.py:
