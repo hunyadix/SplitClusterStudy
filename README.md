@@ -17,6 +17,7 @@ git checkout -t hunyadix/CMSSW_8_0_18_for_SplitClusterMerger
 
 ### &#x1F539; Generating MinBias events using cmsDriver.py:
 
+```bash
 cmsDriver.py \
 -s GEN,SIM,DIGI,L1,DIGI2RAW,RAW2DIGI \
 --mc  \
@@ -32,6 +33,7 @@ cmsDriver.py \
 --python_filename=GENSIM2RAW2DIGI_dynineff_layer1_dcol_0_70_cfg.py \
 -n 10  \
 --no_exec
+```
 
 ##### Modifications:
 
