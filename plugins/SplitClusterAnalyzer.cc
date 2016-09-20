@@ -37,8 +37,6 @@ void SplitClusterAnalyzer::beginJob()
 	ClusterDataTree::defineClusterTreeBranches(clusterTree, clusterField);
 	mergeTree   = new TTree("mergeTree", "Cluster merging info");
 	MergingStatisticsTree::defineMergingStatTreeBranches(mergeTree, mergeStatField);
-	mergeSnapshotTree = new TTree("mergeSnapshotTree", "Cluster merging snapshots");
-	MergingStatisticsTree::defineMergingSnapshotTreeBranches(mergeSnapshotTree, mergeSnapshotField);
 	pixelTree = new TTree("pixelTree", "Pixel data");
 	PixelDataTree::definePixelTreeBranches(pixelTree, pixelField, eventField);
 }
@@ -210,11 +208,11 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 		{
 			++numClusters;
 			// Perform test for marker
-			bool isCurrentClusterSplit = checkIfNextToDcolLostDigi(currentCluster, *digiFlagsOnModulePtr);
+			int isCurrentClusterSplit = getMaxDigiMarkerValue(currentCluster, *digiFlagsOnModulePtr);
 			// Saving the pixel vectors to save computing time
 			std::vector<SiPixelCluster::Pixel> currentClusterPixels = currentCluster.pixels();
 			// Save cluster data
-			saveClusterData(currentCluster, mod, mod_on);
+			saveClusterData(currentCluster, mod, mod_on, *digiFlagsOnModulePtr);
 			// Save digis data
 			for(const auto& pixel: currentClusterPixels)
 			{
@@ -253,7 +251,7 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 			// Stop if no mergeable clusters found
 			if(clusterToMergePtr == nullptr) continue;
 			const SiPixelCluster& clusterToMerge = *clusterToMergePtr;
-			bool isMergeableClusterSplit = checkIfNextToDcolLostDigi(clusterToMerge, *digiFlagsOnModulePtr);
+			int isMergeableClusterSplit = getMaxDigiMarkerValue(clusterToMerge, *digiFlagsOnModulePtr);
 			// Save every cluster pair only once: check the cluster order
 			if(checkClusterPairOrder(currentCluster, clusterToMerge))
 			{
@@ -262,16 +260,7 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 				std::vector<SiPixelCluster::Pixel> clusterToMergePixels = clusterToMerge.pixels();
 				// Saving off informations about the mergeable pixels
 				saveMergingData(currentCluster, clusterToMerge, currentClusterPixels, clusterToMergePixels, isCurrentClusterSplit, isMergeableClusterSplit, mod, mod_on);
-				// std::cout << "Adding entry to eventMergingStatisticsField." << std::endl;
-				// std::cout << "clusterSize_1: " << mergeStatField.clusterSize_1 << std::endl;
 				eventMergingStatisticsField.fill(mergeStatField);
-				// std::cout << "clusterSize_1: " << eventMergingStatisticsField.clusterSize_1.back() << std::endl;
-				// Save x (10) snapshots
-				if(numSavedSnapshots < maxSnapshotsToSave)
-				{
-					saveSnapshotData(currentCluster, clusterToMerge);
-					++numSavedSnapshots;
-				}
 			}
 		}
 	}
@@ -296,47 +285,7 @@ void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
 	eventTree -> Fill();
 }
 
-// std::vector<SiPixelCluster::Pixel> SplitClusterAnalyzer::getDigisOnModule(const edmNew::DetSet<SiPixelCluster>& clusterSetOnModule)
-// {
-// 	std::vector<SiPixelCluster::Pixel> pixelsOnModule;
-// 	for(const auto& currentCluster: clusterSetOnModule)
-// 	{
-// 		std::vector<SiPixelCluster::Pixel> pixelsInCluster = currentCluster.pixels();
-// 		pixelsOnModule.reserve(pixelsOnModule.size() + pixelsInCluster.size()); 
-// 		pixelsOnModule.insert(pixelsOnModule.end(), pixelsInCluster.begin(), pixelsInCluster.end());
-// 	}
-// 	return pixelsOnModule;
-// }
-
-// const SiPixelCluster* SplitClusterAnalyzer::findBestMergeableClusterCandidate(const SiPixelCluster& cluster, const edmNew::DetSet<SiPixelCluster>& clusterSet)
-// {
-// 	const SiPixelCluster* searchResult = nullptr;
-// 	auto distanceScore = [] (float x1, float y1, float x2, float y2) { return std::abs(x1 - x2) + 3 * std::abs(y1 - y2); };
-// 	if(clusterSet.size() < 2) return searchResult;
-// 	float currentX = cluster.x();
-// 	float currentY = cluster.y();
-// 	// Lower score is better
-// 	float minDistanceScore = distanceScore(currentX, currentY,  clusterSet.begin() -> x(), clusterSet.begin() -> y());
-// 	searchResult = &(*(clusterSet.begin()));
-// 	if(minDistanceScore == 0)
-// 	{
-// 		minDistanceScore = distanceScore(currentX, currentY, (clusterSet.begin() + 1) -> x(), (clusterSet.begin() + 1) -> y());
-// 		searchResult = &(*(clusterSet.begin() + 1));
-// 	}
-// 	for(const auto& otherCluster: clusterSet)
-// 	{
-// 		// Y distance is more important than X distance
-// 		float otherScore = distanceScore(currentX, currentY, otherCluster.x(), otherCluster.y());
-// 		if(otherScore <= minDistanceScore && otherScore != 0)
-// 		{
-// 			minDistanceScore = otherScore;
-// 			searchResult = &otherCluster;
-// 		}
-// 	}
-// 	return searchResult;
-// }
-
-void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on)
+void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags)
 {
 	clusterField.mod    = mod;
 	clusterField.mod_on = mod_on;
@@ -348,13 +297,16 @@ void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const 
 	clusterField.size  = cluster.size();
 	// Charge
 	clusterField.charge = cluster.charge();
-	// Misc.
-	for(int i = 0; i < clusterField.size && i < 1000; ++i)
+	// Pixel info
+	const auto& currentPixelPositions = cluster.pixels();
+	const auto& currentAdcs           = cluster.pixelADC();
+	for(int i = 0; i < clusterField.size && i < 250; ++i)
+	for(int i = 0; i < clusterField.size && i < 250; ++i)
 	{
-		const auto& currentPixels = cluster.pixels();
-		clusterField.adc[i]    = cluster.pixelADC()[i] / 1000.0;
-		clusterField.pix[i][0] = currentPixels[i].x;
-		clusterField.pix[i][1] = currentPixels[i].y;
+		clusterField.pixelsCol[i] = currentPixelPositions[i].x;
+		clusterField.pixelsRow[i] = currentPixelPositions[i].y;
+		clusterField.pixelsAdc[i] = currentAdcs[i] / 1000.0;
+		clusterField.pixelsMarker[i] = getDigiMarkerValue(currentPixelPositions[i], digiFlags);
 	}
 	ClusterDataTree::setClusterTreeDataFields(clusterTree, clusterField);
 	clusterTree -> Fill();
@@ -386,7 +338,6 @@ void SplitClusterAnalyzer::saveMergingData(const SiPixelCluster& currentCluster,
 	mergeStatField.clusterCharge_1          = currentCluster.charge();
 	mergeStatField.clusterCharge_2          = clusterToMerge.charge();
 	mergeStatField.chargeDifference         = clusterToMerge.charge() - currentCluster.charge();
-	// FIXME: Add missing fields
 	mergeStatField.clusterAngle_1           = ClusterPairMergingValidator::getClusterAngle(currentCluster);
 	mergeStatField.clusterAngle_2           = ClusterPairMergingValidator::getClusterAngle(clusterToMerge);
 	mergeStatField.angleDifference          = mergeStatField.clusterAngle_1 - mergeStatField.clusterAngle_2;
@@ -399,50 +350,6 @@ void SplitClusterAnalyzer::saveMergingData(const SiPixelCluster& currentCluster,
 	mergeTree -> Fill();
 }
 
-void SplitClusterAnalyzer::saveSnapshotData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge)
-{
-	int centerXFirst  = currentCluster.x();
-	int centerYFirst  = currentCluster.y();
-	// First cluster
-	for(const auto& pixel: currentCluster.pixels())
-	{
-		int x = pixel.x - centerXFirst + 16;
-		int y = pixel.y - centerYFirst + 16;
-		int index = 32 * y + x;
-		if(index < 0 || 1023 < index)
-		{
-			std::cerr << "Error creating merging snapshot: index out of borders: " << index << "." << std::endl;
-			continue;
-		}
-		mergeSnapshotField[index] = 1;
-	}
-	// Second cluster
-	for(const auto& pixel: clusterToMerge.pixels())
-	{
-		int x = pixel.x - centerXFirst + 16;
-		int y = pixel.y - centerYFirst + 16;
-		int index = 32 * y + x;
-		if(index < 0 || 1023 < index)
-		{
-			std::cerr << "Error creating merging snapshot: index out of borders: " << index << "." << std::endl;
-			continue;
-		}
-		mergeSnapshotField[index] = 2;
-	}
-	TH2I* snapshotHisto = new TH2I(("snapshot_" + std::to_string(numSavedSnapshots)).c_str(), ("snapshot_" + std::to_string(numSavedSnapshots)).c_str(), 32, 0, 32, 32, 0, 32);
-	for(int i = 0; i < 1024; ++i)
-	{
-		if(mergeSnapshotField[i] == 0) continue;
-		int x = i % 32, y = i / 32;
-		snapshotHisto -> Fill(x, y);
-		if(mergeSnapshotField[i] == 1) continue;
-		snapshotHisto -> Fill(x, y);
-	}
-	snapshotHisto -> Write();
-	MergingStatisticsTree::setMergingSnapshotTreeDataFields(mergeSnapshotTree, mergeSnapshotField);
-	mergeSnapshotTree -> Fill();
-}
-
 void SplitClusterAnalyzer::savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection)
 {
 	pixelField.mod      = mod;
@@ -450,7 +357,7 @@ void SplitClusterAnalyzer::savePixelData(const SiPixelCluster::Pixel& pixelToSav
 	pixelField.col      = static_cast<int>(pixelToSave.x);
 	pixelField.row      = static_cast<int>(pixelToSave.y);
 	pixelField.adc      = static_cast<int>(pixelToSave.adc);
-	pixelField.isMarked = checkIfNextToDcolLostDigi(pixelToSave, digiFlagsCollection);
+	pixelField.isMarked = getDigiMarkerValue(pixelToSave, digiFlagsCollection);
 	PixelDataTree::setPixelTreeDataFields(pixelTree, pixelField, eventField);
 	pixelTree -> Fill();
 }
@@ -511,7 +418,7 @@ void SplitClusterAnalyzer::fillEventPlot(const SiPixelCluster::Pixel& pixelToSav
 	}
 	if(mod_on.module < 0) moduleCoordinate = (mod_on.module - 0.5) * 416 + pixelToSave.y + 1;
 	if(0 < mod_on.module) moduleCoordinate = (mod_on.module - 0.5) * 416 + pixelToSave.y;
-	int fillWeight = (checkIfNextToDcolLostDigi(pixelToSave, digiFlagsCollection)) ? 2 : 1;
+	int fillWeight = (getDigiMarkerValue(pixelToSave, digiFlagsCollection)) ? 2 : 1;
 	// Fill the appropriate layer plot
 	switch(mod_on.layer)
 	{
@@ -614,9 +521,17 @@ void SplitClusterAnalyzer::fillEventPlotWithMarkersOnModule(const ModuleData& mo
 
 void SplitClusterAnalyzer::saveEventPlot()
 {
+	static int dirSystemReady = 0;
+	if(!dirSystemReady)
+	{
+		ntupleOutputFile -> mkdir("EventPlots");
+		dirSystemReady = 1;
+	}
+	ntupleOutputFile -> cd   ("EventPlots");
 	currentEventPlotLayer1 -> Write();
 	currentEventPlotLayer2 -> Write();
 	currentEventPlotLayer3 -> Write();
+	ntupleOutputFile -> cd   ("EventPlots");
 }
 
 bool SplitClusterAnalyzer::checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs)
@@ -636,61 +551,44 @@ bool SplitClusterAnalyzer::checkClusterPairOrder(const SiPixelCluster& lhs, cons
 	return false;
 }
 
-bool SplitClusterAnalyzer::checkIfNextToDcolLostDigi(const SiPixelCluster& clusterToCheck, const edm::DetSet<PixelDigi>& digiFlags)
+int SplitClusterAnalyzer::getDigiMarkerValue(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags)
 {
-	for(const auto& digi: clusterToCheck.pixels())
-	{
-		int channel = PixelDigi::pixelToChannel(digi.x, digi.y);
-		for(const auto& digiInSet: digiFlags)
-		{
-			int channelToCompareWith = digiInSet.channel();
-			if(channel == channelToCompareWith)
-			{
-				if(digiInSet.adc() == 0)
-				{
-					return false;
-				}
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-bool SplitClusterAnalyzer::checkIfNextToDcolLostDigi(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags)
-{
+	int markerValue = 0;
 	int channel = PixelDigi::pixelToChannel(pixelToCheck.x, pixelToCheck.y);
 	for(const auto& digiInSet: digiFlags)
 	{
 		int channelToCompareWith = digiInSet.channel();
 		if(channel == channelToCompareWith)
 		{
-			if(digiInSet.adc() == 0)
-			{
-				return false;
-			}
-			return true;
+			markerValue = digiInSet.adc();
 		}
+	}
+	return markerValue;
+}
+
+int SplitClusterAnalyzer::getMaxDigiMarkerValue(const SiPixelCluster& clusterToCheck, const edm::DetSet<PixelDigi>& digiFlags)
+{
+	int markerValue = 0;
+	for(const auto& digi: clusterToCheck.pixels())
+	{
+		markerValue = std::max(markerValue, getDigiMarkerValue(digi, digiFlags));
 	}
 	return false;
 }
 
 bool SplitClusterAnalyzer::checkIfDigiIsInDetSet(const PixelDigi& digi, const edm::DetSet<PixelDigi>& digiDetSet)
 {
+	int markerValue = 0;
 	int channel = digi.channel();
 	for(const auto& digiInSet: digiDetSet)
 	{
 		int channelToCompareWith = digiInSet.channel();
 		if(channel == channelToCompareWith)
 		{
-			if(digiInSet.adc() == 0)
-			{
-				return false;
-			}
-			return true;
+			markerValue = digiInSet.adc();
 		}
 	}
-	return false;
+	return markerValue;
 }
 
 void SplitClusterAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
@@ -722,10 +620,6 @@ void SplitClusterAnalyzer::clearAllContainers()
 	eventField.init();
 	clusterField.init();
 	mergeStatField.init();
-	for(int& i: mergeSnapshotField)
-	{
-		i = 0;
-	}
 	pixelField.init();
 	eventMergingStatisticsField.clear();
 }

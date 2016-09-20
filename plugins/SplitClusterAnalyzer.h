@@ -110,12 +110,8 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		Cluster                            clusterField;
 		TTree*                             mergeTree;
 		MergingStatisticsData              mergeStatField;
-		TTree*                             mergeSnapshotTree;
 		TTree*                             pixelTree;
 		Pixel                              pixelField;
-		int                                mergeSnapshotField[1024];
-		unsigned int                       numSavedSnapshots   = 0;
-		unsigned int                       maxSnapshotsToSave  = 10;
 		unsigned int                       numSavedEventPlots  = 0;
 		unsigned int                       maxEventPlotsToSave = 10;
 		TH2D*                              currentEventPlotLayer1;
@@ -132,22 +128,18 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		SiPixelCluster                     findClosestCluster(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const uint32_t& rawId, const float& lx, const float& ly);
 		void                               handleEvent(const edm::Event& iEvent);
 		void                               handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollectionHandle, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& federrors);
-		// std::vector<SiPixelCluster::Pixel> getDigisOnModule(const edmNew::DetSet<SiPixelCluster>& clusterSetOnModule);
-		// static const SiPixelCluster*       findBestMergeableClusterCandidate(const SiPixelCluster& cluster, const edmNew::DetSet<SiPixelCluster>& clusterSet);
-		void                               saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on);
+		void                               saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags);
 		void                               saveMergingData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge, const std::vector<SiPixelCluster::Pixel>& currentClusterPixels, const std::vector<SiPixelCluster::Pixel>& clusterToMergePixels, bool isCurrentClusterSplit, bool isMergeableClusterSplit, const ModuleData& mod, const ModuleData& mod_on);
-		void                               saveSnapshotData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge);
 		void                               savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
 		void                               createEventPlot();
-		// void                               addMarkersToEventPlot(const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
 		void                               fillEventPlot(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
 		void                               fillEventPlotWithMarkersOnModule(const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
 		void                               saveEventPlot();
 
 		static bool                        checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs);
+		static int                         getDigiMarkerValue(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags);
+		static int                         getMaxDigiMarkerValue(const SiPixelCluster& clusterToCheck, const edm::DetSet<PixelDigi>& digiFlags);
 		static bool                        checkIfDigiIsInDetSet(const PixelDigi& digi, const edm::DetSet<PixelDigi>& digiFlags);
-		static bool                        checkIfNextToDcolLostDigi(const SiPixelCluster& clusterToCheck, const edm::DetSet<PixelDigi>& digiFlags);
-		static bool                        checkIfNextToDcolLostDigi(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags);
 		////////////////////
 		// Error handling //
 		////////////////////

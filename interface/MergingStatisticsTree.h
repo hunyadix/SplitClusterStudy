@@ -10,12 +10,7 @@ class MergingStatisticsTree
 {
 	public:
 		static void defineMergingStatTreeBranches(TTree*& mergeTree, MergingStatisticsData& mergeStatField);
-		static void defineMergingSnapshotTreeBranches(TTree*& mergeSnapshotTree, int (&mergeSnapshotField)[1024]);
-		// static void defineMergingSignalTreeBranches(TTree*& mergeSnapshotTree, );
-		// static void defineMergingBackgroundTreeBranches(TTree*& mergeSnapshotTree, );
-
 		static void setMergingStatTreeDataFields (TTree*& mergeTree, MergingStatisticsData& mergeStatField);
-		static void setMergingSnapshotTreeDataFields (TTree*& mergeSnapshotTree, int (&mergeSnapshotField)[1024]);
 };
 
 

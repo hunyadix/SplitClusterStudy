@@ -16,7 +16,7 @@ git checkout -t hunyadix/CMSSW_8_0_18_for_SplitClusterMerger
 git clone git@github.com:hunyadix/SplitClusterStudy.git DPGAnalysis/SplitClusterStudy
 cd DPGAnalysis/SplitClusterStudy
 git submodule init && git submodule update
-
+cd ../..
 cmsenv
 scram b -j 20
 ```
@@ -25,8 +25,8 @@ scram b -j 20
 
 ```bash
 cmsDriver.py \
--s GEN,SIM,DIGI,L1,DIGI2RAW,RAW2DIGI \
---mc  \
+-s GEN,SIM,DIGI,L1,DIGI2RAW,RAW2DIGI,RECO \
+--mc \
 --evt_type SingleNuE10_cfi  \
 --era Run2_25ns  \
 --conditions auto:run2_mc  \
@@ -69,7 +69,7 @@ if runOnGrid:
 else:
     process.mix.input.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v2/10002/082C3FE4-7479-E511-BCC5-0025904C8254.root'])
 ```
-
+    
 Reading Dynamic inefficiencies from DB:
 
 ```python
