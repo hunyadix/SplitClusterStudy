@@ -108,20 +108,12 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		MergingStatisticsDataArrays        eventMergingStatisticsField;
 		TTree*                             eventClustersTree;
 		EventClustersDataArrays            eventClustersField;
-		// std::vector<MergingStatisticsData> eventMergingStatisticsField;
 		TTree*                             clusterTree;
 		Cluster                            clusterField;
 		TTree*                             mergeTree;
 		MergingStatisticsData              mergeStatField;
 		TTree*                             pixelTree;
 		Pixel                              pixelField;
-		// unsigned int                       numSavedEventPlots  = 0;
-		// unsigned int                       maxEventPlotsToSave = 10;
-		// TH2D*                              currentEventPlotLayer1;
-		// TH2D*                              currentEventPlotLayer2;
-		// TH2D*                              currentEventPlotLayer3;
-		// Data containers
-		// std::multimap<SiPixelCluster&, int> clusterMergeableDigis;
 
 		/////////////////////
 		// Data processing //
@@ -134,10 +126,6 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		void                               saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags);
 		void                               saveMergingData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge, const std::vector<SiPixelCluster::Pixel>& currentClusterPixels, const std::vector<SiPixelCluster::Pixel>& clusterToMergePixels, bool isCurrentClusterSplit, bool isMergeableClusterSplit, const ModuleData& mod, const ModuleData& mod_on);
 		void                               savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
-		// void                               createEventPlot();
-		// void                               fillEventPlot(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
-		// void                               fillEventPlotWithMarkersOnModule(const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
-		// void                               saveEventPlot();
 
 		static bool                        checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs);
 		static int                         getDigiMarkerValue(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags);
