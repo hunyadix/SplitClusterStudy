@@ -8,11 +8,10 @@
 // #include <iostream>
 
 ClusterPairMergingValidator::ClusterForValidator::ClusterForValidator(const SiPixelCluster& clusterArg)
-: cluster(&clusterArg)
+: cluster(&clusterArg), pixels(cluster -> pixels())
 {
 	float maxLength = 0;
 	int maxPixelPairCharge = 0;
-	const auto& pixels = cluster -> pixels();
 	typedef std::vector<SiPixelCluster::Pixel>::const_iterator PixelConstIt_t;
 	if(pixels.size() == 0)
 	{
@@ -36,11 +35,11 @@ ClusterPairMergingValidator::ClusterForValidator::ClusterForValidator(const SiPi
 		{
 			// std::cerr << "Node pair: " << startPixelCandidate - pixels.begin() << ", " << endPixelCandidate - pixels.begin() << std::endl;
 			bool saveAsNewMax = false;
-			float length = ClusterGeometry::pixelAbsDistance(*startPixelCandidate, *endPixelCandidate);
+			float distance = ClusterGeometry::pixelAbsDistance(*startPixelCandidate, *endPixelCandidate);
 			// Save the furthermost pixelpair
-			if(maxLength < length) saveAsNewMax = true;
-			// Check charge for pixels with the same length
-			if(length == maxLength)
+			if(maxLength < distance) saveAsNewMax = true;
+			// Check charge for pixels with the same distance
+			if(distance == maxLength)
 			{
 				int pixelPairCharge = startPixelCandidate -> adc + endPixelCandidate -> adc;
 				if(maxPixelPairCharge < pixelPairCharge) saveAsNewMax = true;
@@ -49,7 +48,7 @@ ClusterPairMergingValidator::ClusterForValidator::ClusterForValidator(const SiPi
 			{
 				startPixel = &(*startPixelCandidate);
 				endPixel   = &(*endPixelCandidate);
-				maxLength  = length;
+				maxLength  = distance;
 				maxPixelPairCharge = startPixel -> adc + endPixel -> adc;
 			}
 		}
@@ -75,6 +74,7 @@ void ClusterPairMergingValidator::ClusterForValidator::swap(ClusterForValidator&
 	std::swap(endPixel, other.endPixel);
 	std::swap(length, other.length);
 	std::swap(dir, other.dir);
+	std::swap(pixels, other.pixels);
 }
 
 ClusterPairMergingValidator::ClusterPairMergingValidator(const SiPixelCluster& first, const SiPixelCluster& second)
@@ -133,13 +133,13 @@ std::vector<std::pair<int, int>> ClusterPairMergingValidator::getShortestPathBet
 	auto getNeighbourPositionVector = [] (int row, int col)
 	{
 		std::vector<std::pair<int, int>> neighbourIndexCollection;
-		auto checkInsertIndexPair = [&neighbourIndexCollection] (int row, int col)
+		auto checkInsertIndexPair = [&neighbourIndexCollection] (int rowToInsert, int colToInsert)
 		{
-		  if(row < 0 || row > 159 || col < 0 || col > 415)
+		  if(rowToInsert < 0 || rowToInsert > 159 || colToInsert < 0 || colToInsert > 415)
 		  {
 		    return;
 		  }
-		  neighbourIndexCollection.emplace_back(row, col);
+		  neighbourIndexCollection.emplace_back(rowToInsert, colToInsert);
 		};
 		checkInsertIndexPair(row - 1, col - 1);
 		checkInsertIndexPair(row - 1, col    );

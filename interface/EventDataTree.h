@@ -21,8 +21,8 @@ class EventDataTree
 		static void defineEventTreeBranches(TTree*& eventTree, EventData& eventField);
 		static void setEventTreeDataFields (TTree*& eventTree, EventData& eventField);
 
-		static void defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays eventMergingStatisticsField);
-		static void setEventClusterPairsTreeDataFields (TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays mergingStatisticsDataArrays);
+		static void defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays& eventMergingStatisticsField);
+		static void setEventClusterPairsTreeDataFields (TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays& mergingStatisticsDataArrays);
 		// static void setEventClusterPairsTreeDataFields (TTree*& eventTree, EventData& eventField, std::vector<MergingStatisticsData>& eventMergingStatisticsField);
 };
 

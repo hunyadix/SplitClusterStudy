@@ -14,7 +14,7 @@ void EventDataTree::setEventTreeDataFields(TTree*& eventTree, EventData& eventFi
 
 // Event based cluster pair statistics
 // void EventDataTree::defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, std::vector<MergingStatisticsData>& eventMergingStatisticsField)
-void EventDataTree::defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays mergingStatisticsDataArrays)
+void EventDataTree::defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays& mergingStatisticsDataArrays)
 {
 	eventTree -> Branch("event", &eventField, eventField.list.c_str());
 	// Number of mergeable cluster pairs
@@ -48,7 +48,7 @@ void EventDataTree::defineEventClusterPairsTreeBranches(TTree*& eventTree, Event
 	eventTree -> Branch("federr", &(mergingStatisticsDataArrays.mod_on[0]).federr, "federr[nMergeableClusterPairs]/I");
 }
 
-void EventDataTree::setEventClusterPairsTreeDataFields (TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays mergingStatisticsDataArrays)
+void EventDataTree::setEventClusterPairsTreeDataFields (TTree*& eventTree, EventData& eventField, MergingStatisticsDataArrays& mergingStatisticsDataArrays)
 {
 	eventTree -> SetBranchAddress("event", &eventField);
 	// Number of mergeable cluster pairs
@@ -81,67 +81,3 @@ void EventDataTree::setEventClusterPairsTreeDataFields (TTree*& eventTree, Event
 	eventTree -> SetBranchAddress("shl",    &(mergingStatisticsDataArrays.mod_on[0]).shl);
 	eventTree -> SetBranchAddress("federr", &(mergingStatisticsDataArrays.mod_on[0]).federr);
 }
-
-
-// // void EventDataTree::defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, std::vector<MergingStatisticsData>& eventMergingStatisticsField)
-// void EventDataTree::defineEventClusterPairsTreeBranches(TTree*& eventTree, EventData& eventField, 
-// 	int clusterSize_1,
-// 	int clusterSize_2,
-// 	int sizeDifference,
-// 	float clusterCharge_1,
-// 	float clusterCharge_2,
-// 	float chargeDifference,
-// 	float clusterAngle_1,
-// 	float clusterAngle_2,
-// 	float angleDifference,
-// 	int isMarkedAsSplitCluster_1,
-// 	int isMarkedAsSplitCluster_2,
-// 	int distanceInPixels)
-// {
-// 	eventTree -> Branch("event", &eventField, eventField.list.c_str());
-// 	// Number of mergeable cluster pairs
-// 	int size = eventMergingStatisticsField.size();
-// 	eventTree -> Branch("nMergeableClusterPairs", &size, "nMergeableClusterPairs/I");
-// 	// // Mergeable cluster pair data
-// 	eventTree -> Branch("clusterSize_1",            &eventMergingStatisticsField.clusterSize_1,            "clusterSize_1[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("clusterSize_2",            &eventMergingStatisticsField.clusterSize_2,            "clusterSize_2[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("sizeDifference",           &eventMergingStatisticsField.sizeDifference,           "sizeDifference[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("clusterCharge_1",          &eventMergingStatisticsField.clusterCharge_1,          "clusterCharge_1[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("clusterCharge_2",          &eventMergingStatisticsField.clusterCharge_2,          "clusterCharge_2[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("chargeDifference",         &eventMergingStatisticsField.chargeDifference,         "chargeDifference[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("clusterAngle_1",           &eventMergingStatisticsField.clusterAngle_1,           "clusterAngle_1[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("clusterAngle_2",           &eventMergingStatisticsField.clusterAngle_2,           "clusterAngle_2[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("angleDifference",          &eventMergingStatisticsField.angleDifference,          "angleDifference[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("isMarkedAsSplitCluster_1", &eventMergingStatisticsField.isMarkedAsSplitCluster_1, "isMarkedAsSplitCluster_1[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("isMarkedAsSplitCluster_2", &eventMergingStatisticsField.isMarkedAsSplitCluster_2, "isMarkedAsSplitCluster_2[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("distanceInPixels",         &eventMergingStatisticsField.distanceInPixels,         "distanceInPixels[nMergeableClusterPairs]/I");
-// 	// Module data for mergeable cluster pairs
-// 	eventTree -> Branch("det",    &eventMergingStatisticsField.mod_on.det,    "det[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("layer",  &eventMergingStatisticsField.mod_on.layer,  "layer[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("ladder", &eventMergingStatisticsField.mod_on.ladder, "ladder[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("module", &eventMergingStatisticsField.mod_on.module, "module[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("half",   &eventMergingStatisticsField.mod_on.half,   "half[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("outer",  &eventMergingStatisticsField.mod_on.outer,  "outer[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("side",   &eventMergingStatisticsField.mod_on.side,   "side[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("disk",   &eventMergingStatisticsField.mod_on.disk,   "disk[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("blade",  &eventMergingStatisticsField.mod_on.blade,  "blade[nMergeableClusterPairs]/F");
-// 	eventTree -> Branch("panel",  &eventMergingStatisticsField.mod_on.panel,  "panel[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("ring",   &eventMergingStatisticsField.mod_on.ring,   "ring[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("shl",    &eventMergingStatisticsField.mod_on.shl,    "shl[nMergeableClusterPairs]/I");
-// 	eventTree -> Branch("federr", &eventMergingStatisticsField.mod_on.federr, "federr[nMergeableClusterPairs]/I");
-// 	// auto data = eventMergingStatisticsField.data();
-// 	// eventTree -> Branch("mergeableClusterPairStatistics", &data, "eventMergingStatisticsField[12][nMergeableClusterPairs]/F");
-
-// 	// eventTree -> Branch("module",      &eventMergingStatisticsField.mod,    ModuleData::list.c_str());
-// 	// eventTree -> Branch("module_on",   &eventMergingStatisticsField.mod_on, ModuleData::list.c_str());
-// }
-
-// void EventDataTree::setEventClusterPairsTreeDataFields (TTree*& eventTree, EventData& eventField, std::vector<MergingStatisticsData>& eventMergingStatisticsField)
-// {
-// 	int size = eventMergingStatisticsField.size();
-// 	eventTree -> SetBranchAddress("nMergeableClusterPairs",         &size);
-// 	auto data = eventMergingStatisticsField.data();
-// 	eventTree -> SetBranchAddress("mergeableClusterPairStatistics", &data);
-// 	// eventTree -> SetBranchAddress("module",      &eventMergingStatisticsField.mod);
-// 	// eventTree -> SetBranchAddress("module_on",   &eventMergingStatisticsField.mod_on);
-// }

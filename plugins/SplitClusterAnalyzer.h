@@ -27,10 +27,11 @@
 // Fed errors
 #include "../FedErrorFetcher/interface/FedErrorFetcher.h"
 // Tree branching
+#include "../interface/EventDataTree.h"
+#include "../interface/EventClustersTree.h"
 #include "../interface/ClusterDataTree.h"
 #include "../interface/MergingStatisticsTree.h"
 #include "../interface/PixelDataTree.h"
-#include "../interface/EventDataTree.h"
 // Module data
 #include "../ModuleDataFetcher/interface/ModuleDataProducer.h"
 // Cluster/Pixel geometry
@@ -105,6 +106,8 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		TTree*                             eventTree;
 		EventData                          eventField;
 		MergingStatisticsDataArrays        eventMergingStatisticsField;
+		TTree*                             eventClustersTree;
+		EventClustersDataArrays            eventClustersField;
 		// std::vector<MergingStatisticsData> eventMergingStatisticsField;
 		TTree*                             clusterTree;
 		Cluster                            clusterField;
@@ -112,11 +115,11 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		MergingStatisticsData              mergeStatField;
 		TTree*                             pixelTree;
 		Pixel                              pixelField;
-		unsigned int                       numSavedEventPlots  = 0;
-		unsigned int                       maxEventPlotsToSave = 10;
-		TH2D*                              currentEventPlotLayer1;
-		TH2D*                              currentEventPlotLayer2;
-		TH2D*                              currentEventPlotLayer3;
+		// unsigned int                       numSavedEventPlots  = 0;
+		// unsigned int                       maxEventPlotsToSave = 10;
+		// TH2D*                              currentEventPlotLayer1;
+		// TH2D*                              currentEventPlotLayer2;
+		// TH2D*                              currentEventPlotLayer3;
 		// Data containers
 		// std::multimap<SiPixelCluster&, int> clusterMergeableDigis;
 
@@ -131,10 +134,10 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		void                               saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags);
 		void                               saveMergingData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge, const std::vector<SiPixelCluster::Pixel>& currentClusterPixels, const std::vector<SiPixelCluster::Pixel>& clusterToMergePixels, bool isCurrentClusterSplit, bool isMergeableClusterSplit, const ModuleData& mod, const ModuleData& mod_on);
 		void                               savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
-		void                               createEventPlot();
-		void                               fillEventPlot(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
-		void                               fillEventPlotWithMarkersOnModule(const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
-		void                               saveEventPlot();
+		// void                               createEventPlot();
+		// void                               fillEventPlot(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
+		// void                               fillEventPlotWithMarkersOnModule(const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
+		// void                               saveEventPlot();
 
 		static bool                        checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs);
 		static int                         getDigiMarkerValue(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags);
@@ -155,7 +158,7 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		void clearAllContainers();
 
 	public:
-		SplitClusterAnalyzer(edm::ParameterSet const& iConfig);
+		SplitClusterAnalyzer(edm::ParameterSet const& iConfigArg);
 		virtual ~SplitClusterAnalyzer();
 		virtual void beginJob();
 		virtual void endJob();

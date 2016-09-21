@@ -16,9 +16,10 @@ class ClusterPairMergingValidator
 			public:
 				explicit ClusterForValidator(const SiPixelCluster& clusterArg);
 				void swap(ClusterForValidator&& other);
-				const SiPixelCluster* cluster;
-				const SiPixelCluster::Pixel* startPixel = nullptr;
-				const SiPixelCluster::Pixel* endPixel   = nullptr;
+				const SiPixelCluster*               cluster;
+				std::vector<SiPixelCluster::Pixel>  pixels;
+				const SiPixelCluster::Pixel*        startPixel = nullptr;
+				const SiPixelCluster::Pixel*        endPixel   = nullptr;
 				int length;
 				float dir;
 		};
