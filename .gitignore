@@ -13,8 +13,9 @@
 *.pdf
 *.png
 
-# Compilation extras
+# Compilation residuals
 *.pyc
+*.o
 
 # SCRAM extras
 __init__.py
@@ -22,8 +23,12 @@ __init__.pyc
 
 # Executables
 *_process
+test/SplitClusterHistogramGenerator/bin/*
 
 # Data files
+
+# Test results
+test/SplitClusterHistogramGenerator/results/*
 
 # Logs
 nohup.out
@@ -40,6 +45,7 @@ jegyzet.md
 # Sublime text files
 *.sublime-*
 *.temp
+
 
 # Instlumi and pileup maps
 # Resources/Sources/Includes/Histogram_generation/Fill_parameters/Instlumi_map/run_ls_instlumi_pileup_2012.txt
