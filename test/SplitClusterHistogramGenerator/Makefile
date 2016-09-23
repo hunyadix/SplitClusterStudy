@@ -15,8 +15,12 @@ COMMONACTORS_S = ../../src/CommonActors.$(SrcSuf)
 COMMONACTORS_O = ./obj/CommonActors.$(ObjSuf)
 OBJS     += $(COMMONACTORS_O)
 
-TTREETOOLS_S = ../../src/TTreeTools.cc
+TTREETOOLS_S = ../../src/TTreeTools.$(SrcSuf)
 TTREETOOLS_O = ./obj/TTreeTools.$(ObjSuf)
+OBJS     += $(TTREETOOLS_O)
+
+EVENTCLUSTERSTREE_S = ../../src/EventClustersTree.$(SrcSuf)
+EVENTCLUSTERSTREE_O = ./obj/EventClustersTree.$(ObjSuf)
 OBJS     += $(TTREETOOLS_O)
 
 # PROGRAMS
@@ -31,7 +35,7 @@ all: $(PROGRAMS)
 
 # Executables
 
-$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TTREETOOLS_O)
+$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TTREETOOLS_O) $(EVENTCLUSTERSTREE_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -59,6 +63,13 @@ $(TTREETOOLS_O): $(TTREETOOLS_S)
 	@printf "Compiling utility: \"TTreeTools\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
+
+$(EVENTCLUSTERSTREE_O): $(EVENTCLUSTERSTREE_S)
+	@printf "Compiling utility: \"EventClustersTree\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+###
 
 $(PLOTEVENTCLUSTERS_O): $(PLOTEVENTCLUSTERS_S)  
 	@printf "Compiling test: \"plotEventClusters\"...\n"
