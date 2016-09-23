@@ -6,9 +6,12 @@ PLOTEVENTCLUSTERS_A = ./bin/plotEventClusters$(ExeSuf)
 OBJS     += $(PLOTEVENTCLUSTERS_O)
 PROGRAMS += $(PLOTEVENTCLUSTERS_A)
 
+TTREETOOLS_S = ./src/TTreeTools.$(SrcSuf)
+TTREETOOLS_O = ./src/TTreeTools.$(ObjSuf)
+
 all: $(PROGRAMS)
 
-$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O)
+$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(TTREETOOLS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -17,6 +20,11 @@ $(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O)
 
 $(PLOTEVENTCLUSTERS_O): $(PLOTEVENTCLUSTERS_S)
 	@printf "Compiling test: \"plotEventClusters\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(TTREETOOLS_O): $(TTREETOOLS_S)
+	@printf "Compiling test: \"TTreeTools\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
