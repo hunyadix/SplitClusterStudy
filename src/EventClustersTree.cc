@@ -65,3 +65,8 @@ void EventClustersTree::setEventClustersTreeDataFields (TTree*& eventClustersTre
 	eventClustersTree -> SetBranchAddress("shl",          &(eventClusters.mod_on[0]).shl);
 	eventClustersTree -> SetBranchAddress("federr",       &(eventClusters.mod_on[0]).federr);
 }
+
+// void EventClustersTree::getDataFieldsFromTree(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters)
+// {
+	
+// }

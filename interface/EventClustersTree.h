@@ -3,6 +3,7 @@
 
 // #include "../interface/EventData.h"
 #include "../interface/Cluster.h"
+#include "../interface/TTreeTools.h"
 
 #include <TROOT.h>
 #include <TTree.h>
@@ -12,6 +13,7 @@ class EventClustersTree
 	public:
 		static void defineEventClustersTreeBranches(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
 		static void setEventClustersTreeDataFields (TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
+		// static void getDataFieldsFromTree          (TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
 };
 
 

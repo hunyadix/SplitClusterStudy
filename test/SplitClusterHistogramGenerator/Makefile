@@ -1,20 +1,21 @@
 include Makefile.arch
+SrcSuf = cc
 
 # Utility
 
-CONSOLECOLORS_S = ./src/ConsoleColors.$(SrcSuf)
+CONSOLECOLORS_S = ../../src/ConsoleColors.$(SrcSuf)
 CONSOLECOLORS_O = ./obj/ConsoleColors.$(ObjSuf)
 OBJS     += $(CONSOLECOLORS_O)
 
-CONSOLEACTOR_S = ./src/ConsoleActor.$(SrcSuf)
+CONSOLEACTOR_S = ../../src/ConsoleActor.$(SrcSuf)
 CONSOLEACTOR_O = ./obj/ConsoleActor.$(ObjSuf)
 OBJS     += $(CONSOLEACTOR_O)
 
-COMMONACTORS_S = ./src/CommonActors.$(SrcSuf)
+COMMONACTORS_S = ../../src/CommonActors.$(SrcSuf)
 COMMONACTORS_O = ./obj/CommonActors.$(ObjSuf)
 OBJS     += $(COMMONACTORS_O)
 
-TTREETOOLS_S = ./src/TTreeTools.$(SrcSuf)
+TTREETOOLS_S = ../../src/TTreeTools.cc
 TTREETOOLS_O = ./obj/TTreeTools.$(ObjSuf)
 OBJS     += $(TTREETOOLS_O)
 
