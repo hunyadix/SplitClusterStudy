@@ -172,7 +172,8 @@ SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew
 
 void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
 {
-	int numClusters = 0;
+	// Reserve place for the variables storing the cluster data
+	eventClustersField.reserve(getNumClusters(clusterCollection));
 	// Generate det id to marker set map to fetch the marked pixels on the modules
 	std::map<DetId, const edm::DetSet<PixelDigi>*> detIdToMarkerPtrMap;
 	for(const auto& markerSet: *digiFlagsCollection)
@@ -205,7 +206,6 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 		// Looping on clusters on the same detector_part
 		for(const auto& currentCluster: clusterSetOnModule)
 		{
-			++numClusters;
 			// Perform test for marker
 			int isCurrentClusterSplit = getMaxDigiMarkerValue(currentCluster, *digiFlagsOnModulePtr);
 			// Saving the pixel vectors to save computing time
@@ -349,6 +349,16 @@ void SplitClusterAnalyzer::savePixelData(const SiPixelCluster::Pixel& pixelToSav
 	pixelField.isMarked = getDigiMarkerValue(pixelToSave, digiFlagsCollection);
 	PixelDataTree::setPixelTreeDataFields(pixelTree, pixelField, eventField);
 	pixelTree -> Fill();
+}
+
+unsigned int SplitClusterAnalyzer::getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
+{
+	unsigned int numClusters = 0;
+	for(const auto& clusterSetOnModule: *clusterCollection)
+	{
+		numClusters += clusterSetOnModule.size();
+	}
+	return numClusters;
 }
 
 bool SplitClusterAnalyzer::checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs)

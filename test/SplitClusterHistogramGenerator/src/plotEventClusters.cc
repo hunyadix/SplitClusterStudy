@@ -9,7 +9,9 @@
 #include <TROOT.h>
 #include <TFile.h>
 #include <TTree.h>
-// #include <TH1F.h>
+#include <TH1F.h>
+#include <TApplication.h>
+#include <TCanvas.h>
 // #include <TH2I.h>
 // #include <TRandom3.h>
 
@@ -20,33 +22,35 @@
 
 int main(int argc, char** argv)
 {
-	std::cout << "PlotEventClusters started." << std::endl;
+	TApplication* theApp = new TApplication("App", 0, 0);
+	std::cout << debug_prompt << "PlotEventClusters started..." << std::endl;
 	TFile* inputFile = TFile::Open("/data/hunyadi/CMSSW/SplitClusterStudy/CMSSW_8_0_18/src/TestSplitClusterStudy/Ntuple_scm.root", "READ");
 	TTree* eventClustersTree = (TTree*)(inputFile -> Get("eventClustersTree"));
 	TTreeTools::treeCheck(eventClustersTree, "Tree missing.", true);
-	// FIXME: This is awkward, but otherwise eats away more the available stack memory (segfault)
-	// std::auto_ptr<EventClustersDataArrays> eventClusterFieldPtr(new EventClustersDataArrays());
-	EventClustersDataArrays* eventClusterFieldPtr = new EventClustersDataArrays();
-	EventClustersTree::associateDataFieldsFromTree(eventClustersTree, *eventClusterFieldPtr);
+	EventClustersDataArrays eventClusterField;
+	EventClustersTree::associateDataFieldsFromTree(eventClustersTree, eventClusterField);
 	// Get number of entries
 	Int_t totalNumEntries = eventClustersTree -> GetEntries();
 	std::cout << debug_prompt << "Total entries in the tree: " << totalNumEntries << std::endl;
-	eventClustersTree -> GetEntry(1);
-	// // Check if data is present
+	// Check if data is present
 	if(totalNumEntries == 0) {std::cerr << error_prompt << "No entries found in tree: eventClustersTree." << std::endl; exit(-1);}
-	// // Loop on data
+	// Histogram definitions
+	TH1F* chargeDistribution = new TH1F("charge_distribution", "charge_distribution", 50, 0, 50);
+	// Loop on data
 	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
 	{
-		eventClustersTree -> GetEntry(entryIndex);
-		std::cout << debug_prompt << "nClusters: "   << eventClusterFieldPtr -> size            << std::endl;
-		std::cout << debug_prompt << "x: "           << eventClusterFieldPtr -> x[0]            << std::endl;
-		std::cout << debug_prompt << "y: "           << eventClusterFieldPtr -> y[0]            << std::endl;
-		std::cout << debug_prompt << "sizeX: "       << eventClusterFieldPtr -> sizeX[0]        << std::endl;
-		std::cout << debug_prompt << "sizeY: "       << eventClusterFieldPtr -> sizeY[0]        << std::endl;
-		std::cout << debug_prompt << "clusterSize: " << eventClusterFieldPtr -> clusterSize[0]  << std::endl;
-		std::cout << debug_prompt << "charge: "      << eventClusterFieldPtr -> charge[0]       << std::endl;
+		eventClustersTree   -> GetEntry(entryIndex);
+		for(const float& charge: *(eventClusterField.charge))
+		{
+			chargeDistribution -> Fill(charge);
+		}
 	}
+	std::cout << debug_prompt << "Loop done." << std::endl;
+	TCanvas canvas("canvas", "canvas");
+	chargeDistribution -> Draw();
+	std::cin.get();
+	std::cin.get();
 	inputFile -> Close();
-	delete eventClusterFieldPtr;
+	std::cout << debug_prompt << "PlotEventClusters terminated succesfully." << std::endl;
 	return 0; 
 }

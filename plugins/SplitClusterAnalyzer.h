@@ -127,6 +127,7 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		void                        saveMergingData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge, const std::vector<SiPixelCluster::Pixel>& currentClusterPixels, const std::vector<SiPixelCluster::Pixel>& clusterToMergePixels, bool isCurrentClusterSplit, bool isMergeableClusterSplit, const ModuleData& mod, const ModuleData& mod_on);
 		void                        savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
 
+		static unsigned int         getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection);
 		static bool                 checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs);
 		static int                  getDigiMarkerValue(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags);
 		static int                  getMaxDigiMarkerValue(const SiPixelCluster& clusterToCheck, const edm::DetSet<PixelDigi>& digiFlags);

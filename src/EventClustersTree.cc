@@ -2,8 +2,6 @@
 
 void EventClustersTree::defineEventClustersTreeBranches(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters)
 {
-	// Number of clusters
-	// eventClustersTree -> Branch("nClusters",    "int", &eventClusters);
 	// Cluster data
 	eventClustersTree -> Branch("x",            "std::vector<float>", &(eventClusters.x));
 	eventClustersTree -> Branch("y",            "std::vector<float>", &(eventClusters.y));
@@ -62,35 +60,33 @@ void EventClustersTree::setEventClustersTreeDataFields (TTree*& eventClustersTre
 	eventClustersTree -> SetBranchAddress("federr",       &(eventClusters.federr));
 }
 
-// void EventClustersTree::associateDataFieldsFromTree(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters)
-// {
-// 	TTreeTools::treeCheck(eventClustersTree, "Error opening the clustTree.");
-// 		// Number of clusters
-// 	TTreeTools::checkGetBranch(eventClustersTree, "nClusters")    -> SetAddress(&eventClusters.size);
-// 	// Cluster Data
-// 	TTreeTools::checkGetBranch(eventClustersTree, "x")            -> SetAddress(&(eventClusters.x[0]));
-// 	TTreeTools::checkGetBranch(eventClustersTree, "y")            -> SetAddress(&(eventClusters.y[0]));
-// 	TTreeTools::checkGetBranch(eventClustersTree, "sizeX")        -> SetAddress(&(eventClusters.sizeX[0]));
-// 	TTreeTools::checkGetBranch(eventClustersTree, "sizeY")        -> SetAddress(&(eventClusters.sizeY[0]));
-// 	TTreeTools::checkGetBranch(eventClustersTree, "clusterSize")  -> SetAddress(&(eventClusters.clusterSize[0]));
-// 	TTreeTools::checkGetBranch(eventClustersTree, "charge")       -> SetAddress(&(eventClusters.charge[0]));
-// 	// // Pixel Data
-// 	TTreeTools::checkGetBranch(eventClustersTree, "pixelsCol")    -> SetAddress(eventClusters.pixelsCol[0]);
-// 	TTreeTools::checkGetBranch(eventClustersTree, "pixelsRow")    -> SetAddress(eventClusters.pixelsRow[0]);
-// 	TTreeTools::checkGetBranch(eventClustersTree, "pixelsAdc")    -> SetAddress(eventClusters.pixelsAdc[0]);
-// 	TTreeTools::checkGetBranch(eventClustersTree, "pixelsMarker") -> SetAddress(eventClusters.pixelsMarker[0]);
-// 	// // Module data for mergeable cluster pairs
-// 	TTreeTools::checkGetBranch(eventClustersTree, "det")          -> SetAddress(&(eventClusters.mod_on[0]).det);   // Működik
-// 	TTreeTools::checkGetBranch(eventClustersTree, "layer")        -> SetAddress(&(eventClusters.mod_on[0]).layer); // Szegmentálási hiba
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "ladder")       -> SetAddress(&(eventClusters.mod_on[0]).ladder);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "module")       -> SetAddress(&(eventClusters.mod_on[0]).module);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "half")         -> SetAddress(&(eventClusters.mod_on[0]).half);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "outer")        -> SetAddress(&(eventClusters.mod_on[0]).outer);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "side")         -> SetAddress(&(eventClusters.mod_on[0]).side);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "disk")         -> SetAddress(&(eventClusters.mod_on[0]).disk);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "blade")        -> SetAddress(&(eventClusters.mod_on[0]).blade);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "panel")        -> SetAddress(&(eventClusters.mod_on[0]).panel);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "ring")         -> SetAddress(&(eventClusters.mod_on[0]).ring);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "shl")          -> SetAddress(&(eventClusters.mod_on[0]).shl);
-// 	// TTreeTools::checkGetBranch(eventClustersTree, "federr")       -> SetAddress(&(eventClusters.mod_on[0]).federr);
-// }
+void EventClustersTree::associateDataFieldsFromTree(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters)
+{
+	TTreeTools::treeCheck(eventClustersTree, "Error opening the clustTree.");
+	// Cluster Data
+	TTreeTools::checkGetBranch(eventClustersTree, "x")            -> SetAddress(&(eventClusters.x));
+	TTreeTools::checkGetBranch(eventClustersTree, "y")            -> SetAddress(&(eventClusters.y));
+	TTreeTools::checkGetBranch(eventClustersTree, "sizeX")        -> SetAddress(&(eventClusters.sizeX));
+	TTreeTools::checkGetBranch(eventClustersTree, "sizeY")        -> SetAddress(&(eventClusters.sizeY));
+	TTreeTools::checkGetBranch(eventClustersTree, "clusterSize")  -> SetAddress(&(eventClusters.clusterSize));
+	TTreeTools::checkGetBranch(eventClustersTree, "charge")       -> SetAddress(&(eventClusters.charge));
+	// // Pixel Data
+	TTreeTools::checkGetBranch(eventClustersTree, "pixelsCol")    -> SetAddress(&(eventClusters.pixelsCol));
+	TTreeTools::checkGetBranch(eventClustersTree, "pixelsRow")    -> SetAddress(&(eventClusters.pixelsRow));
+	TTreeTools::checkGetBranch(eventClustersTree, "pixelsAdc")    -> SetAddress(&(eventClusters.pixelsAdc));
+	TTreeTools::checkGetBranch(eventClustersTree, "pixelsMarker") -> SetAddress(&(eventClusters.pixelsMarker));
+	// // Module data for mergeable cluster pairs
+	TTreeTools::checkGetBranch(eventClustersTree, "det")          -> SetAddress(&(eventClusters.det));   // Működik
+	TTreeTools::checkGetBranch(eventClustersTree, "layer")        -> SetAddress(&(eventClusters.layer)); // Szegmentálási hiba
+	TTreeTools::checkGetBranch(eventClustersTree, "ladder")       -> SetAddress(&(eventClusters.ladder));
+	TTreeTools::checkGetBranch(eventClustersTree, "module")       -> SetAddress(&(eventClusters.module));
+	TTreeTools::checkGetBranch(eventClustersTree, "half")         -> SetAddress(&(eventClusters.half));
+	TTreeTools::checkGetBranch(eventClustersTree, "outer")        -> SetAddress(&(eventClusters.outer));
+	TTreeTools::checkGetBranch(eventClustersTree, "side")         -> SetAddress(&(eventClusters.side));
+	TTreeTools::checkGetBranch(eventClustersTree, "disk")         -> SetAddress(&(eventClusters.disk));
+	TTreeTools::checkGetBranch(eventClustersTree, "blade")        -> SetAddress(&(eventClusters.blade));
+	TTreeTools::checkGetBranch(eventClustersTree, "panel")        -> SetAddress(&(eventClusters.panel));
+	TTreeTools::checkGetBranch(eventClustersTree, "ring")         -> SetAddress(&(eventClusters.ring));
+	TTreeTools::checkGetBranch(eventClustersTree, "shl")          -> SetAddress(&(eventClusters.shl));
+	TTreeTools::checkGetBranch(eventClustersTree, "federr")       -> SetAddress(&(eventClusters.federr));
+}
