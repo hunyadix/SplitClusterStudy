@@ -1,4 +1,6 @@
-// ...
+// Utility
+#include "../interface/TTreeTools.h"
+#include "../interface/CommonActors.h"
 
 // Root
 #include <TROOT.h>
@@ -14,15 +16,11 @@
 
 int main(int argc, char** argv)
 {
-	try
-	{
-		TTree* eventClustersTree = new TTree("eventClustersTree", "Event cluster collection");
-		std::cout << "PlotEventClusters started." << std::endl;
-
-	}
-	catch(const std::exception& e)
-	{
-		std::cout << "An error occured: " << e.what() << std::endl;
-	}
+	std::cout << "PlotEventClusters started." << std::endl;
+	TFile* inputFile = TFile::Open("/data/hunyadi/CMSSW/SplitClusterStudy/CMSSW_8_0_18/src/TestSplitClusterStudy/Ntuple_scm.root", "READ");
+	// TTree* eventClustersTree = new TTree("eventClustersTree", "Event cluster collection");
+	TTree* eventClustersTree = (TTree*)(inputFile -> Get("eventClustersTree"));
+	TTreeTools::treeCheck(eventClustersTree, "This error message should be shown with a prompt before it.", true);
+	inputFile -> Close();
 	return 0; 
 }
