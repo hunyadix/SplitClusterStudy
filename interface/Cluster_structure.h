@@ -23,11 +23,18 @@ class ClustData
 		int clusterIndex;
 		int clusterSize;
 		float charge;
-		int pixelsCol[100];
-		int pixelsRow[100];
-		int pixelsAdc[100];
-		int pixelsMarker[100];
+		std::vector<int>* pixelsCol    = new std::vector<int>;
+		std::vector<int>* pixelsRow    = new std::vector<int>;
+		std::vector<int>* pixelsAdc    = new std::vector<int>;
+		std::vector<int>* pixelsMarker = new std::vector<int>;
 		ClustData() { init(); }
+		~ClustData()
+		{
+			delete pixelsCol;
+			delete pixelsRow;
+			delete pixelsAdc;
+			delete pixelsMarker;
+		}
 		void init()
 		{
 			x            = NOVAL_F;
@@ -37,83 +44,155 @@ class ClustData
 			clusterIndex = NOVAL_I;
 			clusterSize  = 0;
 			charge       = NOVAL_F;
-			for(size_t j = 0; j < 100; j++)
-			{
-				pixelsCol[j] = NOVAL_I;
-				pixelsRow[j] = NOVAL_I;
-				pixelsAdc[j] = NOVAL_I;
-				pixelsMarker[j] = NOVAL_I;
-			}
+			pixelsCol    -> clear();
+			pixelsRow    -> clear();
+			pixelsAdc    -> clear();
+			pixelsMarker -> clear();
 		};
 };
 
 class EventClustersDataArrays
 {
 	public:
-		int size = 0;
-		std::vector<float> x;
-		std::vector<float> y;
-		std::vector<int>   sizeX;
-		std::vector<int>   sizeY;
-		std::vector<int>   clusterIndex;
-		std::vector<int>   clusterSize;
-		std::vector<float> charge;
-		int pixelsCol[200000][100];
-		int pixelsRow[200000][100];
-		int pixelsAdc[200000][100];
-		int pixelsMarker[200000][100];
+		int                            size;
+		std::vector<float>*            x;
+		std::vector<float>*            y;
+		std::vector<int>*              sizeX;
+		std::vector<int>*              sizeY;
+		std::vector<int>*              clusterIndex;
+		std::vector<int>*              clusterSize;
+		std::vector<float>*            charge;
+		std::vector<std::vector<int>>* pixelsCol;
+		std::vector<std::vector<int>>* pixelsRow;
+		std::vector<std::vector<int>>* pixelsAdc;
+		std::vector<std::vector<int>>* pixelsMarker;
 		// Module
-		std::vector<ModuleData> mod;
-		std::vector<ModuleData> mod_on;
+		std::vector<int>*              det;
+		std::vector<int>*              layer;
+		std::vector<int>*              ladder;
+		std::vector<int>*              module;
+		std::vector<int>*              half;
+		std::vector<int>*              outer;
+		std::vector<int>*              side;
+		std::vector<int>*              disk;
+		std::vector<int>*              blade;
+		std::vector<int>*              panel;
+		std::vector<int>*              ring;
+		std::vector<int>*              shl;
+		std::vector<int>*              federr;
+
+		EventClustersDataArrays()
+		{
+			size         = 0;
+			x            = new std::vector<float>();
+			y            = new std::vector<float>();
+			sizeX        = new std::vector<int>();
+			sizeY        = new std::vector<int>();
+			clusterIndex = new std::vector<int>();
+			clusterSize  = new std::vector<int>();
+			charge       = new std::vector<float>();
+			pixelsCol    = new std::vector<std::vector<int>>();
+			pixelsRow    = new std::vector<std::vector<int>>();
+			pixelsAdc    = new std::vector<std::vector<int>>();
+			pixelsMarker = new std::vector<std::vector<int>>();
+			det          = new std::vector<int>();
+			layer        = new std::vector<int>();
+			ladder       = new std::vector<int>();
+			module       = new std::vector<int>();
+			half         = new std::vector<int>();
+			outer        = new std::vector<int>();
+			side         = new std::vector<int>();
+			disk         = new std::vector<int>();
+			blade        = new std::vector<int>();
+			panel        = new std::vector<int>();
+			ring         = new std::vector<int>();
+			shl          = new std::vector<int>();
+			federr       = new std::vector<int>();
+		}
+		~EventClustersDataArrays()
+		{
+			delete x;
+			delete y;
+			delete sizeX;
+			delete sizeY;
+			delete clusterIndex;
+			delete clusterSize;
+			delete charge;
+			delete pixelsCol;
+			delete pixelsRow;
+			delete pixelsAdc;
+			delete pixelsMarker;
+			// Module
+			delete det;
+			delete layer;
+			delete ladder;
+			delete module;
+			delete half;
+			delete outer;
+			delete side;
+			delete disk;
+			delete blade;
+			delete panel;
+			delete ring;
+			delete shl;
+			delete federr;
+		}
 		void clear()
 		{
 			size = 0;
-			x            .clear();
-			y            .clear();
-			sizeX        .clear();
-			sizeY        .clear();
-			clusterIndex .clear();
-			clusterSize  .clear();
-			charge       .clear();
-			for(int numClust = 0; numClust < 200000; ++numClust)
-			{
-				for(int numPix = 0; numPix < 100; ++numPix)
-				{
-					pixelsCol[numClust][numPix]    = NOVAL_I;
-					pixelsRow[numClust][numPix]    = NOVAL_I;
-					pixelsAdc[numClust][numPix]    = NOVAL_I;
-					pixelsMarker[numClust][numPix] = NOVAL_I;
-				}
-			}
+			x             -> clear();
+			y             -> clear();
+			sizeX         -> clear();
+			sizeY         -> clear();
+			clusterIndex  -> clear();
+			clusterSize   -> clear();
+			charge        -> clear();
+			pixelsCol     -> clear();
+			pixelsRow     -> clear();
+			pixelsAdc     -> clear();
+			pixelsMarker  -> clear();
 			// Module
-			mod          .clear();
-			mod_on       .clear();
+			det          -> clear();
+			layer        -> clear();
+			ladder       -> clear();
+			module       -> clear();
+			half         -> clear();
+			outer        -> clear();
+			side         -> clear();
+			disk         -> clear();
+			blade        -> clear();
+			panel        -> clear();
+			ring         -> clear();
+			shl          -> clear();
+			federr       -> clear();
 		}
-		void fill(const ClustData& clustData, const ModuleData& module, const ModuleData& module_on)
+		void fill(const ClustData& clustData, const ModuleData& module_on)
 		{
-			if(size == 200000)
-			{
-				std::cerr << "Error in EventClustersDataArrays: more than 200000 clusters registered for an event. Resize the storage class!" << std::endl;
-				++size;
-				return;
-			}
-			x            .push_back(clustData.x);
-			y            .push_back(clustData.y);
-			sizeX        .push_back(clustData.sizeX);
-			sizeY        .push_back(clustData.sizeY);
-			clusterIndex .push_back(clustData.clusterIndex);
-			clusterSize  .push_back(clustData.clusterSize);
-			charge       .push_back(clustData.charge);
-			for(int numPix = 0; numPix < 100; ++numPix)
-			{
-				pixelsCol[size][numPix]    = clustData.pixelsCol[numPix];
-				pixelsRow[size][numPix]    = clustData.pixelsCol[numPix];
-				pixelsAdc[size][numPix]    = clustData.pixelsCol[numPix];
-				pixelsMarker[size][numPix] = clustData.pixelsCol[numPix];	
-			}
+			x            -> push_back(clustData.x);
+			y            -> push_back(clustData.y);
+			sizeX        -> push_back(clustData.sizeX);
+			sizeY        -> push_back(clustData.sizeY);
+			clusterIndex -> push_back(clustData.clusterIndex);
+			clusterSize  -> push_back(clustData.clusterSize);
+			charge       -> push_back(clustData.charge);
+			pixelsCol    -> push_back(*clustData.pixelsCol);
+			pixelsRow    -> push_back(*clustData.pixelsRow);
+			pixelsAdc    -> push_back(*clustData.pixelsAdc);
+			pixelsMarker -> push_back(*clustData.pixelsMarker);	
 			// Module
-			mod          .push_back(module);
-			mod_on       .push_back(module_on);
+			det          -> push_back(module_on.det);
+			layer        -> push_back(module_on.layer);
+			ladder       -> push_back(module_on.ladder);
+			module       -> push_back(module_on.module);
+			half         -> push_back(module_on.half);
+			outer        -> push_back(module_on.outer);
+			side         -> push_back(module_on.side);
+			disk         -> push_back(module_on.disk);
+			blade        -> push_back(module_on.blade);
+			panel        -> push_back(module_on.panel);
+			ring         -> push_back(module_on.ring);
+			shl          -> push_back(module_on.shl);
+			federr       -> push_back(module_on.federr);								
 			++size;
 		}
 };

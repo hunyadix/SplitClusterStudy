@@ -3,7 +3,7 @@
 #define EDM_ML_LOGDEBUG
 #define ML_DEBUG
 
-#pragma message("Recompiling SplitClusterAnalyzer.cc...")
+// #pragma message("Recompiling SplitClusterAnalyzer.cc...")
 
 SplitClusterAnalyzer::SplitClusterAnalyzer(edm::ParameterSet const& iConfigArg) : iConfig(iConfigArg)
 {
@@ -212,7 +212,7 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 			std::vector<SiPixelCluster::Pixel> currentClusterPixels = currentCluster.pixels();
 			// Save cluster data
 			saveClusterData(currentCluster, mod, mod_on, *digiFlagsOnModulePtr);
-			eventClustersField.fill(clusterField, clusterField.mod, clusterField.mod_on);
+			eventClustersField.fill(clusterField, clusterField.mod_on);
 			// Save digis data
 			for(const auto& pixel: currentClusterPixels)
 			{
@@ -292,10 +292,10 @@ void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const 
 	const auto& currentAdcs           = cluster.pixelADC();
 	for(int numPixel = 0; numPixel < clusterField.clusterSize && numPixel < 100; ++numPixel)
 	{
-		clusterField.pixelsCol[numPixel] = currentPixelPositions[numPixel].x;
-		clusterField.pixelsRow[numPixel] = currentPixelPositions[numPixel].y;
-		clusterField.pixelsAdc[numPixel] = currentAdcs[numPixel] / 1000.0;
-		clusterField.pixelsMarker[numPixel] = getDigiMarkerValue(currentPixelPositions[numPixel], digiFlags);
+		(*clusterField.pixelsCol)    .push_back(currentPixelPositions[numPixel].x);
+		(*clusterField.pixelsRow)    .push_back(currentPixelPositions[numPixel].y);
+		(*clusterField.pixelsAdc)    .push_back(currentAdcs[numPixel] / 1000.0);
+		(*clusterField.pixelsMarker) .push_back(getDigiMarkerValue(currentPixelPositions[numPixel], digiFlags));
 	}
 	ClusterDataTree::setClusterTreeDataFields(clusterTree, clusterField);
 	clusterTree -> Fill();

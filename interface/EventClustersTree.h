@@ -13,7 +13,7 @@ class EventClustersTree
 	public:
 		static void defineEventClustersTreeBranches(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
 		static void setEventClustersTreeDataFields (TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
-		static void associateDataFieldsFromTree          (TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
+		// static void associateDataFieldsFromTree          (TTree*& eventClustersTree, EventClustersDataArrays& eventClusters);
 };
 
 

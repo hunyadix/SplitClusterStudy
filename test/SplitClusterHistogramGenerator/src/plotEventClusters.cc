@@ -17,7 +17,6 @@
 #include <iostream>
 #include <exception>
 #include <memory>
-#include <sys/resource.h>
 
 int main(int argc, char** argv)
 {
@@ -29,15 +28,6 @@ int main(int argc, char** argv)
 	// std::auto_ptr<EventClustersDataArrays> eventClusterFieldPtr(new EventClustersDataArrays());
 	EventClustersDataArrays* eventClusterFieldPtr = new EventClustersDataArrays();
 	EventClustersTree::associateDataFieldsFromTree(eventClustersTree, *eventClusterFieldPtr);
-	// eventClusterFieldPtr -> x            .reserve(200000);
-	// eventClusterFieldPtr -> y            .reserve(200000);
-	// eventClusterFieldPtr -> sizeX        .reserve(200000);
-	// eventClusterFieldPtr -> sizeY        .reserve(200000);
-	// eventClusterFieldPtr -> clusterIndex .reserve(200000);
-	// eventClusterFieldPtr -> clusterSize  .reserve(200000);
-	// eventClusterFieldPtr -> charge       .reserve(200000);
-	// eventClusterFieldPtr -> mod          .reserve(200000);
-	// eventClusterFieldPtr -> mod_on       .reserve(200000);
 	// Get number of entries
 	Int_t totalNumEntries = eventClustersTree -> GetEntries();
 	std::cout << debug_prompt << "Total entries in the tree: " << totalNumEntries << std::endl;

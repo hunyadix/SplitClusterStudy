@@ -18,7 +18,7 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 // Adding some colors :)
-#include "../interface/Console_colors.h"
+#include "../interface/ConsoleColors.h"
 
 ///////////
 // Tools //

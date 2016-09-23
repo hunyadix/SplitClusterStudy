@@ -19,10 +19,10 @@ void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, Cluster& cl
 	clusterTree -> Branch("clust_size",   &clusterField.clusterSize,  "size/I");
 	clusterTree -> Branch("clust_charge", &clusterField.charge,       "charge/F");
 	// Pixel data
-	clusterTree -> Branch("pixelsCol",    &clusterField.pixelsCol,    "pixelsCol[100]/I");
-	clusterTree -> Branch("pixelsRow",    &clusterField.pixelsRow,    "pixelsRow[100]/I");
-	clusterTree -> Branch("pixelsAdc",    &clusterField.pixelsAdc,    "pixelsAdc[100]/I");
-	clusterTree -> Branch("pixelsMarker", &clusterField.pixelsMarker, "pixelsMarker[100]/I");
+	clusterTree -> Branch("pixelsCol",    "std::vector<int>", &clusterField.pixelsCol);
+	clusterTree -> Branch("pixelsRow",    "std::vector<int>", &clusterField.pixelsRow);
+	clusterTree -> Branch("pixelsAdc",    "std::vector<int>", &clusterField.pixelsAdc);
+	clusterTree -> Branch("pixelsMarker", "std::vector<int>", &clusterField.pixelsMarker);
 }
 
 ////////////////////////////////////
