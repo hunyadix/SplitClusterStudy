@@ -49,6 +49,9 @@
 #include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
 // #include "Geometry/TrackerNumberingBuilder/interface/GeometricDet.h"
 
+
+#include "../TimerForBenchmarking/interface/TimerColored.h"
+
 ///////////
 // Other //
 ///////////
@@ -84,6 +87,8 @@
 #include <vector>
 #include <limits>
 
+#define USE_TIMER
+
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
 	private:
@@ -115,6 +120,10 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		TTree*                      pixelTree;
 		Pixel                       pixelField;
 
+#ifdef USE_TIMER
+		std::unique_ptr<TimerColored> timer;
+#endif
+
 		/////////////////////
 		// Data processing //
 		/////////////////////
@@ -126,8 +135,9 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		void                        saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags);
 		void                        saveMergingData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge, const std::vector<SiPixelCluster::Pixel>& currentClusterPixels, const std::vector<SiPixelCluster::Pixel>& clusterToMergePixels, bool isCurrentClusterSplit, bool isMergeableClusterSplit, const ModuleData& mod, const ModuleData& mod_on);
 		void                        savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
+		void                        reserveMemoryForEventClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection);
 
-		static unsigned int         getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection);
+		// static unsigned int         getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection);
 		static bool                 checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs);
 		static int                  getDigiMarkerValue(const SiPixelCluster::Pixel& pixelToCheck, const edm::DetSet<PixelDigi>& digiFlags);
 		static int                  getMaxDigiMarkerValue(const SiPixelCluster& clusterToCheck, const edm::DetSet<PixelDigi>& digiFlags);

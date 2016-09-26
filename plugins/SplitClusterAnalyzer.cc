@@ -12,6 +12,10 @@ SplitClusterAnalyzer::SplitClusterAnalyzer(edm::ParameterSet const& iConfigArg) 
 	digiFlagsToken           = consumes<edm::DetSetVector<PixelDigi>>          (edm::InputTag("simSiPixelDigis", "dcolLostNeighbourDigiFlags"));
 	clustersToken            = consumes<edmNew::DetSetVector<SiPixelCluster>>  (edm::InputTag("siPixelClusters"));
 	trajTrackCollectionToken = consumes<TrajTrackAssociationCollection>(iConfig.getParameter<edm::InputTag>("trajectoryInput"));
+
+#ifdef USE_TIMER
+	timer.reset(new TimerColored(timer_prompt));
+#endif
 }
 
 SplitClusterAnalyzer::~SplitClusterAnalyzer() {}
@@ -173,13 +177,16 @@ SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew
 void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
 {
 	// Reserve place for the variables storing the cluster data
-	eventClustersField.reserve(getNumClusters(clusterCollection));
+	reserveMemoryForEventClusters(clusterCollection);
 	// Generate det id to marker set map to fetch the marked pixels on the modules
 	std::map<DetId, const edm::DetSet<PixelDigi>*> detIdToMarkerPtrMap;
 	for(const auto& markerSet: *digiFlagsCollection)
 	{
 		detIdToMarkerPtrMap.insert(std::pair<DetId, const edm::DetSet<PixelDigi>*>(markerSet.detId(), &markerSet));
 	}
+	#ifdef USE_TIMER
+		timer -> restart("Measuring the time required to handle the clusters.");
+	#endif
 	// Looping on all the clusters
 	for(const auto& clusterSetOnModule: *clusterCollection)
 	{
@@ -260,6 +267,9 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 			}
 		}
 	}
+	#ifdef USE_TIMER
+		timer -> printSeconds("Took about: ", " seconds.");
+	#endif
 }
 
 void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
@@ -273,8 +283,17 @@ void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
 	eventField.evt          = static_cast<int>(iEvent.id().event());
 	EventDataTree::setEventClusterPairsTreeDataFields(eventTree, eventField, eventMergingStatisticsField);
 	eventTree -> Fill();
+	#ifdef USE_TIMER
+		timer -> restart("Measuring the time required to fill the data tree.");
+	#endif
 	EventClustersTree::setEventClustersTreeDataFields(eventClustersTree, eventClustersField);
+	#ifdef USE_TIMER
+		timer -> printSeconds("Setting the branch addresses took about: ", " seconds.");
+	#endif
 	eventClustersTree -> Fill();
+	#ifdef USE_TIMER
+		timer -> printSeconds("Took about: ", " seconds.");
+	#endif
 }
 
 void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags)
@@ -351,15 +370,42 @@ void SplitClusterAnalyzer::savePixelData(const SiPixelCluster::Pixel& pixelToSav
 	pixelTree -> Fill();
 }
 
-unsigned int SplitClusterAnalyzer::getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
+void SplitClusterAnalyzer::reserveMemoryForEventClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
 {
+#ifdef USE_TIMER
+	timer -> restart("Measuring the time required to reserve space for the vector containing the clusters to draw.");
+#endif
 	unsigned int numClusters = 0;
 	for(const auto& clusterSetOnModule: *clusterCollection)
 	{
 		numClusters += clusterSetOnModule.size();
 	}
-	return numClusters;
+	eventClustersField.reserveAllContainers(numClusters);
+	for(const auto& clusterSetOnModule: *clusterCollection)
+	{
+		for(const auto& currentCluster: clusterSetOnModule)
+		{
+			int numPixels = currentCluster.size();
+			eventClustersField.pixelsCol    -> reserve(numPixels);
+			eventClustersField.pixelsRow    -> reserve(numPixels);
+			eventClustersField.pixelsAdc    -> reserve(numPixels);
+			eventClustersField.pixelsMarker -> reserve(numPixels);
+		}
+	}
+#ifdef USE_TIMER
+	timer -> printSeconds("Took about: ", " seconds.");
+#endif
 }
+
+// unsigned int SplitClusterAnalyzer::getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
+// {
+// 	unsigned int numClusters = 0;
+// 	for(const auto& clusterSetOnModule: *clusterCollection)
+// 	{
+// 		numClusters += clusterSetOnModule.size();
+// 	}
+// 	return numClusters;
+// }
 
 bool SplitClusterAnalyzer::checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs)
 {

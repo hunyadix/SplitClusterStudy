@@ -7,3 +7,6 @@
 [submodule "TrajAnalyzer"]
 	path = TrajAnalyzer
 	url = git@github.com:hunyadix/TrajAnalyzer.git
+[submodule "TimerForBenchmarking"]
+	path = TimerForBenchmarking
+	url = git@github.com:hunyadix/TimerForBenchmarking.git

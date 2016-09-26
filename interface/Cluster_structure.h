@@ -166,7 +166,7 @@ class EventClustersDataArrays
 			shl          -> clear();
 			federr       -> clear();
 		}
-		void reserve(int capacity)
+		void reserveAllContainers(int capacity)
 		{
 			x            -> reserve(capacity);
 			y            -> reserve(capacity);
@@ -192,6 +192,33 @@ class EventClustersDataArrays
 			ring         -> reserve(capacity);
 			shl          -> reserve(capacity);
 			federr       -> reserve(capacity);	
+		}
+		void resizeAllContainers(int capacity)
+		{
+			x            -> resize(capacity);
+			y            -> resize(capacity);
+			sizeX        -> resize(capacity);
+			sizeY        -> resize(capacity);
+			clusterIndex -> resize(capacity);
+			clusterSize  -> resize(capacity);
+			charge       -> resize(capacity);
+			pixelsCol    -> resize(capacity);
+			pixelsRow    -> resize(capacity);
+			pixelsAdc    -> resize(capacity);
+			pixelsMarker -> resize(capacity);
+			det          -> resize(capacity);
+			layer        -> resize(capacity);
+			ladder       -> resize(capacity);
+			module       -> resize(capacity);
+			half         -> resize(capacity);
+			outer        -> resize(capacity);
+			side         -> resize(capacity);
+			disk         -> resize(capacity);
+			blade        -> resize(capacity);
+			panel        -> resize(capacity);
+			ring         -> resize(capacity);
+			shl          -> resize(capacity);
+			federr       -> resize(capacity);	
 		}
 		void fill(const ClustData& clustData, const ModuleData& module_on)
 		{
