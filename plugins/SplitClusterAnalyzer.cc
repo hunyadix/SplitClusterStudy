@@ -177,7 +177,7 @@ SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew
 void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
 {
 	// Reserve place for the variables storing the cluster data
-	reserveMemoryForEventClusters(clusterCollection);
+	// reserveMemoryForEventClusters(clusterCollection);
 	// Generate det id to marker set map to fetch the marked pixels on the modules
 	std::map<DetId, const edm::DetSet<PixelDigi>*> detIdToMarkerPtrMap;
 	for(const auto& markerSet: *digiFlagsCollection)
@@ -286,10 +286,6 @@ void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
 	#ifdef USE_TIMER
 		timer -> restart("Measuring the time required to fill the data tree.");
 	#endif
-	EventClustersTree::setEventClustersTreeDataFields(eventClustersTree, eventClustersField);
-	#ifdef USE_TIMER
-		timer -> printSeconds("Setting the branch addresses took about: ", " seconds.");
-	#endif
 	eventClustersTree -> Fill();
 	#ifdef USE_TIMER
 		timer -> printSeconds("Took about: ", " seconds.");
@@ -307,14 +303,14 @@ void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const 
 	clusterField.clusterSize = cluster.size();
 	clusterField.charge      = cluster.charge();
 	// Info of the pixels in the cluster
-	const auto& currentPixelPositions = cluster.pixels();
-	const auto& currentAdcs           = cluster.pixelADC();
+	const auto currentPixelPositions = cluster.pixels();
+	const auto currentAdcs           = cluster.pixelADC();
 	for(int numPixel = 0; numPixel < clusterField.clusterSize && numPixel < 100; ++numPixel)
 	{
-		(*clusterField.pixelsCol)    .push_back(currentPixelPositions[numPixel].x);
-		(*clusterField.pixelsRow)    .push_back(currentPixelPositions[numPixel].y);
-		(*clusterField.pixelsAdc)    .push_back(currentAdcs[numPixel] / 1000.0);
-		(*clusterField.pixelsMarker) .push_back(getDigiMarkerValue(currentPixelPositions[numPixel], digiFlags));
+		clusterField.pixelsCol    .push_back(currentPixelPositions[numPixel].x);
+		clusterField.pixelsRow    .push_back(currentPixelPositions[numPixel].y);
+		clusterField.pixelsAdc    .push_back(currentAdcs[numPixel] / 1000.0);
+		clusterField.pixelsMarker .push_back(getDigiMarkerValue(currentPixelPositions[numPixel], digiFlags));
 	}
 	ClusterDataTree::setClusterTreeDataFields(clusterTree, clusterField);
 	clusterTree -> Fill();
@@ -370,32 +366,34 @@ void SplitClusterAnalyzer::savePixelData(const SiPixelCluster::Pixel& pixelToSav
 	pixelTree -> Fill();
 }
 
-void SplitClusterAnalyzer::reserveMemoryForEventClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
-{
-#ifdef USE_TIMER
-	timer -> restart("Measuring the time required to reserve space for the vector containing the clusters to draw.");
-#endif
-	unsigned int numClusters = 0;
-	for(const auto& clusterSetOnModule: *clusterCollection)
-	{
-		numClusters += clusterSetOnModule.size();
-	}
-	eventClustersField.reserveAllContainers(numClusters);
-	for(const auto& clusterSetOnModule: *clusterCollection)
-	{
-		for(const auto& currentCluster: clusterSetOnModule)
-		{
-			int numPixels = currentCluster.size();
-			eventClustersField.pixelsCol    -> reserve(numPixels);
-			eventClustersField.pixelsRow    -> reserve(numPixels);
-			eventClustersField.pixelsAdc    -> reserve(numPixels);
-			eventClustersField.pixelsMarker -> reserve(numPixels);
-		}
-	}
-#ifdef USE_TIMER
-	timer -> printSeconds("Took about: ", " seconds.");
-#endif
-}
+// void SplitClusterAnalyzer::reserveMemoryForEventClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
+// {
+// #ifdef USE_TIMER
+// 	timer -> restart("Measuring the time required to reserve space for the vector containing the clusters to draw.");
+// #endif
+// 	unsigned int numClusters = 0;
+// 	for(const auto& clusterSetOnModule: *clusterCollection)
+// 	{
+// 		numClusters += clusterSetOnModule.size();
+// 	}
+// 	eventClustersField.reserveAllContainers(numClusters);
+// 	for(const auto& clusterSetOnModule: *clusterCollection)
+// 	{
+// 		const auto beginIt = clusterSetOnModule.begin();
+// 		for(auto clusterIt = clusterSetOnModule.begin(); clusterIt != clusterSetOnModule.end(); ++clusterIt)
+// 		{
+// 			int clusterIndex = clusterIt - beginIt;
+// 			int numPixels = clusterIt -> size();
+// 			eventClustersField.pixelsCol[clusterIndex]    .reserve(numPixels);
+// 			eventClustersField.pixelsRow[clusterIndex]    .reserve(numPixels);
+// 			eventClustersField.pixelsAdc[clusterIndex]    .reserve(numPixels);
+// 			eventClustersField.pixelsMarker[clusterIndex] .reserve(numPixels);
+// 		}
+// 	}
+// #ifdef USE_TIMER
+// 	timer -> printSeconds("Took about: ", " seconds.");
+// #endif
+// }
 
 // unsigned int SplitClusterAnalyzer::getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
 // {

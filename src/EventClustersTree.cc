@@ -3,35 +3,36 @@
 void EventClustersTree::defineEventClustersTreeBranches(TTree*& eventClustersTree, EventClustersDataArrays& eventClusters)
 {
 	// Cluster data
-	eventClustersTree -> Branch("x",            "std::vector<float>", &(eventClusters.x));
-	eventClustersTree -> Branch("y",            "std::vector<float>", &(eventClusters.y));
-	eventClustersTree -> Branch("sizeX",        "std::vector<int>",   &(eventClusters.sizeX));
-	eventClustersTree -> Branch("sizeY",        "std::vector<int>",   &(eventClusters.sizeY));
-	eventClustersTree -> Branch("clusterSize",  "std::vector<int>",   &(eventClusters.clusterSize));
-	eventClustersTree -> Branch("charge",       "std::vector<float>", &(eventClusters.charge));
+	eventClustersTree -> Branch("x",            &(eventClusters.x));
+	eventClustersTree -> Branch("y",            &(eventClusters.y));
+	eventClustersTree -> Branch("sizeX",        &(eventClusters.sizeX));
+	eventClustersTree -> Branch("sizeY",        &(eventClusters.sizeY));
+	eventClustersTree -> Branch("clusterSize",  &(eventClusters.clusterSize));
+	eventClustersTree -> Branch("charge",       &(eventClusters.charge));
 	// Pixel data
-	eventClustersTree -> Branch("pixelsCol",    "std::vector<std::vector<int>>", &(eventClusters.pixelsCol));
-	eventClustersTree -> Branch("pixelsRow",    "std::vector<std::vector<int>>", &(eventClusters.pixelsRow));
-	eventClustersTree -> Branch("pixelsAdc",    "std::vector<std::vector<int>>", &(eventClusters.pixelsAdc));
-	eventClustersTree -> Branch("pixelsMarker", "std::vector<std::vector<int>>", &(eventClusters.pixelsMarker));
+	eventClustersTree -> Branch("pixelsCol",    &(eventClusters.pixelsCol));
+	eventClustersTree -> Branch("pixelsRow",    &(eventClusters.pixelsRow));
+	eventClustersTree -> Branch("pixelsAdc",    &(eventClusters.pixelsAdc));
+	eventClustersTree -> Branch("pixelsMarker", &(eventClusters.pixelsMarker));
 	// Module data for mergeable cluster pairs
-	eventClustersTree -> Branch("det",          "std::vector<int>", &(eventClusters.det));
-	eventClustersTree -> Branch("layer",        "std::vector<int>", &(eventClusters.layer));
-	eventClustersTree -> Branch("ladder",       "std::vector<int>", &(eventClusters.ladder));
-	eventClustersTree -> Branch("module",       "std::vector<int>", &(eventClusters.module));
-	eventClustersTree -> Branch("half",         "std::vector<int>", &(eventClusters.half));
-	eventClustersTree -> Branch("outer",        "std::vector<int>", &(eventClusters.outer));
-	eventClustersTree -> Branch("side",         "std::vector<int>", &(eventClusters.side));
-	eventClustersTree -> Branch("disk",         "std::vector<int>", &(eventClusters.disk));
-	eventClustersTree -> Branch("blade",        "std::vector<int>", &(eventClusters.blade));
-	eventClustersTree -> Branch("panel",        "std::vector<int>", &(eventClusters.panel));
-	eventClustersTree -> Branch("ring",         "std::vector<int>", &(eventClusters.ring));
-	eventClustersTree -> Branch("shl",          "std::vector<int>", &(eventClusters.shl));
-	eventClustersTree -> Branch("federr",       "std::vector<int>", &(eventClusters.federr));
+	eventClustersTree -> Branch("det",          &(eventClusters.det));
+	eventClustersTree -> Branch("layer",        &(eventClusters.layer));
+	eventClustersTree -> Branch("ladder",       &(eventClusters.ladder));
+	eventClustersTree -> Branch("module",       &(eventClusters.module));
+	eventClustersTree -> Branch("half",         &(eventClusters.half));
+	eventClustersTree -> Branch("outer",        &(eventClusters.outer));
+	eventClustersTree -> Branch("side",         &(eventClusters.side));
+	eventClustersTree -> Branch("disk",         &(eventClusters.disk));
+	eventClustersTree -> Branch("blade",        &(eventClusters.blade));
+	eventClustersTree -> Branch("panel",        &(eventClusters.panel));
+	eventClustersTree -> Branch("ring",         &(eventClusters.ring));
+	eventClustersTree -> Branch("shl",          &(eventClusters.shl));
+	eventClustersTree -> Branch("federr",       &(eventClusters.federr));
 }
 
 void EventClustersTree::setEventClustersTreeDataFields (TTree*& eventClustersTree, EventClustersDataArrays& eventClusters)
 {
+	// FIXME: this does not work.
 	// Cluster data
 	eventClustersTree -> SetBranchAddress("x",            &(eventClusters.x));
 	eventClustersTree -> SetBranchAddress("y",            &(eventClusters.y));
@@ -76,8 +77,8 @@ void EventClustersTree::associateDataFieldsFromTree(TTree*& eventClustersTree, E
 	TTreeTools::checkGetBranch(eventClustersTree, "pixelsAdc")    -> SetAddress(&(eventClusters.pixelsAdc));
 	TTreeTools::checkGetBranch(eventClustersTree, "pixelsMarker") -> SetAddress(&(eventClusters.pixelsMarker));
 	// // Module data for mergeable cluster pairs
-	TTreeTools::checkGetBranch(eventClustersTree, "det")          -> SetAddress(&(eventClusters.det));   // Működik
-	TTreeTools::checkGetBranch(eventClustersTree, "layer")        -> SetAddress(&(eventClusters.layer)); // Szegmentálási hiba
+	TTreeTools::checkGetBranch(eventClustersTree, "det")          -> SetAddress(&(eventClusters.det));
+	TTreeTools::checkGetBranch(eventClustersTree, "layer")        -> SetAddress(&(eventClusters.layer));
 	TTreeTools::checkGetBranch(eventClustersTree, "ladder")       -> SetAddress(&(eventClusters.ladder));
 	TTreeTools::checkGetBranch(eventClustersTree, "module")       -> SetAddress(&(eventClusters.module));
 	TTreeTools::checkGetBranch(eventClustersTree, "half")         -> SetAddress(&(eventClusters.half));

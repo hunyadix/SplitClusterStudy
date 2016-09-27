@@ -19,10 +19,10 @@ void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, Cluster& cl
 	clusterTree -> Branch("clust_size",   &clusterField.clusterSize,  "size/I");
 	clusterTree -> Branch("clust_charge", &clusterField.charge,       "charge/F");
 	// Pixel data
-	clusterTree -> Branch("pixelsCol",    "std::vector<int>", &clusterField.pixelsCol);
-	clusterTree -> Branch("pixelsRow",    "std::vector<int>", &clusterField.pixelsRow);
-	clusterTree -> Branch("pixelsAdc",    "std::vector<int>", &clusterField.pixelsAdc);
-	clusterTree -> Branch("pixelsMarker", "std::vector<int>", &clusterField.pixelsMarker);
+	clusterTree -> Branch("pixelsCol",    &clusterField.pixelsCol);
+	clusterTree -> Branch("pixelsRow",    &clusterField.pixelsRow);
+	clusterTree -> Branch("pixelsAdc",    &clusterField.pixelsAdc);
+	clusterTree -> Branch("pixelsMarker", &clusterField.pixelsMarker);
 }
 
 ////////////////////////////////////
@@ -31,6 +31,7 @@ void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, Cluster& cl
 
 void ClusterDataTree::setClusterTreeDataFields(TTree*& clusterTree, Cluster& clusterField)
 {
+	std::cout << "Calling ClusterDataTree::setClusterTreeDataFields() which is unsafe!" << std::endl; 
 	// Module data
 	clusterTree -> SetBranchAddress("module",       &clusterField.mod);
 	clusterTree -> SetBranchAddress("module_on",    &clusterField.mod_on);
@@ -43,8 +44,9 @@ void ClusterDataTree::setClusterTreeDataFields(TTree*& clusterTree, Cluster& clu
 	clusterTree -> SetBranchAddress("clust_size",   &clusterField.clusterSize);
 	clusterTree -> SetBranchAddress("clust_charge", &clusterField.charge);
 	// Pixel data
-	clusterTree -> SetBranchAddress("pixelsCol",    &clusterField.pixelsCol);
-	clusterTree -> SetBranchAddress("pixelsRow",    &clusterField.pixelsRow);
-	clusterTree -> SetBranchAddress("pixelsAdc",    &clusterField.pixelsAdc);
-	clusterTree -> SetBranchAddress("pixelsMarker", &clusterField.pixelsMarker);
+	// FIXME: this does not work right now
+	// clusterTree -> SetBranchAddress("pixelsCol",    &clusterField.pixelsCol);
+	// clusterTree -> SetBranchAddress("pixelsRow",    &clusterField.pixelsRow);
+	// clusterTree -> SetBranchAddress("pixelsAdc",    &clusterField.pixelsAdc);
+	// clusterTree -> SetBranchAddress("pixelsMarker", &clusterField.pixelsMarker);
 }

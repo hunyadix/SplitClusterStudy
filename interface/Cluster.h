@@ -14,7 +14,6 @@
 class Cluster : public ClustData
 {
 	public:
-
 		ModuleData mod; // offline module number
 		ModuleData mod_on; // online module number
 
@@ -25,7 +24,6 @@ class Cluster : public ClustData
 			mod.init();
 			mod_on.init();
 		}
-	
 };
 
 #endif

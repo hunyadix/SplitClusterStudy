@@ -44,4 +44,8 @@
     <flags CXXFLAGS="-Wall -Wshadow -g -D=EDM_ML_DEBUG"/>
     <flags   EDM_PLUGIN="1"/>
   </library>
+  <library   file="BenchmarkingTest.cc ../ModuleDataFetcher/src/*.cc" name="BenchmarkingTest">
+    <flags CXXFLAGS="-Wall -Wshadow -g -D=EDM_ML_DEBUG"/>
+    <flags   EDM_PLUGIN="1"/>
+  </library>
 </environment>

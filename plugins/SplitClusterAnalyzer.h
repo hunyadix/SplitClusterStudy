@@ -75,8 +75,8 @@
 #include <TFile.h>
 #include <TTree.h>
 // #include <TH1F.h>
-#include <TH2I.h>
-#include <TRandom3.h>
+// #include <TH2I.h>
+// #include <TRandom3.h>
 
 ////////////////
 // C++ system //
@@ -85,7 +85,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <limits>
 
 #define USE_TIMER
 
@@ -105,7 +104,7 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		edm::EDGetTokenT<TrajTrackAssociationCollection>         trajTrackCollectionToken;
 		// Output file path
 		// Default: "Ntuple_scm.root"
-		std::string ntupleOutputFilename = "Ntuple_scm.root";
+		std::string ntupleOutputFilename = "Ntuple_scs.root";
 		TFile*      ntupleOutputFile;
 		// Tree definition
 		TTree*                      eventTree;
