@@ -12,10 +12,6 @@ SplitClusterAnalyzer::SplitClusterAnalyzer(edm::ParameterSet const& iConfigArg) 
 	digiFlagsToken           = consumes<edm::DetSetVector<PixelDigi>>          (edm::InputTag("simSiPixelDigis", "dcolLostNeighbourDigiFlags"));
 	clustersToken            = consumes<edmNew::DetSetVector<SiPixelCluster>>  (edm::InputTag("siPixelClusters"));
 	trajTrackCollectionToken = consumes<TrajTrackAssociationCollection>(iConfig.getParameter<edm::InputTag>("trajectoryInput"));
-
-#ifdef USE_TIMER
-	timer.reset(new TimerColored(timer_prompt));
-#endif
 }
 
 SplitClusterAnalyzer::~SplitClusterAnalyzer() {}
@@ -37,15 +33,14 @@ void SplitClusterAnalyzer::beginJob()
 	LogDebug("file_operations") << "Output file: \"" << ntupleOutputFilename << "\" created." << std::endl;
 	// Tree definitions
 	eventTree = new TTree("eventTree", "Event informations");
-	EventDataTree::defineEventClusterPairsTreeBranches(eventTree, eventField, eventMergingStatisticsField);
-	eventClustersTree = new TTree("eventClustersTree", "Event cluster collection");
-	EventClustersTree::defineEventClustersTreeBranches(eventClustersTree, eventClustersField);
+	// EventDataTree::defineEventClusterPairsTreeBranches(eventTree, eventField, eventMergingStatisticsField);
+	EventDataTree::defineEventTreeBranches(eventTree, eventField);
+	// eventClustersTree = new TTree("eventClustersTree", "Event cluster collection");
+	// EventClustersTree::defineEventClustersTreeBranches(eventClustersTree, eventClustersField);
 	clusterTree = new TTree("clustTree", "Pixel clusters");
-	ClusterDataTree::defineClusterTreeBranches(clusterTree, clusterField);
+	ClusterDataTree::defineClusterTreeBranches(clusterTree, eventField, clusterField);
 	mergeTree   = new TTree("mergeTree", "Cluster merging informations");
 	MergingStatisticsTree::defineMergingStatTreeBranches(mergeTree, mergeStatField);
-	pixelTree = new TTree("pixelTree", "Pixel data");
-	PixelDataTree::definePixelTreeBranches(pixelTree, pixelField, eventField);
 }
 
 void SplitClusterAnalyzer::endJob()
@@ -68,8 +63,6 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	// Fetching the markers for digis that have a dcol lost digi next to them
 	edm::Handle<edm::DetSetVector<PixelDigi>> digiFlagsCollection;
 	iEvent.getByToken(digiFlagsToken,         digiFlagsCollection);
-	// std::cout << "Succesfully fetched digiflags." << std::endl;
-	// std::cout << "digiFlagsCollection -> size(): " << digiFlagsCollection -> size() << std::endl;
 	// Fetching the clusters by token
 	edm::Handle<edmNew::DetSetVector<SiPixelCluster>> clusterCollection;
 	iEvent.getByToken(clustersToken,                  clusterCollection);
@@ -77,17 +70,18 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	edm::Handle<TrajTrackAssociationCollection> trajTrackCollection;
 	iEvent.getByToken(trajTrackCollectionToken, trajTrackCollection);
 	// Trying to access the clusters
-	// if(!dcolLostDigiCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch dcol lost digis.");
-	if(!clusterCollection.isValid())      handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
-	if(!trajTrackCollection.isValid())    handleDefaultError("data access", "data_access", "Failed to fetch trajectory measurements.");
+	if(!digiFlagsCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch dcol lost digis.");
+	if(!clusterCollection.isValid())   handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
+	if(!trajTrackCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch trajectory measurements.");
 	// Resetting data fields
 	clearAllContainers();
 	// Processing data
+	handleEvent(iEvent);
 	// Preparing a trajectory to closest cluster map
 	TrajClusterMap trajClosestClustMap;
 	trajClosestClustMap = getTrajClosestClusterMap(trajTrackCollection, clusterCollection, trackerTopology);
 	handleClusters(clusterCollection, digiFlagsCollection, trackerTopology, fedErrors);
-	handleEvent(iEvent);
+	eventTree -> Fill();
 }
 
 SplitClusterAnalyzer::TrajClusterMap SplitClusterAnalyzer::getTrajClosestClusterMap(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology)
@@ -184,9 +178,6 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 	{
 		detIdToMarkerPtrMap.insert(std::pair<DetId, const edm::DetSet<PixelDigi>*>(markerSet.detId(), &markerSet));
 	}
-	#ifdef USE_TIMER
-		timer -> restart("Measuring the time required to handle the clusters.");
-	#endif
 	// Looping on all the clusters
 	for(const auto& clusterSetOnModule: *clusterCollection)
 	{
@@ -219,12 +210,12 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 			std::vector<SiPixelCluster::Pixel> currentClusterPixels = currentCluster.pixels();
 			// Save cluster data
 			saveClusterData(currentCluster, mod, mod_on, *digiFlagsOnModulePtr);
-			eventClustersField.fill(clusterField, clusterField.mod_on);
-			// Save digis data
-			for(const auto& pixel: currentClusterPixels)
-			{
-				savePixelData(pixel, mod, mod_on, *digiFlagsOnModulePtr);
-			}
+			// eventClustersField.fill(clusterField, clusterField.mod_on);
+			// // Save digis data
+			// for(const auto& pixel: currentClusterPixels)
+			// {
+			// 	savePixelData(pixel, mod, mod_on, *digiFlagsOnModulePtr);
+			// }
 			// Find pixels that are close to the current cluster
 			std::vector<const SiPixelCluster*> closeClusters;
 			for(const auto& otherCluster: clusterSetOnModule)
@@ -263,13 +254,10 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 				std::vector<SiPixelCluster::Pixel> clusterToMergePixels = clusterToMerge.pixels();
 				// Saving off informations about the mergeable pixels
 				saveMergingData(currentCluster, clusterToMerge, currentClusterPixels, clusterToMergePixels, isCurrentClusterSplit, isMergeableClusterSplit, mod, mod_on);
-				eventMergingStatisticsField.fill(mergeStatField);
+				// eventMergingStatisticsField.fill(mergeStatField);
 			}
 		}
 	}
-	#ifdef USE_TIMER
-		timer -> printSeconds("Took about: ", " seconds.");
-	#endif
 }
 
 void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
@@ -281,38 +269,36 @@ void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
 	eventField.orb          = static_cast<int>(iEvent.orbitNumber());
 	eventField.bx           = static_cast<int>(iEvent.bunchCrossing());
 	eventField.evt          = static_cast<int>(iEvent.id().event());
-	EventDataTree::setEventClusterPairsTreeDataFields(eventTree, eventField, eventMergingStatisticsField);
-	eventTree -> Fill();
-	#ifdef USE_TIMER
-		timer -> restart("Measuring the time required to fill the data tree.");
-	#endif
-	eventClustersTree -> Fill();
-	#ifdef USE_TIMER
-		timer -> printSeconds("Took about: ", " seconds.");
-	#endif
 }
 
 void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags)
 {
-	clusterField.mod         = mod;
-	clusterField.mod_on      = mod_on;
-	clusterField.x           = cluster.x();
-	clusterField.y           = cluster.y();
-	clusterField.sizeX       = cluster.sizeX();
-	clusterField.sizeY       = cluster.sizeY();
-	clusterField.clusterSize = cluster.size();
-	clusterField.charge      = cluster.charge();
+	clusterField.init();
+	// FIXME: change this to a global cluster counting
+	static int clusterIndex = 0;
+	clusterField.clusterIndex = ++clusterIndex;
+	clusterField.mod          = mod;
+	clusterField.mod_on       = mod_on;
+	clusterField.x            = cluster.x();
+	clusterField.y            = cluster.y();
+	clusterField.sizeX        = cluster.sizeX();
+	clusterField.sizeY        = cluster.sizeY();
+	clusterField.clusterSize  = cluster.size();
+	clusterField.charge       = cluster.charge();
 	// Info of the pixels in the cluster
 	const auto currentPixelPositions = cluster.pixels();
 	const auto currentAdcs           = cluster.pixelADC();
-	for(int numPixel = 0; numPixel < clusterField.clusterSize && numPixel < 100; ++numPixel)
+	if(static_cast<unsigned int>(clusterField.clusterSize) != currentPixelPositions.size())
 	{
-		clusterField.pixelsCol    .push_back(currentPixelPositions[numPixel].x);
-		clusterField.pixelsRow    .push_back(currentPixelPositions[numPixel].y);
+		std::cout << error_prompt << "Size conflict in saveClusterData()." << std::endl;
+	}
+	for(int numPixel = 0; numPixel < clusterField.clusterSize; ++numPixel)
+	{
+		clusterField.pixelsCol    .push_back(currentPixelPositions[numPixel].y);
+		clusterField.pixelsRow    .push_back(currentPixelPositions[numPixel].x);
 		clusterField.pixelsAdc    .push_back(currentAdcs[numPixel] / 1000.0);
 		clusterField.pixelsMarker .push_back(getDigiMarkerValue(currentPixelPositions[numPixel], digiFlags));
 	}
-	ClusterDataTree::setClusterTreeDataFields(clusterTree, clusterField);
 	clusterTree -> Fill();
 }
 
@@ -350,60 +336,8 @@ void SplitClusterAnalyzer::saveMergingData(const SiPixelCluster& currentCluster,
 	mergeStatField.distanceInPixels         = ClusterPairMergingValidator::getShortestPathBetweenClusters(currentCluster, clusterToMerge).size() - 1;
 	mergeStatField.mod                      = mod;
 	mergeStatField.mod_on                   = mod_on;
-	MergingStatisticsTree::setMergingStatTreeDataFields(mergeTree, mergeStatField);
 	mergeTree -> Fill();
 }
-
-void SplitClusterAnalyzer::savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection)
-{
-	pixelField.mod      = mod;
-	pixelField.mod_on   = mod_on;
-	pixelField.col      = static_cast<int>(pixelToSave.x);
-	pixelField.row      = static_cast<int>(pixelToSave.y);
-	pixelField.adc      = static_cast<int>(pixelToSave.adc);
-	pixelField.isMarked = getDigiMarkerValue(pixelToSave, digiFlagsCollection);
-	PixelDataTree::setPixelTreeDataFields(pixelTree, pixelField, eventField);
-	pixelTree -> Fill();
-}
-
-// void SplitClusterAnalyzer::reserveMemoryForEventClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
-// {
-// #ifdef USE_TIMER
-// 	timer -> restart("Measuring the time required to reserve space for the vector containing the clusters to draw.");
-// #endif
-// 	unsigned int numClusters = 0;
-// 	for(const auto& clusterSetOnModule: *clusterCollection)
-// 	{
-// 		numClusters += clusterSetOnModule.size();
-// 	}
-// 	eventClustersField.reserveAllContainers(numClusters);
-// 	for(const auto& clusterSetOnModule: *clusterCollection)
-// 	{
-// 		const auto beginIt = clusterSetOnModule.begin();
-// 		for(auto clusterIt = clusterSetOnModule.begin(); clusterIt != clusterSetOnModule.end(); ++clusterIt)
-// 		{
-// 			int clusterIndex = clusterIt - beginIt;
-// 			int numPixels = clusterIt -> size();
-// 			eventClustersField.pixelsCol[clusterIndex]    .reserve(numPixels);
-// 			eventClustersField.pixelsRow[clusterIndex]    .reserve(numPixels);
-// 			eventClustersField.pixelsAdc[clusterIndex]    .reserve(numPixels);
-// 			eventClustersField.pixelsMarker[clusterIndex] .reserve(numPixels);
-// 		}
-// 	}
-// #ifdef USE_TIMER
-// 	timer -> printSeconds("Took about: ", " seconds.");
-// #endif
-// }
-
-// unsigned int SplitClusterAnalyzer::getNumClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection)
-// {
-// 	unsigned int numClusters = 0;
-// 	for(const auto& clusterSetOnModule: *clusterCollection)
-// 	{
-// 		numClusters += clusterSetOnModule.size();
-// 	}
-// 	return numClusters;
-// }
 
 bool SplitClusterAnalyzer::checkClusterPairOrder(const SiPixelCluster& lhs, const SiPixelCluster& rhs)
 {
@@ -462,25 +396,10 @@ bool SplitClusterAnalyzer::checkIfDigiIsInDetSet(const PixelDigi& digi, const ed
 	return markerValue;
 }
 
-void SplitClusterAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
-{
-	// LogDebug("step") << "Executing SplitClusterAnalyzer::beginRun()..." << std::endl;
-}
-
-void SplitClusterAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
-{
-	// LogDebug("step") << "Executing SplitClusterAnalyzer::endRun()..." << std::endl;
-}
-
-void SplitClusterAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
-{
-	// LogDebug("step") << "Executing SplitClusterAnalyzer::beginLuminosityBlock()..." << std::endl;
-}
-
-void SplitClusterAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
-{
-	// LogDebug("step") << "Executing SplitClusterAnalyzer::endLuminosityBlock()..." << std::endl;
-}
+void SplitClusterAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&) {}
+void SplitClusterAnalyzer::endRun(edm::Run const&, edm::EventSetup const&) {}
+void SplitClusterAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {}
+void SplitClusterAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {}
 
 /////////////
 // Utility //
@@ -491,9 +410,7 @@ void SplitClusterAnalyzer::clearAllContainers()
 	eventField.init();
 	clusterField.init();
 	mergeStatField.init();
-	pixelField.init();
-	eventMergingStatisticsField.clear();
-	eventClustersField.clear();
+	// eventClustersField.clear();
 }
 
 ////////////////////
@@ -532,3 +449,43 @@ DEFINE_FWK_MODULE(SplitClusterAnalyzer);
 ///////////////////////
 // CODE DUMP AREA :) //
 ///////////////////////
+
+// void fillEventPlot(TH2D& layer1, const ModuleData& mod_on, const int& col, const int& row, const int& markerState)
+// {
+// 	// Pixel x range: [0, 159]
+// 	// Pixel y range: [0, 415]
+// 	// x coordinate corresponds to row, y coordinate corresponds to col
+// 	// Check if pixel is on endcap
+// 	if(mod_on.det == 1) return;
+// 	// For every second module the ladder coordinate is numbered the other way around
+// 	// For a reversed coordinate the pixel x coordinate decreases as the global x increases
+// 	int isReversedModule = (mod_on.ladder + (0 < mod_on.ladder)) % 2;
+// 	// 2 ROCs per module in ladder direction and 80 pixel per column
+// 	// 8 ROCs per module in module direction and 52 columns
+// 	int moduleCoordinate = NOVAL_I;
+// 	int ladderCoordinate = NOVAL_I;
+// 	if(isReversedModule)
+// 	{
+// 		if(mod_on.ladder < 0) ladderCoordinate = (mod_on.ladder + 0.5) * 160 - row;
+// 		if(0 < mod_on.ladder) ladderCoordinate = (mod_on.ladder + 0.5) * 160 - row - 1;
+// 		// Correcting for the fact that the first module is only a half
+// 		if(mod_on.ladder == 1)  ladderCoordinate += 80;
+// 		if(mod_on.ladder == -1) ladderCoordinate -= 80;
+// 	}
+// 	else
+// 	{
+// 		if(mod_on.ladder < 0) ladderCoordinate = (mod_on.ladder - 0.5) * 160 + row + 1;
+// 		if(0 < mod_on.ladder) ladderCoordinate = (mod_on.ladder - 0.5) * 160 + row;
+// 		// Correcting for the fact that the first module is only a half
+// 		if(mod_on.ladder == 1)  ladderCoordinate += 80;
+// 		if(mod_on.ladder == -1) ladderCoordinate -= 80;
+// 	}
+// 	if(mod_on.module < 0) moduleCoordinate = (mod_on.module - 0.5) * 416 + col + 1;
+// 	if(0 < mod_on.module) moduleCoordinate = (mod_on.module - 0.5) * 416 + col;
+// 	int fillWeight = markerState ? 2 : 1;
+// 	// Fill the appropriate layer plot
+// 	if(mod_on.layer == 1)
+// 	{
+// 		layer1.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
+// 	}
+// }

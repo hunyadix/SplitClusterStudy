@@ -4,20 +4,21 @@
 // Tree branching //
 ////////////////////
 
-void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, Cluster& clusterField)
+void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, EventData& eventField, Cluster& clusterField)
 {
-	// clusterTree -> Branch("event",        &event_field,               event_field.list.c_str());
+	// Event Data
+	clusterTree -> Branch("event",        &eventField,                eventField.list.c_str());
 	// Module
-	clusterTree -> Branch("module",       &clusterField.mod,          ModuleData::list.c_str());
-	clusterTree -> Branch("module_on",    &clusterField.mod_on,       ModuleData::list.c_str());
+	clusterTree -> Branch("mod",          &clusterField.mod,          ModuleData::list.c_str());
+	clusterTree -> Branch("mod_on",       &clusterField.mod_on,       ModuleData::list.c_str());
 	// Cluster data
 	clusterTree -> Branch("x",            &clusterField.x,            "x/F");
 	clusterTree -> Branch("y",            &clusterField.y,            "y/F");
-	clusterTree -> Branch("clust_sizeX",  &clusterField.sizeX,        "sizeX/I");
-	clusterTree -> Branch("clust_sizeY",  &clusterField.sizeY,        "sizeY/I");
-	clusterTree -> Branch("clust_index",  &clusterField.clusterIndex, "i/I");
-	clusterTree -> Branch("clust_size",   &clusterField.clusterSize,  "size/I");
-	clusterTree -> Branch("clust_charge", &clusterField.charge,       "charge/F");
+	clusterTree -> Branch("sizeX",        &clusterField.sizeX,        "sizeX/I");
+	clusterTree -> Branch("sizeY",        &clusterField.sizeY,        "sizeY/I");
+	clusterTree -> Branch("clusterIndex", &clusterField.clusterIndex, "i/I");
+	clusterTree -> Branch("clusterSize",  &clusterField.clusterSize,  "size/I");
+	clusterTree -> Branch("charge",       &clusterField.charge,       "charge/F");
 	// Pixel data
 	clusterTree -> Branch("pixelsCol",    &clusterField.pixelsCol);
 	clusterTree -> Branch("pixelsRow",    &clusterField.pixelsRow);
@@ -25,28 +26,25 @@ void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, Cluster& cl
 	clusterTree -> Branch("pixelsMarker", &clusterField.pixelsMarker);
 }
 
-////////////////////////////////////
-// Tree branch address assignment //
-////////////////////////////////////
-
-void ClusterDataTree::setClusterTreeDataFields(TTree*& clusterTree, Cluster& clusterField)
+void ClusterDataTree::associateDataFieldsFromTree(TTree*& clusterTree, EventData& eventField, Cluster& clusterField)
 {
-	std::cout << "Calling ClusterDataTree::setClusterTreeDataFields() which is unsafe!" << std::endl; 
+	TTreeTools::treeCheck(clusterTree, "Error opening the clustTree.");
+	// Event data
+	TTreeTools::checkGetBranch(clusterTree, "event")        -> SetAddress(&eventField);
 	// Module data
-	clusterTree -> SetBranchAddress("module",       &clusterField.mod);
-	clusterTree -> SetBranchAddress("module_on",    &clusterField.mod_on);
-	// Cluster data
-	clusterTree -> SetBranchAddress("x",            &clusterField.x);
-	clusterTree -> SetBranchAddress("y",            &clusterField.y);
-	clusterTree -> SetBranchAddress("clust_sizeX",  &clusterField.sizeX);
-	clusterTree -> SetBranchAddress("clust_sizeY",  &clusterField.sizeY);
-	clusterTree -> SetBranchAddress("clust_index",  &clusterField.clusterIndex);
-	clusterTree -> SetBranchAddress("clust_size",   &clusterField.clusterSize);
-	clusterTree -> SetBranchAddress("clust_charge", &clusterField.charge);
-	// Pixel data
-	// FIXME: this does not work right now
-	// clusterTree -> SetBranchAddress("pixelsCol",    &clusterField.pixelsCol);
-	// clusterTree -> SetBranchAddress("pixelsRow",    &clusterField.pixelsRow);
-	// clusterTree -> SetBranchAddress("pixelsAdc",    &clusterField.pixelsAdc);
-	// clusterTree -> SetBranchAddress("pixelsMarker", &clusterField.pixelsMarker);
+	TTreeTools::checkGetBranch(clusterTree, "mod")          -> SetAddress(&(clusterField.mod));
+	TTreeTools::checkGetBranch(clusterTree, "mod_on")       -> SetAddress(&(clusterField.mod_on));
+	// Cluster Data
+	TTreeTools::checkGetBranch(clusterTree, "x")            -> SetAddress(&clusterField.x);
+	TTreeTools::checkGetBranch(clusterTree, "y")            -> SetAddress(&clusterField.y);
+	TTreeTools::checkGetBranch(clusterTree, "sizeX")        -> SetAddress(&clusterField.sizeX);
+	TTreeTools::checkGetBranch(clusterTree, "sizeY")        -> SetAddress(&clusterField.sizeY);
+	TTreeTools::checkGetBranch(clusterTree, "clusterIndex") -> SetAddress(&clusterField.clusterIndex);
+	TTreeTools::checkGetBranch(clusterTree, "clusterSize")  -> SetAddress(&clusterField.clusterSize);
+	TTreeTools::checkGetBranch(clusterTree, "charge")       -> SetAddress(&clusterField.charge);
+	// Pixel Data
+	// TTreeTools::checkGetBranch(clusterTree, "pixelsCol")    -> SetAddress(&(clusterField.pixelsCol));
+	// TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&(clusterField.pixelsRow));
+	// TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&(clusterField.pixelsAdc));
+	// TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&(clusterField.pixelsMarker));
 }

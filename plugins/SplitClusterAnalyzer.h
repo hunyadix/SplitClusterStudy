@@ -76,6 +76,7 @@
 #include <TTree.h>
 // #include <TH1F.h>
 // #include <TH2I.h>
+#include <TH2D.h>
 // #include <TRandom3.h>
 
 ////////////////
@@ -85,8 +86,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
-#define USE_TIMER
 
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
@@ -103,25 +102,18 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		edm::EDGetTokenT<edmNew::DetSetVector<SiPixelCluster>>   clustersToken;
 		edm::EDGetTokenT<TrajTrackAssociationCollection>         trajTrackCollectionToken;
 		// Output file path
-		// Default: "Ntuple_scm.root"
+		// Default: "Ntuple_scs.root"
 		std::string ntupleOutputFilename = "Ntuple_scs.root";
 		TFile*      ntupleOutputFile;
 		// Tree definition
 		TTree*                      eventTree;
 		EventData                   eventField;
-		MergingStatisticsDataArrays eventMergingStatisticsField;
-		TTree*                      eventClustersTree;
-		EventClustersDataArrays     eventClustersField;
+		// TTree*                      eventClustersTree;
+		// EventClustersDataArrays     eventClustersField;
 		TTree*                      clusterTree;
 		Cluster                     clusterField;
 		TTree*                      mergeTree;
 		MergingStatisticsData       mergeStatField;
-		TTree*                      pixelTree;
-		Pixel                       pixelField;
-
-#ifdef USE_TIMER
-		std::unique_ptr<TimerColored> timer;
-#endif
 
 		/////////////////////
 		// Data processing //

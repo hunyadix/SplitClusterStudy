@@ -1,21 +1,10 @@
 #ifndef CLUSTER_DATA_TREE_H
 #define CLUSTER_DATA_TREE_H
 
-//////////////////////
-// Tree definitions //
-//////////////////////
-
 #include "../interface/Cluster.h"
+#include "../interface/EventData.h"
 
-////////////////////////////
-// Message logger service //
-////////////////////////////
-
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-
-////////////////////
-// Root libraries //
-////////////////////
+#include "../interface/TTreeTools.h"
 
 #include <TROOT.h>
 #include <TTree.h>
@@ -23,8 +12,8 @@
 class ClusterDataTree
 {
 	public:
-		static void defineClusterTreeBranches(TTree*& clusterTree, Cluster& clusterField);
-		static void setClusterTreeDataFields (TTree*& clusterTree, Cluster& clusterField);
+		static void defineClusterTreeBranches  (TTree*& clusterTree, EventData& eventField, Cluster& clusterField);
+		static void associateDataFieldsFromTree(TTree*& clusterTree, EventData& eventField, Cluster& clusterField);
 };
 
 #endif

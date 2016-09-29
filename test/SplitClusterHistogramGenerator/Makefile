@@ -15,12 +15,20 @@ COMMONACTORS_S = ../../src/CommonActors.$(SrcSuf)
 COMMONACTORS_O = ./obj/CommonActors.$(ObjSuf)
 OBJS     += $(COMMONACTORS_O)
 
+TIMER_S = ../../TimerForBenchmarking/src/Timer.$(SrcSuf)
+TIMER_O = ./obj/Timer.$(ObjSuf)
+OBJS     += $(TTREETOOLS_O)
+
+TIMERCOL_S = ../../TimerForBenchmarking/src/TimerColored.$(SrcSuf)
+TIMERCOL_O = ./obj/TimerColored.$(ObjSuf)
+OBJS     += $(TTREETOOLS_O)
+
 TTREETOOLS_S = ../../src/TTreeTools.$(SrcSuf)
 TTREETOOLS_O = ./obj/TTreeTools.$(ObjSuf)
 OBJS     += $(TTREETOOLS_O)
 
-EVENTCLUSTERSTREE_S = ../../src/EventClustersTree.$(SrcSuf)
-EVENTCLUSTERSTREE_O = ./obj/EventClustersTree.$(ObjSuf)
+CLUSTERDATATREE_S = ../../src/ClusterDataTree.$(SrcSuf)
+CLUSTERDATATREE_O = ./obj/ClusterDataTree.$(ObjSuf)
 OBJS     += $(TTREETOOLS_O)
 
 # PROGRAMS
@@ -31,13 +39,26 @@ PLOTEVENTCLUSTERS_A = ./bin/plotEventClusters$(ExeSuf)
 OBJS     += $(PLOTEVENTCLUSTERS_O)
 PROGRAMS += $(PLOTEVENTCLUSTERS_A)
 
+PLOTCLUSTERANGLES_S = ./src/plotClusterAngles.$(SrcSuf)
+PLOTCLUSTERANGLES_O = ./obj/plotClusterAngles.$(ObjSuf)
+PLOTCLUSTERANGLES_A = ./bin/plotClusterAngles$(ExeSuf)
+OBJS     += $(PLOTCLUSTERANGLES_O)
+PROGRAMS += $(PLOTCLUSTERANGLES_A)
+
 all: $(PROGRAMS)
 
 # Executables
 
-$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TTREETOOLS_O) $(EVENTCLUSTERSTREE_O)
+$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
 	@printf "Compiling done, linking...\n"
-	@$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(PLOTCLUSTERANGLES_A): $(PLOTCLUSTERANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
@@ -59,13 +80,23 @@ $(COMMONACTORS_O): $(COMMONACTORS_S)
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
+$(TIMER_O): $(TIMER_S)
+	@printf "Compiling utility: \"TimerColored\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(TIMERCOL_O): $(TIMERCOL_S)
+	@printf "Compiling utility: \"TimerColored\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
 $(TTREETOOLS_O): $(TTREETOOLS_S)
 	@printf "Compiling utility: \"TTreeTools\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
-$(EVENTCLUSTERSTREE_O): $(EVENTCLUSTERSTREE_S)
-	@printf "Compiling utility: \"EventClustersTree\"...\n"
+$(CLUSTERDATATREE_O): $(CLUSTERDATATREE_S)
+	@printf "Compiling utility: \"ClusterDataTree\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
@@ -75,6 +106,12 @@ $(PLOTEVENTCLUSTERS_O): $(PLOTEVENTCLUSTERS_S)
 	@printf "Compiling test: \"plotEventClusters\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
+
+$(PLOTCLUSTERANGLES_O): $(PLOTCLUSTERANGLES_S)  
+	@printf "Compiling test: \"plotClusterAngles\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
 
 clean:
 	@rm -f $(OBJS) core
