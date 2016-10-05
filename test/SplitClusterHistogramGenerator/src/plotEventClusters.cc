@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 		gStyle -> SetPalette(1);
 		TimerColored timer(timer_prompt);
 		TApplication* theApp = new TApplication("App", &argc, argv);
-		TFile* inputFile = TFile::Open("/data/hunyadi/CMSSW/SplitClusterStudy/CMSSW_8_0_18/src/TestSplitClusterStudy/Ntuple_scs.root", "READ");
+		TFile* inputFile = TFile::Open("/data_ssd_120gb/hunyadi/CMSSW/SplitClusterStudy/CMSSW_8_0_18/src/TestSplitClusterStudy/Ntuple_scs.root", "READ");
 		TTree* clusterTree = (TTree*)(inputFile -> Get("clustTree"));
 		TTreeTools::treeCheck(clusterTree, "Tree missing.", true);
 		Cluster  clusterField;
