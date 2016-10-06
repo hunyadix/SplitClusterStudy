@@ -67,11 +67,13 @@ std::vector<T> filter(std::vector<T> vectorToFilter, UnaryPredicate pred)
 
 struct ClusterStats
 {
-	int startIndex = NOVAL_I;
-	int endIndex   = NOVAL_I;
+	int   startCol = NOVAL_I;
+	int   endCol   = NOVAL_I;
+	float startRow = NOVAL_F;
+	float endRow   = NOVAL_F;
 	float length   = NOVAL_F;
 	float dir      = NOVAL_F;
-	int error      = 0;
+	int   error    = 0;
 };
 
 bool isMissingPartDoubleColumn(const int& firstCol, const int& firstRow, const int& secondCol, const int& secondRow);
@@ -138,35 +140,44 @@ int main(int argc, char** argv) try
 			// Looping on possible pairs
 			for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != eventClusters.end(); ++secondClusterIt)
 			{
-				// Check if clusters are on the same module
+				// Check if clusters are on the same module 
 				if(firstClusterIt -> mod == secondClusterIt -> mod) continue;
 				// Quick checks
 				if(12 < std::abs(firstClusterIt -> x - secondClusterIt -> x)) continue;
 				if(12 < std::abs(firstClusterIt -> y - secondClusterIt -> y)) continue;
 				ClusterStats clusterStats2 = getClusterStats(*secondClusterIt);
-				std::complex<int> firstClusterStartPos;
-				std::complex<int> firstClusterEndPos;
-				std::complex<int> secondClusterStartPos;
-				std::complex<int> secondClusterEndPos;
-				if(firstClusterIt  -> pixelsCol[clusterStats1.startIndex] <= secondClusterIt -> pixelsCol[clusterStats2.startIndex])
+				std::pair<int, int> dist(0, 0);
+				if(clusterStats1.startCol <= clusterStats2.startCol) 
 				{
-					firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
-					firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
-					secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);
-					secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);
+					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
+					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
 				}
-				else
+				if(clusterStats2.startCol <  clusterStats1.startCol) 
 				{
-					firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
-					firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
-					secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);	
-					secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);	
+					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
+					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
 				}
-				if(!isMissingPartDoubleColumn(firstClusterEndPos.real(), firstClusterEndPos.imag(), secondClusterStartPos.real(), secondClusterStartPos.imag())) continue;
-				// std::cout << "First start point: " << 
-				std::complex<int> dist = secondClusterEndPos - firstClusterStartPos;
+				// std::complex<int> firstClusterStartPos;
+				// std::complex<int> firstClusterEndPos;
+				// std::complex<int> secondClusterStartPos;
+				// std::complex<int> secondClusterEndPos;
+				// if(firstClusterIt  -> pixelsCol[clusterStats1.startIndex] <= secondClusterIt -> pixelsCol[clusterStats2.startIndex])
+				// {
+				// 	firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
+				// 	firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
+				// 	secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);
+				// 	secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);
+				// }
+				// else
+				// {
+				// 	firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
+				// 	firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
+				// 	secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);	
+				// 	secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);	
+				// }
+				// // std::cout << "First start point: " << 
 				int clusterPairAngle;
-				clusterPairAngle = std::atan2(dist.imag(), dist.real());
+				clusterPairAngle = std::atan2(dist.second, dist.first);
 				clusterAngle_H.Fill(clusterStats1.dir);
 				clusterPairIndAngle_H.Fill(clusterPairAngle);
 				clusterPairRelAngle_H.Fill(clusterStats1.dir, clusterStats2.dir);
@@ -224,18 +235,30 @@ ClusterStats getClusterStats(const Cluster& clusterField)
 	auto colMinmax = std::minmax_element(clusterField.pixelsCol.begin(), clusterField.pixelsCol.end());
 	int colMin = *(colMinmax.first);
 	int colMax = *(colMinmax.second);
-	int startIndex = 0;
-	int endIndex   = 0;
+	clusterStats.startCol = colMin;
+	clusterStats.endCol   = colMax;
+	clusterStats.startRow = 0;
+	clusterStats.endRow   = 0;
+	int numEdgePixelsMin  = 0;
+	int numEdgePixelsMax  = 0;
 	for(int i: range(clusterField.pixelsCol.size()))
 	{
-		if(clusterField.pixelsCol[i] == colMin && clusterField.pixelsRow[i] < clusterField.pixelsRow[startIndex]) startIndex = i;
-		if(clusterField.pixelsCol[i] == colMax && clusterField.pixelsRow[endIndex] < clusterField.pixelsRow[i])   endIndex   = i;
+		if(clusterField.pixelsCol[i] == colMin)
+		{
+			clusterStats.startRow += clusterField.pixelsRow[i];
+			++numEdgePixelsMin;
+		}
+		if(clusterField.pixelsCol[i] == colMax)
+		{
+			clusterStats.endRow   += clusterField.pixelsRow[i];
+			++numEdgePixelsMax;
+		}
 	}
+	clusterStats.startRow /= numEdgePixelsMin;
+	clusterStats.endRow   /= numEdgePixelsMax;
 	// Save cluster data
 	clusterStats.length = sqrt(maxLengthSquared);
-	clusterStats.dir = std::atan2(clusterField.pixelsRow[endIndex] - clusterField.pixelsRow[startIndex], clusterField.pixelsCol[endIndex] - clusterField.pixelsCol[startIndex]);
-	clusterStats.startIndex = std::move(startIndex);
-	clusterStats.endIndex   = std::move(endIndex);
+	clusterStats.dir = std::atan2(clusterStats.endRow - clusterStats.startRow, clusterStats.startCol - clusterStats.endCol);
 	return clusterStats;
 }
 

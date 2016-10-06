@@ -45,6 +45,12 @@ PLOTCLUSTERANGLES_A = ./bin/plotClusterAngles$(ExeSuf)
 OBJS     += $(PLOTCLUSTERANGLES_O)
 PROGRAMS += $(PLOTCLUSTERANGLES_A)
 
+PLOTCLUSTERWEIGHTEDANGLES_S = ./src/plotClusterAnglesAdcWeights.$(SrcSuf)
+PLOTCLUSTERWEIGHTEDANGLES_O = ./obj/plotClusterAnglesAdcWeights.$(ObjSuf)
+PLOTCLUSTERWEIGHTEDANGLES_A = ./bin/plotClusterAnglesAdcWeights$(ExeSuf)
+OBJS     += $(PLOTCLUSTERWEIGHTEDANGLES_O)
+PROGRAMS += $(PLOTCLUSTERWEIGHTEDANGLES_A)
+
 all: $(PROGRAMS)
 
 # Executables
@@ -57,6 +63,13 @@ $(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR
 	@echo "...$@ is ready to use."
 
 $(PLOTCLUSTERANGLES_A): $(PLOTCLUSTERANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(PLOTCLUSTERWEIGHTEDANGLES_A): $(PLOTCLUSTERWEIGHTEDANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -112,6 +125,10 @@ $(PLOTCLUSTERANGLES_O): $(PLOTCLUSTERANGLES_S)
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
+$(PLOTCLUSTERWEIGHTEDANGLES_O): $(PLOTCLUSTERWEIGHTEDANGLES_S)  
+	@printf "Compiling test: \"plotClusterAnglesAdcWeights\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
 
 clean:
 	@rm -f $(OBJS) core
