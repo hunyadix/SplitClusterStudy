@@ -51,6 +51,12 @@ PLOTCLUSTERWEIGHTEDANGLES_A = ./bin/plotClusterAnglesAdcWeights$(ExeSuf)
 OBJS     += $(PLOTCLUSTERWEIGHTEDANGLES_O)
 PROGRAMS += $(PLOTCLUSTERWEIGHTEDANGLES_A)
 
+PLOTCLUSTERANGLESADCPARAMMAP_S = ./src/plotClusterAnglesEndAdcParamMap.$(SrcSuf)
+PLOTCLUSTERANGLESADCPARAMMAP_O = ./obj/plotClusterAnglesEndAdcParamMap.$(ObjSuf)
+PLOTCLUSTERANGLESADCPARAMMAP_A = ./bin/plotClusterAnglesEndAdcParamMap$(ExeSuf)
+OBJS     += $(PLOTCLUSTERANGLESADCPARAMMAP_O)
+PROGRAMS += $(PLOTCLUSTERANGLESADCPARAMMAP_A)
+
 all: $(PROGRAMS)
 
 # Executables
@@ -75,6 +81,14 @@ $(PLOTCLUSTERWEIGHTEDANGLES_A): $(PLOTCLUSTERWEIGHTEDANGLES_O) $(CONSOLECOLORS_O
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
+
+$(PLOTCLUSTERANGLESADCPARAMMAP_A): $(PLOTCLUSTERANGLESADCPARAMMAP_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
 
 # Obj files
 
@@ -127,6 +141,11 @@ $(PLOTCLUSTERANGLES_O): $(PLOTCLUSTERANGLES_S)
 
 $(PLOTCLUSTERWEIGHTEDANGLES_O): $(PLOTCLUSTERWEIGHTEDANGLES_S)  
 	@printf "Compiling test: \"plotClusterAnglesAdcWeights\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(PLOTCLUSTERANGLESADCPARAMMAP_O): $(PLOTCLUSTERANGLESADCPARAMMAP_S)  
+	@printf "Compiling test: \"plotClusterAnglesEndAdcParamMap\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 

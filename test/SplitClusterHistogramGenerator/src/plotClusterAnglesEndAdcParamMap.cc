@@ -67,11 +67,15 @@ std::vector<T> filter(std::vector<T> vectorToFilter, UnaryPredicate pred)
 
 struct ClusterStats
 {
-	int startIndex = NOVAL_I;
-	int endIndex   = NOVAL_I;
-	float length   = NOVAL_F;
-	float dir      = NOVAL_F;
-	int error      = 0;
+	int   startCol    = NOVAL_I;
+	int   endCol      = NOVAL_I;
+	float startRow    = NOVAL_F;
+	float endRow      = NOVAL_F;
+	int   startColAdc = NOVAL_I;
+	int   endColAdc   = NOVAL_I;
+	float length      = NOVAL_F;
+	float dir         = NOVAL_F;
+	int   error       = 0;
 };
 
 bool isMissingPartDoubleColumn(const int& firstCol, const int& firstRow, const int& secondCol, const int& secondRow);
@@ -108,10 +112,11 @@ int main(int argc, char** argv) try
 	// Check if data is present
 	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
 	// Histogram definitions
-	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, 0, 3.6);
-	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, 0, 3.6);
-	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution", "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0, 3.6, 100, 0, 3.6);
-	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",  "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, 0, 3.6, 100, 0, 3.6, 100, 0, 3.6);
+	TH1D clusterAngle_H                    ("ClusteAngleDistribution",         "Cluster Angle Distribution;angle;# of clusters",                                                                     100, 0, 3.6);
+	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution",  "Cluster Pair Relative Angle Distribution;angle;# of clusters",                                                       100, 0, 3.6);
+	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution",  "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0, 3.6, 100, 0, 3.6);
+	TH2D clusterPairRelAngle_vs_EndAdc_H   ("ClustePairAngleRelAngleVSEndAdc", "Cluster Pair Relative Angle vs summed ADC on the closest cols;rel. angle;adc",                                   100, 0, 3.6, 200, 0, 200);
+	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",   "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, 0, 3.6, 100, 0, 3.6, 100, 0, 3.6);
 	// Loop on data
 	std::map<int, std::vector<Cluster>> eventClustersMap;
 	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
@@ -137,44 +142,38 @@ int main(int argc, char** argv) try
 			// Looping on possible pairs
 			for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != eventClusters.end(); ++secondClusterIt)
 			{
-				// Check if clusters are on the same module
+				// Check if clusters are on the same module 
 				if(firstClusterIt -> mod == secondClusterIt -> mod) continue;
 				// Quick checks
 				if(12 < std::abs(firstClusterIt -> x - secondClusterIt -> x)) continue;
 				if(12 < std::abs(firstClusterIt -> y - secondClusterIt -> y)) continue;
 				ClusterStats clusterStats2 = getClusterStats(*secondClusterIt);
-				std::complex<int> firstClusterStartPos;
-				std::complex<int> firstClusterEndPos;
-				std::complex<int> secondClusterStartPos;
-				std::complex<int> secondClusterEndPos;
-				if(firstClusterIt  -> pixelsCol[clusterStats1.startIndex] <= secondClusterIt -> pixelsCol[clusterStats2.startIndex])
+				std::pair<int, int> dist(0, 0);
+				int endAdcDifference = 0;
+				if(clusterStats1.startCol <= clusterStats2.startCol) 
 				{
-					firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
-					firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
-					secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);
-					secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);
+					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
+					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
+					endAdcDifference = std::abs(clusterStats1.endColAdc - clusterStats2.startColAdc);
 				}
-				else
+				if(clusterStats2.startCol <  clusterStats1.startCol) 
 				{
-					firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
-					firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
-					secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);	
-					secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);	
+					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
+					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
+					endAdcDifference = std::abs(clusterStats1.startColAdc - clusterStats2.endColAdc);
 				}
-				if(!isMissingPartDoubleColumn(firstClusterEndPos.real(), firstClusterEndPos.imag(), secondClusterStartPos.real(), secondClusterStartPos.imag())) continue;
-				// std::cout << "First start point: " << 
-				std::complex<int> dist = secondClusterEndPos - firstClusterStartPos;
 				int clusterPairAngle;
-				clusterPairAngle = std::atan2(dist.imag(), dist.real());
+				clusterPairAngle = std::atan2(dist.second, dist.first);
 				clusterAngle_H.Fill(clusterStats1.dir);
 				clusterPairIndAngle_H.Fill(clusterPairAngle);
 				clusterPairRelAngle_H.Fill(clusterStats1.dir, clusterStats2.dir);
+				clusterPairRelAngle_vs_EndAdc_H.Fill(clusterPairAngle, endAdcDifference);
 				clusterPairAngle_vs_clusterAngle_H.Fill(clusterStats1.dir, clusterStats2.dir, clusterPairAngle);
 			}
 		}
 	}
-	TCanvas canvas("canvas", "canvas", 10, 10, 1600, 500);
-	canvas.Divide(4, 1);
+	TCanvas canvas("canvas", "canvas", 10, 10, 1800, 500);
+	canvas.Divide(5, 1);
 	canvas.cd(1);
 	clusterAngle_H.Draw();
 	canvas.cd(2);
@@ -182,6 +181,8 @@ int main(int argc, char** argv) try
 	canvas.cd(3);
 	clusterPairRelAngle_H.Draw("COLZ");
 	canvas.cd(4);
+	clusterPairRelAngle_vs_EndAdc_H.Draw("COLZ");
+	canvas.cd(5);
 	clusterPairAngle_vs_clusterAngle_H.Draw("COLZ");
 	canvas.Update();
 	theApp -> Run();
@@ -223,45 +224,31 @@ ClusterStats getClusterStats(const Cluster& clusterField)
 	auto colMinmax = std::minmax_element(clusterField.pixelsCol.begin(), clusterField.pixelsCol.end());
 	int colMin = *(colMinmax.first);
 	int colMax = *(colMinmax.second);
-	int startIndex = 0;
-	int endIndex   = 0;
+	clusterStats.startCol = colMin;
+	clusterStats.endCol   = colMax;
+	clusterStats.startRow = 0;
+	clusterStats.endRow   = 0;
+	int numEdgePixelsMin  = 0;
+	int numEdgePixelsMax  = 0;
 	for(int i: range(clusterField.pixelsCol.size()))
 	{
-		if(clusterField.pixelsCol[i] == colMin && clusterField.pixelsRow[i] < clusterField.pixelsRow[startIndex]) startIndex = i;
-		if(clusterField.pixelsCol[i] == colMax && clusterField.pixelsRow[endIndex] < clusterField.pixelsRow[i])   endIndex   = i;
+		if(clusterField.pixelsCol[i] == colMin)
+		{
+			clusterStats.startRow += clusterField.pixelsRow[i];
+			clusterStats.startColAdc += clusterField.pixelsAdc[i];
+			++numEdgePixelsMin;
+		}
+		if(clusterField.pixelsCol[i] == colMax)
+		{
+			clusterStats.endRow   += clusterField.pixelsRow[i];
+			clusterStats.endColAdc += clusterField.pixelsAdc[i];
+			++numEdgePixelsMax;
+		}
 	}
+	clusterStats.startRow /= numEdgePixelsMin;
+	clusterStats.endRow   /= numEdgePixelsMax;
 	// Save cluster data
 	clusterStats.length = sqrt(maxLengthSquared);
-	clusterStats.dir = std::atan2(clusterField.pixelsRow[endIndex] - clusterField.pixelsRow[startIndex], clusterField.pixelsCol[endIndex] - clusterField.pixelsCol[startIndex]);
-	clusterStats.startIndex = std::move(startIndex);
-	clusterStats.endIndex   = std::move(endIndex);
+	clusterStats.dir = std::atan2(clusterStats.endRow - clusterStats.startRow, clusterStats.startCol - clusterStats.endCol);
 	return clusterStats;
 }
-
-// for(unsigned int firstIndex = 0; firstIndex < clusterField.pixelsCol.size(); ++firstIndex)
-	// {
-	// 	for(unsigned int secondIndex = firstIndex + 1; secondIndex < clusterField.pixelsCol.size(); ++secondIndex)
-	// 	{
-	// 		bool saveAsNewMax = false;
-	// 		float xDistance   = clusterField.pixelsRow[firstIndex] - clusterField.pixelsRow[secondIndex];
-	// 		float yDistance   = clusterField.pixelsCol[firstIndex] - clusterField.pixelsCol[secondIndex]; 
-	// 		float distanceSquared = xDistance * xDistance + yDistance * yDistance;
-	// 		// Save the furthermost pixelpair
-	// 		if(maxLengthSquared < distanceSquared) saveAsNewMax = true;
-	// 		// Check charge for pixels with the same distanceSquared
-	// 		else if(distanceSquared == maxLengthSquared)
-	// 		{
-	// 			int pixelPairCharge = clusterField.pixelsAdc[firstIndex] + clusterField.pixelsAdc[secondIndex];
-	// 			if(maxPixelPairCharge < pixelPairCharge) saveAsNewMax = true;
-	// 		}
-	// 		if(saveAsNewMax == true)
-	// 		{
-	// 			clusterStats.startIndex    = firstIndex;
-	// 			clusterStats.endIndex      = secondIndex;
-	// 			maxLengthSquared   = distanceSquared;
-	// 			maxPixelPairCharge = clusterField.pixelsAdc[firstIndex] + clusterField.pixelsAdc[secondIndex];
-	// 		}
-	// 	}
-	// }
-	// // Check start-end order
-	// if(clusterField.pixelsCol[startIndex] < clusterField.pixelsCol[endIndex]) std::swap(startIndex, endIndex);
