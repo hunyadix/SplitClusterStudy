@@ -16,13 +16,16 @@
 class ClustData
 {
 	public:
-		float x;
-		float y;
-		int sizeX;
-		int sizeY;
-		int clusterIndex;
-		int clusterSize;
-		float charge;
+		float            x;
+		float            y;
+		int              sizeX;
+		int              sizeY;
+		int              clusterIndex;
+		int              clusterSize;
+		float            charge;
+		int              isOnHit;
+		float            alpha;
+		float            beta;
 		std::vector<int> pixelsCol;
 		std::vector<int> pixelsRow;
 		std::vector<int> pixelsAdc;
@@ -38,6 +41,9 @@ class ClustData
 			clusterIndex = NOVAL_I;
 			clusterSize  = 0;
 			charge       = NOVAL_F;
+			isOnHit      = 0;
+			alpha        = NOVAL_F;
+			beta         = NOVAL_F;
 			pixelsCol    .clear();
 			pixelsRow    .clear();
 			pixelsAdc    .clear();

@@ -78,9 +78,65 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	// Processing data
 	handleEvent(iEvent);
 	// Preparing a trajectory to closest cluster map
-	handleClusters(clusterCollection, digiFlagsCollection, trackerTopology, fedErrors);
+	std::vector<TrajClusterAssociationData> onTrackClusters;
+	handleTrajectories(trajTrackCollection, clusterCollection, trackerTopology, onTrackClusters);
+	handleClusters(clusterCollection, digiFlagsCollection, onTrackClusters, trackerTopology, fedErrors);
 	eventTree -> Fill();
 }
+
+void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, std::vector<TrajClusterAssociationData>& onTrackClusters) try
+{
+	if(!onTrackClusters.empty()) throw new std::runtime_error("onTrackClusters should be an empty container before filling in handleTrajectories().");
+	for(const auto& currentTrackKeypair: *trajTrackCollection)
+	{
+		// Trajectory segments + corresponding track informations
+		const edm::Ref<std::vector<Trajectory>> traj = currentTrackKeypair.key;
+		const reco::TrackRef track                   = currentTrackKeypair.val; // TrackRef is actually a pointer type
+		// Discarding tracks without pixel measurements
+		if(!TrajAnalyzer::trajectoryHasPixelHit(traj)) continue;
+		// Looping again to check hit efficiency of pixel hits
+		for(auto& measurement: traj -> measurements())
+		{
+			// Check measurement validity
+			if(!measurement.updatedState().isValid()) continue;
+			// Fetch the hit
+			// TransientTrackingRecHit::ConstRecHitPointer recHit = measurement.recHit();
+			auto recHit = measurement.recHit();
+			if(recHit -> hit() == nullptr) continue;
+			const SiPixelRecHit* pixhit = dynamic_cast<const SiPixelRecHit*>(recHit -> hit());
+			// Check hit qualty
+			if(!recHit -> isValid())       continue;
+			// Det id
+			DetId detId = recHit -> geographicalId();
+			uint32_t subdetid = (detId.subdetId());
+			// Looking for pixel hits
+			bool isPixelHit = false;
+			isPixelHit |= subdetid == PixelSubdetector::PixelBarrel;
+			isPixelHit |= subdetid == PixelSubdetector::PixelEndcap;
+			if(!isPixelHit) continue;
+			SiPixelRecHit::ClusterRef const& clusterRef = pixhit -> cluster();
+			if(!clusterRef.isNonnull()) continue;
+			// // Position measurements
+			TrajectoryStateCombiner  trajStateComb;
+			TrajectoryStateOnSurface trajStateOnSurface = trajStateComb(measurement.forwardPredictedState(), measurement.backwardPredictedState());
+			// LocalPoint localPosition = trajStateOnSurface.localPosition();
+			// float lx = localPosition.x();
+			// float ly = localPosition.y();
+			// SiPixelCluster closestCluster = findClosestCluster(clusterCollection, detId.rawId(), lx, ly);
+			// // Do nothing if no cluster is found
+			// if(closestCluster.minPixelRow() == SiPixelCluster::MAXPOS && closestCluster.minPixelCol() == SiPixelCluster::MAXPOS) continue;
+			// // float lz = localPosition.z()
+			LocalTrajectoryParameters trajectoryParameters = trajStateOnSurface.localParameters();
+			auto trajectoryMomentum = trajectoryParameters.momentum();
+			LocalVector localTrackDirection = trajectoryMomentum / trajectoryMomentum.mag();
+			float alpha = atan2(localTrackDirection.z(), localTrackDirection.x());
+			float beta  = atan2(localTrackDirection.z(), localTrackDirection.y());
+			// Save data
+			onTrackClusters.emplace_back(clusterRef, alpha, beta);
+		}
+	}
+}
+catch(const std::exception& e) {std::cerr << error_prompt << e.what() << std::endl;}
 
 SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const uint32_t& rawId, const float& lx, const float& ly)
 {
@@ -118,10 +174,8 @@ SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew
 	return *closestCluster;
 }
 
-void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
+void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, std::vector<TrajClusterAssociationData>& onTrackClusters, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
 {
-	// Reserve place for the variables storing the cluster data
-	// reserveMemoryForEventClusters(clusterCollection);
 	// Generate det id to marker set map to fetch the marked pixels on the modules
 	std::map<DetId, const edm::DetSet<PixelDigi>*> detIdToMarkerPtrMap;
 	for(const auto& markerSet: *digiFlagsCollection)
@@ -159,7 +213,7 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 			// Saving the pixel vectors to save computing time
 			std::vector<SiPixelCluster::Pixel> currentClusterPixels = currentCluster.pixels();
 			// Save cluster data
-			saveClusterData(currentCluster, mod, mod_on, *digiFlagsOnModulePtr);
+			saveClusterData(currentCluster, mod, mod_on, *digiFlagsOnModulePtr, onTrackClusters);
 			// eventClustersField.fill(clusterField, clusterField.mod_on);
 			// // Save digis data
 			// for(const auto& pixel: currentClusterPixels)
@@ -221,7 +275,7 @@ void SplitClusterAnalyzer::handleEvent(const edm::Event& iEvent)
 	eventField.evt          = static_cast<int>(iEvent.id().event());
 }
 
-void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags)
+void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags, std::vector<TrajClusterAssociationData>& onTrackClusters)
 {
 	clusterField.init();
 	// FIXME: change this to a global cluster counting
@@ -248,6 +302,15 @@ void SplitClusterAnalyzer::saveClusterData(const SiPixelCluster& cluster, const 
 		clusterField.pixelsRow    .push_back(currentPixelPositions[numPixel].x);
 		clusterField.pixelsAdc    .push_back(currentAdcs[numPixel] / 1000.0);
 		clusterField.pixelsMarker .push_back(getDigiMarkerValue(currentPixelPositions[numPixel], digiFlags));
+	}
+	auto searchResult = std::find_if(onTrackClusters.begin(), onTrackClusters.end(), [&cluster] (const TrajClusterAssociationData& toCheck) {return toCheck.clusterRef.get() == &cluster;});
+	if(searchResult != onTrackClusters.end())
+	{
+		// std::cout << debug_prompt << "Found cluster reference in track cluster association data." << std::endl;
+		// std::cin.get();
+		clusterField.isOnHit = 1;
+		clusterField.alpha   = searchResult -> alpha;
+		clusterField.beta    = searchResult -> beta;
 	}
 	clusterTree -> Fill();
 }
@@ -399,43 +462,3 @@ DEFINE_FWK_MODULE(SplitClusterAnalyzer);
 ///////////////////////
 // CODE DUMP AREA :) //
 ///////////////////////
-
-// void fillEventPlot(TH2D& layer1, const ModuleData& mod_on, const int& col, const int& row, const int& markerState)
-// {
-// 	// Pixel x range: [0, 159]
-// 	// Pixel y range: [0, 415]
-// 	// x coordinate corresponds to row, y coordinate corresponds to col
-// 	// Check if pixel is on endcap
-// 	if(mod_on.det == 1) return;
-// 	// For every second module the ladder coordinate is numbered the other way around
-// 	// For a reversed coordinate the pixel x coordinate decreases as the global x increases
-// 	int isReversedModule = (mod_on.ladder + (0 < mod_on.ladder)) % 2;
-// 	// 2 ROCs per module in ladder direction and 80 pixel per column
-// 	// 8 ROCs per module in module direction and 52 columns
-// 	int moduleCoordinate = NOVAL_I;
-// 	int ladderCoordinate = NOVAL_I;
-// 	if(isReversedModule)
-// 	{
-// 		if(mod_on.ladder < 0) ladderCoordinate = (mod_on.ladder + 0.5) * 160 - row;
-// 		if(0 < mod_on.ladder) ladderCoordinate = (mod_on.ladder + 0.5) * 160 - row - 1;
-// 		// Correcting for the fact that the first module is only a half
-// 		if(mod_on.ladder == 1)  ladderCoordinate += 80;
-// 		if(mod_on.ladder == -1) ladderCoordinate -= 80;
-// 	}
-// 	else
-// 	{
-// 		if(mod_on.ladder < 0) ladderCoordinate = (mod_on.ladder - 0.5) * 160 + row + 1;
-// 		if(0 < mod_on.ladder) ladderCoordinate = (mod_on.ladder - 0.5) * 160 + row;
-// 		// Correcting for the fact that the first module is only a half
-// 		if(mod_on.ladder == 1)  ladderCoordinate += 80;
-// 		if(mod_on.ladder == -1) ladderCoordinate -= 80;
-// 	}
-// 	if(mod_on.module < 0) moduleCoordinate = (mod_on.module - 0.5) * 416 + col + 1;
-// 	if(0 < mod_on.module) moduleCoordinate = (mod_on.module - 0.5) * 416 + col;
-// 	int fillWeight = markerState ? 2 : 1;
-// 	// Fill the appropriate layer plot
-// 	if(mod_on.layer == 1)
-// 	{
-// 		layer1.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
-// 	}
-// }

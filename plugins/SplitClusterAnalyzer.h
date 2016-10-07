@@ -90,6 +90,13 @@
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
 	private:
+		struct TrajClusterAssociationData
+		{
+			SiPixelRecHit::ClusterRef clusterRef;
+			float                     alpha;
+			float                     beta;
+			TrajClusterAssociationData(SiPixelRecHit::ClusterRef clusterRefArg, float alphaArg, float betaArg) : clusterRef(clusterRefArg), alpha(alphaArg), beta(betaArg) {};
+		};
 		edm::ParameterSet iConfig;
 		// For easier debug message generation
 		const edm::Event* currentEvent;
@@ -119,8 +126,9 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 
 		SiPixelCluster              findClosestCluster(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const uint32_t& rawId, const float& lx, const float& ly);
 		void                        handleEvent(const edm::Event& iEvent);
-		void                        handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollectionHandle, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& federrors);
-		void                        saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags);
+		void                        handleTrajectories(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, std::vector<TrajClusterAssociationData>& onTrackClusters);
+		void                        handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, std::vector<TrajClusterAssociationData>& onTrackClusters, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
+		void                        saveClusterData(const SiPixelCluster& cluster, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlags, std::vector<TrajClusterAssociationData>& onTrackClusters);
 		void                        saveMergingData(const SiPixelCluster& currentCluster, const SiPixelCluster& clusterToMerge, const std::vector<SiPixelCluster::Pixel>& currentClusterPixels, const std::vector<SiPixelCluster::Pixel>& clusterToMergePixels, bool isCurrentClusterSplit, bool isMergeableClusterSplit, const ModuleData& mod, const ModuleData& mod_on);
 		void                        savePixelData(const SiPixelCluster::Pixel& pixelToSave, const ModuleData& mod, const ModuleData& mod_on, const edm::DetSet<PixelDigi>& digiFlagsCollection);
 		void                        reserveMemoryForEventClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection);

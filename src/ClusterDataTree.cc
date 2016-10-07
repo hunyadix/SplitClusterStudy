@@ -19,6 +19,9 @@ void ClusterDataTree::defineClusterTreeBranches(TTree*& clusterTree, EventData& 
 	clusterTree -> Branch("clusterIndex", &clusterField.clusterIndex, "i/I");
 	clusterTree -> Branch("clusterSize",  &clusterField.clusterSize,  "size/I");
 	clusterTree -> Branch("charge",       &clusterField.charge,       "charge/F");
+	clusterTree -> Branch("isOnHit",      &clusterField.isOnHit,      "isOnHit/I");
+	clusterTree -> Branch("alpha",        &clusterField.alpha,        "alpha/F");
+	clusterTree -> Branch("beta",         &clusterField.beta,         "beta/F");
 	// Pixel data
 	clusterTree -> Branch("pixelsCol",    &clusterField.pixelsCol);
 	clusterTree -> Branch("pixelsRow",    &clusterField.pixelsRow);
@@ -42,6 +45,9 @@ void ClusterDataTree::associateDataFieldsFromTree(TTree*& clusterTree, EventData
 	TTreeTools::checkGetBranch(clusterTree, "clusterIndex") -> SetAddress(&clusterField.clusterIndex);
 	TTreeTools::checkGetBranch(clusterTree, "clusterSize")  -> SetAddress(&clusterField.clusterSize);
 	TTreeTools::checkGetBranch(clusterTree, "charge")       -> SetAddress(&clusterField.charge);
+	TTreeTools::checkGetBranch(clusterTree, "isOnHit")      -> SetAddress(&clusterField.isOnHit);
+	TTreeTools::checkGetBranch(clusterTree, "alpha")        -> SetAddress(&clusterField.alpha);
+	TTreeTools::checkGetBranch(clusterTree, "beta")         -> SetAddress(&clusterField.beta);
 	// Pixel Data
 	// TTreeTools::checkGetBranch(clusterTree, "pixelsCol")    -> SetAddress(&(clusterField.pixelsCol));
 	// TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&(clusterField.pixelsRow));
