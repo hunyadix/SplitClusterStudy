@@ -112,11 +112,12 @@ int main(int argc, char** argv) try
 	// Check if data is present
 	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
 	// Histogram definitions
-	TH1D clusterAngle_H                    ("ClusteAngleDistribution",         "Cluster Angle Distribution;angle;# of clusters",                                                                     100, 0, 3.6);
-	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution",  "Cluster Pair Relative Angle Distribution;angle;# of clusters",                                                       100, 0, 3.6);
-	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution",  "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0, 3.6, 100, 0, 3.6);
-	TH2D clusterPairRelAngle_vs_EndAdc_H   ("ClustePairAngleRelAngleVSEndAdc", "Cluster Pair Relative Angle vs summed ADC on the closest cols;rel. angle;adc",                                   100, 0, 3.6, 200, 0, 200);
-	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",   "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, 0, 3.6, 100, 0, 3.6, 100, 0, 3.6);
+	TH1D clusterAngle_H                    ("ClusterAngleDistribution",         "Cluster Angle Distribution;angle;# of clusters",                                                                     100, 0, 3.6);
+	TH1D clusterPairIndAngle_H             ("ClusterPairAngleIndDistribution",  "Cluster Pair Relative Angle Distribution;angle;# of clusters",                                                       100, 0, 3.6);
+	TH1D clusterPairEndAdc_H               ("ClusterPairEndAdcDifferences",     "Cluster Pair Closest Col. Adc Difference;adc difference;# of clusters",                                              200, 0, 200);
+	TH2D clusterPairRelAngle_H             ("ClusterPairAngleRelDistribution",  "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;# of clusters",          100, 0, 3.6, 100, 0, 3.6);
+	TH2D clusterPairRelAngle_vs_EndAdc_H   ("ClusterPairAngleRelAngleVSEndAdc", "Cluster Pair Relative Angle vs Summed ADC on the closest cols;rel. angle;adc",                                       100, 0, 3.6, 200, 0, 200);
+	TH3D clusterPairAngle_vs_clusterAngle_H("ClusterPairAngleVSClusterAngle",   "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle",     100, 0, 3.6, 100, 0, 3.6, 100, 0, 3.6);
 	// Loop on data
 	std::map<int, std::vector<Cluster>> eventClustersMap;
 	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
@@ -166,14 +167,15 @@ int main(int argc, char** argv) try
 				clusterPairAngle = std::atan2(dist.second, dist.first);
 				clusterAngle_H.Fill(clusterStats1.dir);
 				clusterPairIndAngle_H.Fill(clusterPairAngle);
+				clusterPairEndAdc_H.Fill(endAdcDifference);
 				clusterPairRelAngle_H.Fill(clusterStats1.dir, clusterStats2.dir);
 				clusterPairRelAngle_vs_EndAdc_H.Fill(clusterPairAngle, endAdcDifference);
 				clusterPairAngle_vs_clusterAngle_H.Fill(clusterStats1.dir, clusterStats2.dir, clusterPairAngle);
 			}
 		}
 	}
-	TCanvas canvas("canvas", "canvas", 10, 10, 1800, 500);
-	canvas.Divide(5, 1);
+	TCanvas canvas("canvas", "canvas", 10, 10, 1600, 800);
+	canvas.Divide(4, 2);
 	canvas.cd(1);
 	clusterAngle_H.Draw();
 	canvas.cd(2);
@@ -181,9 +183,11 @@ int main(int argc, char** argv) try
 	canvas.cd(3);
 	clusterPairRelAngle_H.Draw("COLZ");
 	canvas.cd(4);
-	clusterPairRelAngle_vs_EndAdc_H.Draw("COLZ");
+	clusterPairAngle_vs_clusterAngle_H.Draw("LEGO");
 	canvas.cd(5);
-	clusterPairAngle_vs_clusterAngle_H.Draw("COLZ");
+	clusterPairEndAdc_H.Draw();
+	canvas.cd(6);
+	clusterPairRelAngle_vs_EndAdc_H.Draw("COLZ");
 	canvas.Update();
 	theApp -> Run();
 	inputFile -> Close();

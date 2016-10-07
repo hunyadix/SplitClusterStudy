@@ -90,8 +90,6 @@
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
 	private:
-		// FIXME: This type is just plain ugly
-		typedef std::map<TrajectoryMeasurement, SiPixelCluster, std::function<bool(const TrajectoryMeasurement&, const TrajectoryMeasurement&)>> TrajClusterMap;
 		edm::ParameterSet iConfig;
 		// For easier debug message generation
 		const edm::Event* currentEvent;
@@ -119,7 +117,6 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		// Data processing //
 		/////////////////////
 
-		TrajClusterMap              getTrajClosestClusterMap(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology);
 		SiPixelCluster              findClosestCluster(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const uint32_t& rawId, const float& lx, const float& ly);
 		void                        handleEvent(const edm::Event& iEvent);
 		void                        handleClusters(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollectionHandle, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& federrors);

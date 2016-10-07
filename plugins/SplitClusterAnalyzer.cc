@@ -78,58 +78,8 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	// Processing data
 	handleEvent(iEvent);
 	// Preparing a trajectory to closest cluster map
-	TrajClusterMap trajClosestClustMap;
-	trajClosestClustMap = getTrajClosestClusterMap(trajTrackCollection, clusterCollection, trackerTopology);
 	handleClusters(clusterCollection, digiFlagsCollection, trackerTopology, fedErrors);
 	eventTree -> Fill();
-}
-
-SplitClusterAnalyzer::TrajClusterMap SplitClusterAnalyzer::getTrajClosestClusterMap(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology)
-{
-	auto mapComparator = [] (const TrajectoryMeasurement& lhs, const TrajectoryMeasurement& rhs)
-	{
-		return lhs.estimate() < rhs.estimate();
-	};
-	TrajClusterMap trajClosestClustMap(mapComparator);
-	for(const auto& currentTrackKeypair: *trajTrackCollection)
-	{
-		// Trajectory segments + corresponding track informations
-		const edm::Ref<std::vector<Trajectory>> traj = currentTrackKeypair.key;
-		const reco::TrackRef track                   = currentTrackKeypair.val; // TrackRef is actually a pointer type
-		// Discarding tracks without pixel measurements
-		if(TrajAnalyzer::trajectoryHasPixelHit(traj)) continue;
-		// Looping again to check hit efficiency of pixel hits
-		for(auto& measurement: traj -> measurements())
-		{
-			// Check measurement validity
-			if(!measurement.updatedState().isValid()) continue;
-			auto hit = measurement.recHit();
-			// Det id
-			DetId detId = hit -> geographicalId();
-			uint32_t subdetid = (detId.subdetId());
-			// Looking for pixel hits
-			bool is_pixel_hit = false;
-			is_pixel_hit |= subdetid == PixelSubdetector::PixelBarrel;
-			is_pixel_hit |= subdetid == PixelSubdetector::PixelEndcap;
-			if(!is_pixel_hit) continue;
-			// Fetch the hit
-			const SiPixelRecHit* pixhit = dynamic_cast<const SiPixelRecHit*>(hit -> hit());
-			// Check hit qualty
-			if(!pixhit) continue;
-			// Position measurements
-			TrajectoryStateCombiner  trajStateComb;
-			TrajectoryStateOnSurface trajStateOnSurface = trajStateComb(measurement.forwardPredictedState(), measurement.backwardPredictedState());
-			LocalPoint localPosition = trajStateOnSurface.localPosition();
-			float lx = localPosition.x();
-			float ly = localPosition.y();
-			SiPixelCluster closestCluster = findClosestCluster(clusterCollection, detId.rawId(), lx, ly);
-			// Do nothing if no cluster is found
-			if(closestCluster.minPixelRow() == SiPixelCluster::MAXPOS && closestCluster.minPixelCol() == SiPixelCluster::MAXPOS) continue;
-			// float lz = localPosition.z()
-			trajClosestClustMap.insert(std::pair<TrajectoryMeasurement, SiPixelCluster>(measurement, closestCluster));
-		}
-	}
-	return trajClosestClustMap;
 }
 
 SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const uint32_t& rawId, const float& lx, const float& ly)
@@ -214,7 +164,7 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 			// // Save digis data
 			// for(const auto& pixel: currentClusterPixels)
 			// {
-			// 	savePixelData(pixel, mod, mod_on, *digiFlagsOnModulePtr);
+				// savePixelData(pixel, mod, mod_on, *digiFlagsOnModulePtr);
 			// }
 			// Find pixels that are close to the current cluster
 			std::vector<const SiPixelCluster*> closeClusters;

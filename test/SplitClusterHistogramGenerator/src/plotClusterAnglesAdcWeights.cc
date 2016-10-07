@@ -111,8 +111,8 @@ int main(int argc, char** argv) try
 	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
 	// Histogram definitions
 	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, 0, 3.6);
-	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution",  "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, 0, 3.6);
-	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution",  "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0, 3.6, 100, 0, 3.6);
+	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, 0, 3.6);
+	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution", "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0, 3.6, 100, 0, 3.6);
 	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",  "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, 0, 3.6, 100, 0, 3.6, 100, 0, 3.6);
 	// Loop on data
 	timer.restart("Measuring the time required for the looping...");
