@@ -76,12 +76,12 @@ int main(int argc, char** argv) try
 	// Check if data is present
 	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
 	// Histogram definitions
-	TH1D clusterAngle_H                    ("ClusterAngleDistribution",         "Cluster Angle Distribution;angle;# of clusters",                                                                     100, -3.2, 3.2);
-	TH1D clusterPairIndAngle_H             ("ClusterPairAngleIndDistribution",  "Cluster Pair Relative Angle Distribution;angle;# of clusters",                                                       100, -3.2, 3.2);
-	TH1D clusterPairEndAdc_H               ("ClusterPairEndAdcDifferences",     "Cluster Pair Closest Col. Adc Difference;adc difference;# of clusters",                                              200, 0, 200);
-	TH2D clusterPairRelAngle_H             ("ClusterPairAngleRelDistribution",  "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;# of clusters",          100, -3.2, 3.2, 100, -3.2, 3.2);
-	TH2D clusterPairRelAngle_vs_EndAdc_H   ("ClusterPairAngleRelAngleVSEndAdc", "Cluster Pair Relative Angle vs Summed ADC on the closest cols;rel. angle;adc",                                       100, -3.2, 3.2, 200, 0, 200);
-	TH3D clusterPairAngle_vs_clusterAngle_H("ClusterPairAngleVSClusterAngle",   "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle",     100, -3.2, 3.2, 100, -3.2, 3.2, 100, -3.2, 3.2);
+	TH1D clusterAngleAllFromShape_H    ("ClusteAngleDistributionFromShape",         "Cluster Angle Distribution (all tagged clusters, shape based);angle;nclusters",                          100, -3.2, 3.2);
+	TH1D clusterAngleAlpha_H           ("ClusteAngleAlpha",                         "Cluster Angle Alpha (on hit tagged clusters);angle;nclusters",                                           100, -3.2, 3.2);
+	TH1D clusterAngleBeta_H            ("ClusteAngleBeta",                          "Cluster Angle Beta (on hit tagged clusters);angle;nclusters",                                            100, -3.2, 3.2);
+	TH1D clusterAngleOnTrackFromShape_H("OnHitClusteAngleDistributionFromShape",    "Cluster Angle Distribution (on hit tagged clusters, shape based);angle;nclusters",                       100, -3.2, 3.2);
+	TH1D clusterAngleOnTrackFromTrack_H("OnHitClusteAngleDistributionFromTrack",    "Cluster Angle Distribution (on hit tagged clusters, track inclination based);angle;nclusters",           100, -3.2, 3.2);
+	TH1D clusterAngleDifference_H      ("OnHitClusteAngleDifferenceBetweenSources", "Cluster Angle Differences  (on hit tagged clusters, shape and track inclination based);angle;nclusters", 100, -3.2, 3.2);
 	// Loop on data
 	std::map<int, std::vector<Cluster>> eventClustersMap;
 	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
@@ -101,57 +101,38 @@ int main(int argc, char** argv) try
 	{
 		std::vector<Cluster>& eventClusters = eventClustersIt -> second;
 		// Looping on clusters
-		for(auto firstClusterIt = eventClusters.begin(); firstClusterIt != eventClusters.end(); ++firstClusterIt)
+		for(const auto& clusterField: eventClusters)
 		{
-			ClusterStats clusterStats1 = getClusterStats(*firstClusterIt);
-			// Looping on possible pairs
-			for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != eventClusters.end(); ++secondClusterIt)
+			// Exclude non-tagged clusters
+			if(std::all_of(clusterField.pixelsMarker.begin(), clusterField.pixelsMarker.end(), [] (int marker) {return marker == 0;})) continue;
+			auto clusterStats = getClusterStats(clusterField);
+			clusterAngleAllFromShape_H.Fill(clusterStats.dir);
+			if(clusterField.isOnHit)
 			{
-				// Check if clusters are on the same module 
-				if(firstClusterIt -> mod == secondClusterIt -> mod) continue;
-				// Quick checks
-				if(12 < std::abs(firstClusterIt -> x - secondClusterIt -> x)) continue;
-				if(12 < std::abs(firstClusterIt -> y - secondClusterIt -> y)) continue;
-				ClusterStats clusterStats2 = getClusterStats(*secondClusterIt);
-				std::pair<int, int> dist(0, 0);
-				int endAdcDifference = 0;
-				if(clusterStats1.startCol <= clusterStats2.startCol) 
-				{
-					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
-					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
-					endAdcDifference = std::abs(clusterStats1.endColAdc - clusterStats2.startColAdc);
-				}
-				if(clusterStats2.startCol <  clusterStats1.startCol) 
-				{
-					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
-					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
-					endAdcDifference = std::abs(clusterStats1.startColAdc - clusterStats2.endColAdc);
-				}
-				int clusterPairAngle;
-				clusterPairAngle = std::atan2(dist.second, dist.first);
-				clusterAngle_H.Fill(clusterStats1.dir);
-				clusterPairIndAngle_H.Fill(clusterPairAngle);
-				clusterPairEndAdc_H.Fill(endAdcDifference);
-				clusterPairRelAngle_H.Fill(clusterStats1.dir, clusterStats2.dir);
-				clusterPairRelAngle_vs_EndAdc_H.Fill(clusterPairAngle, endAdcDifference);
-				clusterPairAngle_vs_clusterAngle_H.Fill(clusterStats1.dir, clusterStats2.dir, clusterPairAngle);
+				clusterAngleAlpha_H.Fill(clusterField.alpha);
+				clusterAngleBeta_H.Fill(clusterField.beta);
+				clusterAngleOnTrackFromShape_H.Fill(clusterStats.dir);
+				float phi   = atan2(tan(clusterField.beta), tan(clusterField.alpha));
+				// float theta = atan(sqrt(1.0 / ( 1.0 / (tan(clusterField.alpha) * tan(clusterField.alpha)) + 1.0 / (tan(clusterField.beta) * tan(clusterField.beta)))));
+				clusterAngleOnTrackFromTrack_H.Fill(phi);
+				clusterAngleDifference_H.Fill(std::abs(phi - clusterStats.dir));
 			}
 		}
 	}
-	TCanvas canvas("canvas", "canvas", 10, 10, 1600, 800);
-	canvas.Divide(4, 2);
+	TCanvas canvas("canvas", "canvas", 10, 10, 1600, 900);
+	canvas.Divide(3, 2);
 	canvas.cd(1);
-	clusterAngle_H.Draw();
+	clusterAngleAllFromShape_H.Draw();
 	canvas.cd(2);
-	clusterPairIndAngle_H.Draw();
+	clusterAngleAlpha_H.Draw();
 	canvas.cd(3);
-	clusterPairRelAngle_H.Draw("COLZ");
+	clusterAngleBeta_H.Draw();
 	canvas.cd(4);
-	clusterPairAngle_vs_clusterAngle_H.Draw("LEGO");
+	clusterAngleOnTrackFromShape_H.Draw();
 	canvas.cd(5);
-	clusterPairEndAdc_H.Draw();
+	clusterAngleOnTrackFromTrack_H.Draw();
 	canvas.cd(6);
-	clusterPairRelAngle_vs_EndAdc_H.Draw("COLZ");
+	clusterAngleDifference_H.Draw();
 	canvas.Update();
 	theApp -> Run();
 	inputFile -> Close();
@@ -208,7 +189,7 @@ ClusterStats getClusterStats(const Cluster& clusterField)
 		}
 		if(clusterField.pixelsCol[i] == colMax)
 		{
-			clusterStats.endRow    += clusterField.pixelsRow[i] * clusterField.pixelsAdc[i];
+			clusterStats.endRow    += (clusterField.pixelsRow[i] * clusterField.pixelsAdc[i]);
 			clusterStats.endColAdc += clusterField.pixelsAdc[i];
 			totalAdcEnd += clusterField.pixelsAdc[i];
 		}

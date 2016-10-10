@@ -57,6 +57,24 @@ PLOTCLUSTERANGLESADCPARAMMAP_A = ./bin/plotClusterAnglesEndAdcParamMap$(ExeSuf)
 OBJS     += $(PLOTCLUSTERANGLESADCPARAMMAP_O)
 PROGRAMS += $(PLOTCLUSTERANGLESADCPARAMMAP_A)
 
+ONHITANGLESCHECK_S = ./src/onHitAnglesCheck.$(SrcSuf)
+ONHITANGLESCHECK_O = ./obj/onHitAnglesCheck.$(ObjSuf)
+ONHITANGLESCHECK_A = ./bin/onHitAnglesCheck$(ExeSuf)
+OBJS     += $(ONHITANGLESCHECK_O)
+PROGRAMS += $(ONHITANGLESCHECK_A)
+
+PLOTEVENTCLUSTERSBYDIRECTION_S = ./src/plotEventClustersByDirection.$(SrcSuf)
+PLOTEVENTCLUSTERSBYDIRECTION_O = ./obj/plotEventClustersByDirection.$(ObjSuf)
+PLOTEVENTCLUSTERSBYDIRECTION_A = ./bin/plotEventClustersByDirection$(ExeSuf)
+OBJS     += $(PLOTEVENTCLUSTERSBYDIRECTION_O)
+PROGRAMS += $(PLOTEVENTCLUSTERSBYDIRECTION_A)
+
+PLOTSMALLCLUFAKEMERGEFF_S = ./src/plotSmallClusterMergingFakeRateAndEfficiency.$(SrcSuf)
+PLOTSMALLCLUFAKEMERGEFF_O = ./obj/plotSmallClusterMergingFakeRateAndEfficiency.$(ObjSuf)
+PLOTSMALLCLUFAKEMERGEFF_A = ./bin/plotSmallClusterMergingFakeRateAndEfficiency$(ExeSuf)
+OBJS     += $(PLOTSMALLCLUFAKEMERGEFF_O)
+PROGRAMS += $(PLOTSMALLCLUFAKEMERGEFF_A)
+
 all: $(PROGRAMS)
 
 # Executables
@@ -89,6 +107,26 @@ $(PLOTCLUSTERANGLESADCPARAMMAP_A): $(PLOTCLUSTERANGLESADCPARAMMAP_O) $(CONSOLECO
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
+$(ONHITANGLESCHECK_A): $(ONHITANGLESCHECK_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(PLOTEVENTCLUSTERSBYDIRECTION_A): $(PLOTEVENTCLUSTERSBYDIRECTION_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(PLOTSMALLCLUFAKEMERGEFF_A): $(PLOTSMALLCLUFAKEMERGEFF_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
 
 # Obj files
 
@@ -146,6 +184,21 @@ $(PLOTCLUSTERWEIGHTEDANGLES_O): $(PLOTCLUSTERWEIGHTEDANGLES_S)
 
 $(PLOTCLUSTERANGLESADCPARAMMAP_O): $(PLOTCLUSTERANGLESADCPARAMMAP_S)  
 	@printf "Compiling test: \"plotClusterAnglesEndAdcParamMap\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(ONHITANGLESCHECK_O): $(ONHITANGLESCHECK_S)  
+	@printf "Compiling test: \"onHitAnglesCheck\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(PLOTEVENTCLUSTERSBYDIRECTION_O): $(PLOTEVENTCLUSTERSBYDIRECTION_S)  
+	@printf "Compiling test: \"plotEventClustersByDirection\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(PLOTSMALLCLUFAKEMERGEFF_O): $(PLOTSMALLCLUFAKEMERGEFF_S)  
+	@printf "Compiling test: \"plotSmallClusterMergingFakeRateAndEfficiency\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
