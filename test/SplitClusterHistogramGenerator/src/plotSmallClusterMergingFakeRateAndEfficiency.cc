@@ -97,11 +97,11 @@ int main(int argc, char** argv) try
 		for(auto clusterIt = eventClusters.begin(); clusterIt != eventClusters.end(); ++clusterIt)
 		{
 			const Cluster& clusterField = *clusterIt;
-			if(clusterField.sizeY == 5 && !isTagged(clusterField))             ++numFiveLongHealthy;
-			if(clusterField.sizeY == 7 && !isTagged(clusterField))             ++numSevenLongHealthy;
-			if(clusterField.sizeY == 6 && !isTagged(clusterField))             ++numSixLongHealthy;
-			if(clusterField.sizeY == 4 && !isTaggedOnOneEndOnly(clusterField)) ++numFourLongUnrestoreableCandidate;
-			if(clusterField.sizeY == 5 && !isTaggedOnOneEndOnly(clusterField)) ++numFiveLongUnrestoreableCandidate;
+			if(clusterField.sizeY == 4 && isTaggedOnOneEndOnly(clusterField)) ++numFourLongUnrestoreableCandidate;
+			if(clusterField.sizeY == 5 && isTaggedOnOneEndOnly(clusterField)) ++numFiveLongUnrestoreableCandidate;
+			if(clusterField.sizeY == 5 && !isTagged(clusterField))            ++numFiveLongHealthy;
+			if(clusterField.sizeY == 7 && !isTagged(clusterField))            ++numSevenLongHealthy;
+			if(clusterField.sizeY == 6 && !isTagged(clusterField))            ++numSixLongHealthy;
 			auto minMaxCol = std::minmax_element(clusterField.pixelsCol.begin(), clusterField.pixelsCol.end());
 			int clusterMinCol = *(minMaxCol.first);
 			int clusterMaxCol = *(minMaxCol.second);

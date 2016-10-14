@@ -41,6 +41,23 @@ cmsDriver.py \
 --no_exec
 ```
 
+##### Base recipe (for people not inside with the Budapest data grid):
+
+```bash
+cmsDriver.py \
+MinBias_13TeV_pythia8_TuneCUETP8M1_cfi \
+--conditions auto:run2_mc \
+-n 10 \
+--era Run2_2016 \
+--eventcontent FEVTDEBUG \
+--relval 9000,100 \
+-s GEN,SIM,DIGI,L1,DIGI2RAW,HLT:@relval2016,RAW2DIGI,L1Reco,RECO \
+--datatier GEN-SIM-RECO \
+--magField 38T_PostLS1 \
+--beamspot NominalCollision2015 \
+--eventcontent RECOSIM
+```
+
 ##### Modifications:
 
 Switches:
