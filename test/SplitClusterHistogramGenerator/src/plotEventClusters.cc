@@ -52,90 +52,168 @@ struct LayerEventPlotTriplet
 	TH2D layer3;
 };
 
+void printUsage(int& argc, char** argv, bool killProcess);
+void processArgs(int& argc, char** argv, std::string& inputFileName, unsigned int& numEventsToMerge, int& savePlots);
 void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
 void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState);
 void printClusterFieldInfo(const Cluster& clusterField);
 
-int main(int argc, char** argv)
+int main(int argc, char** argv) try
 {
-	try
+	std::string inputFileName("");
+	unsigned int numEventsToMerge = 1;
+	int savePlots                 = 0;
+	processArgs(argc, argv, inputFileName, numEventsToMerge, savePlots);
+	std::cout << process_prompt << "PlotEventClusters started..." << std::endl;
+	TimerColored timer(timer_prompt);
+	TApplication* theApp = new TApplication("App", &argc, argv);
+	TFile* inputFile = TFile::Open(inputFileName.c_str(), "READ");
+	TTree* clusterTree = (TTree*)(inputFile -> Get("clustTree"));
+	TTreeTools::treeCheck(clusterTree, "Tree missing.", true);
+	Cluster  clusterField;
+	// STL classes require addresses of pointers as accessors, unfortunately I can't do this in the associateDataFields function
+	std::vector<int>* pixelsColWrapper    = &clusterField.pixelsCol;
+	std::vector<int>* pixelsRowWrapper    = &clusterField.pixelsRow;
+	std::vector<int>* pixelsAdcWrapper    = &clusterField.pixelsAdc;
+	std::vector<int>* pixelsMarkerWrapper = &clusterField.pixelsMarker;
+	EventData eventField;
+	// Histogram definitions
+	std::map<int, LayerEventPlotTriplet> eventPlots;
+	// Get number of entries
+	auto eventBranch = TTreeTools::checkGetBranch(clusterTree, "event");
+	eventBranch -> SetAddress(&eventField);
+	// Check if data is present
+	Int_t totalNumEntries = clusterTree -> GetEntries();
+	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
+	std::cout << debug_prompt << "Total entries in the tree: " << totalNumEntries << std::endl;
+	// Get the indecies of the first "numEventsToMerge" events
+	std::cout << process_prompt << "Filtering the event numbers of the first " << numEventsToMerge << " events..." << std::endl;
+	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
 	{
-		std::cout << debug_prompt << "PlotEventClusters started..." << std::endl;
-		gStyle -> SetPalette(1);
-		TimerColored timer(timer_prompt);
-		TApplication* theApp = new TApplication("App", &argc, argv);
-		TFile* inputFile = TFile::Open("/data_ssd_120gb/hunyadi/CMSSW/SplitClusterStudy/CMSSW_8_0_18/src/TestSplitClusterStudy/Ntuple_scs.root", "READ");
-		TTree* clusterTree = (TTree*)(inputFile -> Get("clustTree"));
-		TTreeTools::treeCheck(clusterTree, "Tree missing.", true);
-		Cluster  clusterField;
-		// STL classes require addresses of pointers as accessors, unfortunately I can't do this in the associateDataFields function
-		std::vector<int>* pixelsColWrapper    = &clusterField.pixelsCol;
-		std::vector<int>* pixelsRowWrapper    = &clusterField.pixelsRow;
-		std::vector<int>* pixelsAdcWrapper    = &clusterField.pixelsAdc;
-		std::vector<int>* pixelsMarkerWrapper = &clusterField.pixelsMarker;
-		EventData eventField;
-		ClusterDataTree::associateDataFieldsFromTree(clusterTree, eventField, clusterField);
-		TTreeTools::checkGetBranch(clusterTree, "pixelsCol")    -> SetAddress(&pixelsColWrapper);
-		TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
-		TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
-		TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
-		clusterTree -> SetBranchAddress("pixelsCol",    &pixelsColWrapper);
-		clusterTree -> SetBranchAddress("pixelsRow",    &pixelsRowWrapper);
-		clusterTree -> SetBranchAddress("pixelsAdc",    &pixelsAdcWrapper);
-		clusterTree -> SetBranchAddress("pixelsMarker", &pixelsMarkerWrapper);
-		// Get number of entries
-		Int_t totalNumEntries = clusterTree -> GetEntries();
-		std::cout << debug_prompt << "Total entries in the tree: " << totalNumEntries << std::endl;
-		// Check if data is present
-		if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
-		// Histogram definitions
-		std::map<int, LayerEventPlotTriplet> eventPlots;
-		// Loop on data
-		timer.restart("Measuring the time required for the looping...");
-		for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
+		eventBranch -> GetEntry(entryIndex);
+		int eventNum = eventField.evt;
+		auto plotTripletIt = eventPlots.find(eventNum);
+		// If key does not exist yet: add key
+		if(plotTripletIt == eventPlots.end())
 		{
-			clusterTree -> GetEntry(entryIndex);
-			int eventNum = eventField.evt;
-			auto plotTriplet_it = eventPlots.find(eventNum);
-			// If key does not exist yet: add key
-			if(plotTriplet_it == eventPlots.end())
+			if(eventPlots.size() < numEventsToMerge)
 			{
-				std::cout << debug_prompt << "Adding event plots for event: " << eventNum << std::endl;
-				plotTriplet_it = eventPlots.emplace(eventNum, eventNum).first;
-			}
-			// std::cout << clusterField.clusterSize << " should equal " << clusterField.pixelsCol.size() << std::endl;
-			for(unsigned int digiIndex = 0; digiIndex < clusterField.pixelsCol.size(); ++digiIndex)
-			{
-				int col         = clusterField.pixelsCol[digiIndex];
-				int row         = clusterField.pixelsRow[digiIndex];
-				int markerState = clusterField.pixelsMarker[digiIndex];
-				// printClusterFieldInfo(clusterField);
-				fillEventPlot(plotTriplet_it -> second, clusterField.mod_on, col, row, markerState);
+				eventPlots.emplace(eventNum, eventNum);
 			}
 		}
-		timer.printSeconds("Loop done. Took about: ", " second(s).");
-		TCanvas canvas("canvas", "canvas", 10, 10, 1500, 500);
-		canvas.Divide(3, 1);
-		canvas.cd(1);
-		eventPlots.at(1).layer1.Draw("COLZ");
-		canvas.cd(2);
-		eventPlots.at(1).layer2.Draw("COLZ");
-		canvas.cd(3);
-		eventPlots.at(1).layer3.Draw("COLZ");
-		canvas.Update();
-		theApp -> Run();
-		inputFile -> Close();
-		std::cout << debug_prompt << "PlotEventClusters terminated succesfully." << std::endl;
 	}
-	catch(const std::out_of_range& e)
+	std::cout << process_prompt << "Done." << std::endl;
+	ClusterDataTree::associateDataFieldsFromTree(clusterTree, eventField, clusterField);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsCol")    -> SetAddress(&pixelsColWrapper);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
+	clusterTree -> SetBranchAddress("pixelsCol",    &pixelsColWrapper);
+	clusterTree -> SetBranchAddress("pixelsCol",    &pixelsColWrapper);
+	clusterTree -> SetBranchAddress("pixelsRow",    &pixelsRowWrapper);
+	clusterTree -> SetBranchAddress("pixelsAdc",    &pixelsAdcWrapper);
+	clusterTree -> SetBranchAddress("pixelsMarker", &pixelsMarkerWrapper);
+	// Loop on data
+	eventBranch -> GetEntry(0);
+	timer.restart("Measuring the time required for the looping...");
+	auto plotTripletIt = eventPlots.find(eventField.evt);
+	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
 	{
-		std::cout << error_prompt << "Out of range exception was thrown: " << e.what() << std::endl;
+		clusterTree -> GetEntry(entryIndex);
+		int eventNum = eventField.evt;
+		// Search only when a change happens in the eventNum
+		if(eventNum != plotTripletIt -> first)
+		{
+			auto searchResults = eventPlots.find(eventNum);
+			if(searchResults == eventPlots.end()) continue;
+			plotTripletIt = std::move(searchResults);
+		}
+		for(unsigned int digiIndex = 0; digiIndex < clusterField.pixelsCol.size(); ++digiIndex)
+		{
+			// Only plotting barrel clusters
+			if(clusterField.mod_on.det != 0) continue;
+			int col         = clusterField.pixelsCol[digiIndex];
+			int row         = clusterField.pixelsRow[digiIndex];
+			int markerState = clusterField.pixelsMarker[digiIndex];
+			// printClusterFieldInfo(clusterField);
+			fillEventPlot(plotTripletIt -> second, clusterField.mod_on, col, row, markerState);
+		}
 	}
-	catch(const std::exception& e)
+	if(eventPlots.size() < numEventsToMerge)
 	{
-		std::cout << error_prompt << "Exception thrown: " << e.what() << std::endl;
+		std::cout << error_prompt << "The ntuple file only contains " << eventPlots.size() << "events. Merging only those..." << std::endl;
 	}
+	timer.printSeconds("Loop done. Took about: ", " second(s).");
+	LayerEventPlotTriplet mergedEvents_H(-1);
+	mergedEvents_H.layer1.SetNameTitle("merged_event_plot_layer_1", "Merged event plot layer 1;module pix. (col);ladder pix. (row)");
+	mergedEvents_H.layer2.SetNameTitle("merged_event_plot_layer_2", "Merged event plot layer 2;module pix. (col);ladder pix. (row)");
+	mergedEvents_H.layer3.SetNameTitle("merged_event_plot_layer_3", "Merged event plot layer 3;module pix. (col);ladder pix. (row)");
+	for(const auto eventNumHistoTripletPair: eventPlots)
+	{
+		mergedEvents_H.layer1.Add(&eventNumHistoTripletPair.second.layer1);
+		mergedEvents_H.layer2.Add(&eventNumHistoTripletPair.second.layer2);
+		mergedEvents_H.layer3.Add(&eventNumHistoTripletPair.second.layer3);
+	}
+	gStyle -> SetPalette(1);
+	std::vector<std::shared_ptr<TCanvas>> canvases;
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", "canvas", 10, 10, 300, 300));
+	canvases.back() -> cd();
+	mergedEvents_H.layer1.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", "canvas", 10, 10, 300, 300));
+	canvases.back() -> cd();
+	mergedEvents_H.layer2.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", "canvas", 10, 10, 300, 300));
+	canvases.back() -> cd();
+	mergedEvents_H.layer3.Draw("COLZ");
+	for(const auto& canvas: canvases)
+	{
+		canvas -> Update();
+	}
+	std::cout << process_prompt << "PlotEventClusters terminated succesfully." << std::endl;
+	theApp -> Run();
+	inputFile -> Close();
 	return 0; 
+}
+catch(const std::out_of_range& e)
+{
+	std::cout << error_prompt << "Out of range exception was thrown: " << e.what() << std::endl;
+	return -1;
+}
+catch(const std::exception& e)
+{
+	std::cout << error_prompt << "Exception thrown: " << e.what() << std::endl;
+	return -1;
+}
+
+void printUsage(int& argc, char** argv, bool killProcess)
+{
+	std::cout << "Usage: " << argv[0] << " <Ntuple path> <num. events to merge> <optional: --savePlots>" << std::endl;
+	if(killProcess) exit(-1);
+}
+
+void processArgs(int& argc, char** argv, std::string& inputFileName, unsigned int& numEventsToMerge, int& savePlots)
+{
+	if(argc != 3 && argc != 4)
+	{
+		printUsage(argc, argv, true);
+	}
+	inputFileName = argv[1];
+	numEventsToMerge = atoi(argv[2]);
+	if(argc == 4)
+	{
+		if(std::string(argv[3]) == std::string("--savePlots"))
+		{
+			savePlots = 1;
+		}
+		else
+		{
+			printUsage(argc, argv, true);
+		}
+	}
+	else
+	{
+		savePlots = 0;
+	}
 }
 
 void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule)

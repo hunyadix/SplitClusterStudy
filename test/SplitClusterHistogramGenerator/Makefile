@@ -39,6 +39,12 @@ PLOTEVENTCLUSTERS_A = ./bin/plotEventClusters$(ExeSuf)
 OBJS     += $(PLOTEVENTCLUSTERS_O)
 PROGRAMS += $(PLOTEVENTCLUSTERS_A)
 
+PLOTCLUSTERSIZES_S = ./src/plotClusterSizes.$(SrcSuf)
+PLOTCLUSTERSIZES_O = ./obj/plotClusterSizes.$(ObjSuf)
+PLOTCLUSTERSIZES_A = ./bin/plotClusterSizes$(ExeSuf)
+OBJS     += $(PLOTCLUSTERSIZES_O)
+PROGRAMS += $(PLOTCLUSTERSIZES_A)
+
 PLOTCLUSTERANGLES_S = ./src/plotClusterAngles.$(SrcSuf)
 PLOTCLUSTERANGLES_O = ./obj/plotClusterAngles.$(ObjSuf)
 PLOTCLUSTERANGLES_A = ./bin/plotClusterAngles$(ExeSuf)
@@ -87,6 +93,13 @@ all: $(PROGRAMS)
 # Executables
 
 $(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(PLOTCLUSTERSIZES_A): $(PLOTCLUSTERSIZES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -183,6 +196,11 @@ $(CLUSTERDATATREE_O): $(CLUSTERDATATREE_S)
 
 $(PLOTEVENTCLUSTERS_O): $(PLOTEVENTCLUSTERS_S)  
 	@printf "Compiling test: \"plotEventClusters\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(PLOTCLUSTERSIZES_O): $(PLOTCLUSTERSIZES_S)  
+	@printf "Compiling test: \"plotClusterSizes\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
