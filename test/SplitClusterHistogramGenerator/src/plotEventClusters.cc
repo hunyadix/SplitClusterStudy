@@ -4,8 +4,8 @@
 // Utility
 #include "../../../interface/TTreeTools.h"
 #include "../../../interface/CommonActors.h"
-
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
+#include "../../../interface/CanvasExtras.h"
 
 // Root
 #include <TROOT.h>
@@ -79,7 +79,6 @@ int main(int argc, char** argv) try
 	EventData eventField;
 	// Histogram definitions
 	std::map<int, LayerEventPlotTriplet> eventPlots;
-	// Get number of entries
 	auto eventBranch = TTreeTools::checkGetBranch(clusterTree, "event");
 	eventBranch -> SetAddress(&eventField);
 	// Check if data is present
@@ -108,11 +107,6 @@ int main(int argc, char** argv) try
 	TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
 	TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
 	TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
-	clusterTree -> SetBranchAddress("pixelsCol",    &pixelsColWrapper);
-	clusterTree -> SetBranchAddress("pixelsCol",    &pixelsColWrapper);
-	clusterTree -> SetBranchAddress("pixelsRow",    &pixelsRowWrapper);
-	clusterTree -> SetBranchAddress("pixelsAdc",    &pixelsAdcWrapper);
-	clusterTree -> SetBranchAddress("pixelsMarker", &pixelsMarkerWrapper);
 	// Loop on data
 	eventBranch -> GetEntry(0);
 	timer.restart("Measuring the time required for the looping...");
@@ -156,15 +150,25 @@ int main(int argc, char** argv) try
 	}
 	gStyle -> SetPalette(1);
 	std::vector<std::shared_ptr<TCanvas>> canvases;
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", "canvas", 10, 10, 300, 300));
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", "canvas", 50, 50, 300, 300));
 	canvases.back() -> cd();
+	redesignCanvas(canvases.back().get(), &mergedEvents_H.layer1);
 	mergedEvents_H.layer1.Draw("COLZ");
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", "canvas", 10, 10, 300, 300));
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", "canvas", 353, 50, 300, 300));
 	canvases.back() -> cd();
+	redesignCanvas(canvases.back().get(), &mergedEvents_H.layer2);
 	mergedEvents_H.layer2.Draw("COLZ");
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", "canvas", 10, 10, 300, 300));
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", "canvas", 656, 50, 300, 300));
 	canvases.back() -> cd();
+	redesignCanvas(canvases.back().get(), &mergedEvents_H.layer3);
+	// Axes
 	mergedEvents_H.layer3.Draw("COLZ");
+	mergedEvents_H.layer1.GetXaxis() -> SetRangeUser(-330, -280);
+	mergedEvents_H.layer1.GetYaxis() -> SetRangeUser(-1040, -900);
+	mergedEvents_H.layer2.GetXaxis() -> SetRangeUser(1240, 1420);
+	mergedEvents_H.layer2.GetYaxis() -> SetRangeUser(-1980, -1830);
+	mergedEvents_H.layer3.GetXaxis() -> SetRangeUser(860, 940);
+	mergedEvents_H.layer3.GetYaxis() -> SetRangeUser(-1000, -850);
 	for(const auto& canvas: canvases)
 	{
 		canvas -> Update();

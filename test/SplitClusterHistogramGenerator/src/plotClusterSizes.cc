@@ -5,6 +5,7 @@
 #include "../../../interface/TTreeTools.h"
 #include "../../../interface/CommonActors.h"
 #include "../../../interface/HelperFunctionsCommon.h"
+#include "../../../interface/CanvasExtras.h"
 
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
 
@@ -27,7 +28,6 @@
 #include <exception>
 #include <functional>
 
-
 void printUsage(int& argc, char** argv, bool killProcess);
 void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePlots);
 
@@ -36,7 +36,7 @@ int main(int argc, char** argv) try
 	std::string inputFileName("");
 	int savePlots                 = 0;
 	processArgs(argc, argv, inputFileName, savePlots);
-	std::cout << process_prompt << "PlotEventClusters started..." << std::endl;
+	std::cout << process_prompt << "PlotClusterSizes started..." << std::endl;
 	TimerColored timer(timer_prompt);
 	TApplication* theApp = new TApplication("App", &argc, argv);
 	TFile* inputFile = TFile::Open(inputFileName.c_str(), "READ");
@@ -59,6 +59,7 @@ int main(int argc, char** argv) try
 	{
 		histograms.emplace_back(std::make_shared<TH1D>(("Sizes_layer_" + std::to_string(layerNum)).c_str(), ("Cluster sizes on layer " + std::to_string(layerNum) + ";size (pixels); num. clusters").c_str(), 50, 0, 50));
 		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(layerNum)).c_str(), ("canvas_" + std::to_string(layerNum)).c_str(), 50 + (layerNum - 1) * (canvasSizeX + 3), 50, canvasSizeX, canvasSizeY));
+		redesignCanvas(canvases.back().get(), histograms.back().get());
 	}
 	for(int layerNum = 1; layerNum <= 3; ++layerNum)
 	{
@@ -93,7 +94,8 @@ int main(int argc, char** argv) try
 	for(int histogram_index: range(histograms.size()))
 	{
 		canvases[histogram_index] -> cd();
-		histograms[histogram_index] -> Draw();
+		histograms[histogram_index] -> GetXaxis() -> SetRangeUser(0, 25);
+		histograms[histogram_index] -> Draw("PHE1");
 		canvases[histogram_index] -> Update();
 	}
 	std::cout << process_prompt << "PlotEventClusters terminated succesfully." << std::endl;

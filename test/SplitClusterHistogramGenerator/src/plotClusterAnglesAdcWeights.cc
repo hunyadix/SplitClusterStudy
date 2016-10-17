@@ -35,9 +35,7 @@ struct ClusterStats
 	int   endCol   = NOVAL_I;
 	float startRow = NOVAL_F;
 	float endRow   = NOVAL_F;
-	float length   = NOVAL_F;
 	float dir      = NOVAL_F;
-	int   error    = 0;
 };
 
 bool isMissingPartDoubleColumn(const int& firstCol, const int& firstRow, const int& secondCol, const int& secondRow);
@@ -121,25 +119,6 @@ int main(int argc, char** argv) try
 					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
 					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
 				}
-				// std::complex<int> firstClusterStartPos;
-				// std::complex<int> firstClusterEndPos;
-				// std::complex<int> secondClusterStartPos;
-				// std::complex<int> secondClusterEndPos;
-				// if(firstClusterIt  -> pixelsCol[clusterStats1.startIndex] <= secondClusterIt -> pixelsCol[clusterStats2.startIndex])
-				// {
-				// 	firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
-				// 	firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
-				// 	secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);
-				// 	secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);
-				// }
-				// else
-				// {
-				// 	firstClusterStartPos  = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.endIndex],   firstClusterIt  -> pixelsCol[clusterStats1.endIndex]);
-				// 	firstClusterEndPos    = std::complex<int>(firstClusterIt  -> pixelsRow[clusterStats1.startIndex], firstClusterIt  -> pixelsCol[clusterStats1.startIndex]);
-				// 	secondClusterStartPos = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.endIndex],   secondClusterIt -> pixelsCol[clusterStats2.endIndex]);	
-				// 	secondClusterEndPos   = std::complex<int>(secondClusterIt -> pixelsRow[clusterStats2.startIndex], secondClusterIt -> pixelsCol[clusterStats2.startIndex]);	
-				// }
-				// // std::cout << "First start point: " << 
 				int clusterPairAngle;
 				clusterPairAngle = std::atan2(dist.second, dist.first);
 				clusterAngle_H.Fill(clusterStats1.dir);
@@ -187,69 +166,41 @@ bool isMissingPartDoubleColumn(const int& firstCol, const int& firstRow, const i
 ClusterStats getClusterStats(const Cluster& clusterField)
 {
 	ClusterStats clusterStats;
-	float maxLengthSquared = 0;
-	// int maxPixelPairCharge = 0;
-	if(clusterField.pixelsCol.size() == 1)
-	{
-		clusterStats.length     = 0;
-		clusterStats.dir        = -1;
-		clusterStats.error = 1;
-		return clusterStats;
-	}
 	auto colMinmax = std::minmax_element(clusterField.pixelsCol.begin(), clusterField.pixelsCol.end());
 	int colMin = *(colMinmax.first);
 	int colMax = *(colMinmax.second);
-	clusterStats.startCol = colMin;
-	clusterStats.endCol   = colMax;
-	clusterStats.startRow = 0;
-	clusterStats.endRow   = 0;
-	int numEdgePixelsMin  = 0;
-	int numEdgePixelsMax  = 0;
+	clusterStats.startCol   = colMin;
+	clusterStats.endCol     = colMax;
+	if(colMin == colMax)
+	{
+		clusterStats.startRow = clusterField.pixelsRow[0];
+		clusterStats.endRow   = clusterStats.startRow;
+		clusterStats.dir      = NOVAL_F;
+		return clusterStats;
+	}
+	clusterStats.startRow   = 0;
+	clusterStats.endRow     = 0;
+	int numEdgePixelsMinCol = 0;
+	int numEdgePixelsMaxCol = 0;
+	int adcMinCol           = 0;
+	int adcMaxCol           = 0;
 	for(int i: range(clusterField.pixelsCol.size()))
 	{
 		if(clusterField.pixelsCol[i] == colMin)
 		{
-			clusterStats.startRow += clusterField.pixelsRow[i];
-			++numEdgePixelsMin;
+			clusterStats.startRow += clusterField.pixelsRow[i] * clusterField.pixelsAdc[i];
+			adcMinCol += clusterField.pixelsAdc[i];
+			++numEdgePixelsMinCol;
 		}
 		if(clusterField.pixelsCol[i] == colMax)
 		{
-			clusterStats.endRow   += clusterField.pixelsRow[i];
-			++numEdgePixelsMax;
+			clusterStats.endRow   += clusterField.pixelsRow[i] * clusterField.pixelsAdc[i];
+			adcMaxCol += clusterField.pixelsAdc[i];
+			++numEdgePixelsMaxCol;
 		}
 	}
-	clusterStats.startRow /= numEdgePixelsMin;
-	clusterStats.endRow   /= numEdgePixelsMax;
-	// Save cluster data
-	clusterStats.length = sqrt(maxLengthSquared);
+	clusterStats.startRow /= adcMinCol;
+	clusterStats.endRow   /= adcMaxCol;
 	clusterStats.dir = std::atan2(clusterStats.endCol - clusterStats.startCol, clusterStats.endRow - clusterStats.startRow);
 	return clusterStats;
 }
-
-// for(unsigned int firstIndex = 0; firstIndex < clusterField.pixelsCol.size(); ++firstIndex)
-	// {
-	// 	for(unsigned int secondIndex = firstIndex + 1; secondIndex < clusterField.pixelsCol.size(); ++secondIndex)
-	// 	{
-	// 		bool saveAsNewMax = false;
-	// 		float xDistance   = clusterField.pixelsRow[firstIndex] - clusterField.pixelsRow[secondIndex];
-	// 		float yDistance   = clusterField.pixelsCol[firstIndex] - clusterField.pixelsCol[secondIndex]; 
-	// 		float distanceSquared = xDistance * xDistance + yDistance * yDistance;
-	// 		// Save the furthermost pixelpair
-	// 		if(maxLengthSquared < distanceSquared) saveAsNewMax = true;
-	// 		// Check charge for pixels with the same distanceSquared
-	// 		else if(distanceSquared == maxLengthSquared)
-	// 		{
-	// 			int pixelPairCharge = clusterField.pixelsAdc[firstIndex] + clusterField.pixelsAdc[secondIndex];
-	// 			if(maxPixelPairCharge < pixelPairCharge) saveAsNewMax = true;
-	// 		}
-	// 		if(saveAsNewMax == true)
-	// 		{
-	// 			clusterStats.startIndex    = firstIndex;
-	// 			clusterStats.endIndex      = secondIndex;
-	// 			maxLengthSquared   = distanceSquared;
-	// 			maxPixelPairCharge = clusterField.pixelsAdc[firstIndex] + clusterField.pixelsAdc[secondIndex];
-	// 		}
-	// 	}
-	// }
-	// // Check start-end order
-	// if(clusterField.pixelsCol[startIndex] < clusterField.pixelsCol[endIndex]) std::swap(startIndex, endIndex);
