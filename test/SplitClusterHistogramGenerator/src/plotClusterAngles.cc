@@ -57,18 +57,25 @@ int main(int argc, char** argv) try
 	TTreeTools::treeCheck(clusterTree, "Tree missing.", true);
 	Cluster  clusterField;
 	EventData eventField;
-	auto eventBranch = TTreeTools::checkGetBranch(clusterTree, "event");
-	eventBranch -> SetAddress(&eventField);
+	std::vector<int>* pixelsColWrapper    = &clusterField.pixelsCol;
+	std::vector<int>* pixelsRowWrapper    = &clusterField.pixelsRow;
+	std::vector<int>* pixelsAdcWrapper    = &clusterField.pixelsAdc;
+	std::vector<int>* pixelsMarkerWrapper = &clusterField.pixelsMarker;
 	// Check if data is present
 	Int_t totalNumEntries = clusterTree -> GetEntries();
 	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
 	std::cout << debug_prompt << "Total entries in the tree: " << totalNumEntries << std::endl;
 	// Get the indecies of the first "numEventsToMerge" events
+	ClusterDataTree::associateDataFieldsFromTree(clusterTree, eventField, clusterField);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsCol")    -> SetAddress(&pixelsColWrapper);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
+	TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
 	std::map<int, std::vector<Cluster>> eventClustersMap;
 	std::cout << process_prompt << "Sorting the clusters by event numbers..." << std::endl;
 	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
 	{
-		eventBranch -> GetEntry(entryIndex);
+		clusterTree -> GetEntry(entryIndex);
 		int eventNum = eventField.evt;
 		auto eventClustersIt = eventClustersMap.find(eventNum);
 		// If key does not exist yet: add key
@@ -80,17 +87,6 @@ int main(int argc, char** argv) try
 	}
 	std::cout << process_prompt << "Done." << std::endl;
 	// STL classes require addresses of pointers as accessors, unfortunately I can't do this in the associateDataFields function
-	std::vector<int>* pixelsColWrapper    = &clusterField.pixelsCol;
-	std::vector<int>* pixelsRowWrapper    = &clusterField.pixelsRow;
-	std::vector<int>* pixelsAdcWrapper    = &clusterField.pixelsAdc;
-	std::vector<int>* pixelsMarkerWrapper = &clusterField.pixelsMarker;
-	// ClusterDataTree::associateDataFieldsFromTree(clusterTree, eventField, clusterField);
-	TTreeTools::checkGetBranch(clusterTree, "event")        -> SetAddress(&eventField);
-	TTreeTools::checkGetBranch(clusterTree, "mod_on")       -> SetAddress(&clusterField.mod_on);
-	TTreeTools::checkGetBranch(clusterTree, "pixelsCol")    -> SetAddress(&pixelsColWrapper);
-	TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
-	TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
-	TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
 	// Histogram definitions
 	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, 0, 3.6);
 	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, 0, 3.6);
@@ -110,7 +106,7 @@ int main(int argc, char** argv) try
 			{
 				if(secondClusterIt -> mod_on.det != 0) continue;
 				// Check if clusters are on the same module 
-				if(firstClusterIt -> mod_on == secondClusterIt -> mod_on) continue;
+				if(!(firstClusterIt -> mod_on == secondClusterIt -> mod_on)) continue;
 				// Quick checks
 				if(12 < std::abs(firstClusterIt -> x - secondClusterIt -> x)) continue;
 				if(12 < std::abs(firstClusterIt -> y - secondClusterIt -> y)) continue;
