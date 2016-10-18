@@ -51,17 +51,11 @@ PLOTCLUSTERANGLES_A = ./bin/plotClusterAngles$(ExeSuf)
 OBJS     += $(PLOTCLUSTERANGLES_O)
 PROGRAMS += $(PLOTCLUSTERANGLES_A)
 
-PLOTCLUSTERWEIGHTEDANGLES_S = ./src/plotClusterAnglesAdcWeights.$(SrcSuf)
-PLOTCLUSTERWEIGHTEDANGLES_O = ./obj/plotClusterAnglesAdcWeights.$(ObjSuf)
-PLOTCLUSTERWEIGHTEDANGLES_A = ./bin/plotClusterAnglesAdcWeights$(ExeSuf)
-OBJS     += $(PLOTCLUSTERWEIGHTEDANGLES_O)
-PROGRAMS += $(PLOTCLUSTERWEIGHTEDANGLES_A)
-
-PLOTCLUSTERANGLESADCPARAMMAP_S = ./src/plotClusterAnglesEndAdcParamMap.$(SrcSuf)
-PLOTCLUSTERANGLESADCPARAMMAP_O = ./obj/plotClusterAnglesEndAdcParamMap.$(ObjSuf)
-PLOTCLUSTERANGLESADCPARAMMAP_A = ./bin/plotClusterAnglesEndAdcParamMap$(ExeSuf)
-OBJS     += $(PLOTCLUSTERANGLESADCPARAMMAP_O)
-PROGRAMS += $(PLOTCLUSTERANGLESADCPARAMMAP_A)
+PLOTCLUSTERANGLESPARAMMAP_S = ./src/plotClusterAnglesParamMap.$(SrcSuf)
+PLOTCLUSTERANGLESPARAMMAP_O = ./obj/plotClusterAnglesParamMap.$(ObjSuf)
+PLOTCLUSTERANGLESPARAMMAP_A = ./bin/plotClusterAnglesParamMap$(ExeSuf)
+OBJS     += $(PLOTCLUSTERANGLESPARAMMAP_O)
+PROGRAMS += $(PLOTCLUSTERANGLESPARAMMAP_A)
 
 ONHITANGLESCHECK_S = ./src/onHitAnglesCheck.$(SrcSuf)
 ONHITANGLESCHECK_O = ./obj/onHitAnglesCheck.$(ObjSuf)
@@ -113,14 +107,7 @@ $(PLOTCLUSTERANGLES_A): $(PLOTCLUSTERANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTCLUSTERWEIGHTEDANGLES_A): $(PLOTCLUSTERWEIGHTEDANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
-	@printf "Compiling done, linking...\n"
-	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
-	$(MT_EXE)
-	@echo "Succesful make..."
-	@echo "...$@ is ready to use."
-
-$(PLOTCLUSTERANGLESADCPARAMMAP_A): $(PLOTCLUSTERANGLESADCPARAMMAP_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTCLUSTERANGLESPARAMMAP_A): $(PLOTCLUSTERANGLESPARAMMAP_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -209,13 +196,8 @@ $(PLOTCLUSTERANGLES_O): $(PLOTCLUSTERANGLES_S)
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
-$(PLOTCLUSTERWEIGHTEDANGLES_O): $(PLOTCLUSTERWEIGHTEDANGLES_S)  
-	@printf "Compiling test: \"plotClusterAnglesAdcWeights\"...\n"
-	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
-	@printf "Done.\n"
-
-$(PLOTCLUSTERANGLESADCPARAMMAP_O): $(PLOTCLUSTERANGLESADCPARAMMAP_S)  
-	@printf "Compiling test: \"plotClusterAnglesEndAdcParamMap\"...\n"
+$(PLOTCLUSTERANGLESPARAMMAP_O): $(PLOTCLUSTERANGLESPARAMMAP_S)  
+	@printf "Compiling test: \"plotClusterAnglesParamMap\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 

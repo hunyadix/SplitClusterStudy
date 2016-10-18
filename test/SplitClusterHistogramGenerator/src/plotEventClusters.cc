@@ -5,6 +5,7 @@
 #include "../../../interface/TTreeTools.h"
 #include "../../../interface/CommonActors.h"
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
+#include "../../../interface/HelperFunctionsCommon.h"
 #include "../../../interface/CanvasExtras.h"
 
 // Root
@@ -54,8 +55,11 @@ struct LayerEventPlotTriplet
 
 void printUsage(int& argc, char** argv, bool killProcess);
 void processArgs(int& argc, char** argv, std::string& inputFileName, unsigned int& numEventsToMerge, int& savePlots);
+int moduleAndColToXCoordinate(const int& module, const int& col);
+int ladderAndRowToYCoordinate(const int& ladder, const int& row);
+void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
 void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
-void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState);
+void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
 void printClusterFieldInfo(const Cluster& clusterField);
 
 int main(int argc, char** argv) try
@@ -142,23 +146,31 @@ int main(int argc, char** argv) try
 	mergedEvents_H.layer1.SetNameTitle("merged_event_plot_layer_1", "Merged event plot layer 1;module pix. (col);ladder pix. (row)");
 	mergedEvents_H.layer2.SetNameTitle("merged_event_plot_layer_2", "Merged event plot layer 2;module pix. (col);ladder pix. (row)");
 	mergedEvents_H.layer3.SetNameTitle("merged_event_plot_layer_3", "Merged event plot layer 3;module pix. (col);ladder pix. (row)");
-	for(const auto eventNumHistoTripletPair: eventPlots)
+	gStyle -> SetPalette(1);
+	// int numPlot = 1;
+	for(auto eventNumHistoTripletPair: eventPlots)
 	{
 		mergedEvents_H.layer1.Add(&eventNumHistoTripletPair.second.layer1);
 		mergedEvents_H.layer2.Add(&eventNumHistoTripletPair.second.layer2);
 		mergedEvents_H.layer3.Add(&eventNumHistoTripletPair.second.layer3);
+		// eventNumHistoTripletPair.second.layer2.GetXaxis() -> SetRangeUser(1240, 1420);
+		// eventNumHistoTripletPair.second.layer2.GetYaxis() -> SetRangeUser(-1950, -1830);
+		// TCanvas canvas(("temp_canvas" + std::to_string(numPlot)).c_str(), "...");
+		// canvas.cd();
+		// eventNumHistoTripletPair.second.layer2.Draw("COLZ");
+		// std::string filename = "results/eventPlotsCheck/" + std::to_string(numPlot++) + ".eps";
+		// canvas.SaveAs(filename.c_str());
 	}
-	gStyle -> SetPalette(1);
 	std::vector<std::shared_ptr<TCanvas>> canvases;
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", "canvas", 50, 50, 300, 300));
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", mergedEvents_H.layer1.GetTitle(), 50, 50, 300, 300));
 	canvases.back() -> cd();
 	redesignCanvas(canvases.back().get(), &mergedEvents_H.layer1);
 	mergedEvents_H.layer1.Draw("COLZ");
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", "canvas", 353, 50, 300, 300));
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", mergedEvents_H.layer2.GetTitle(), 353, 50, 300, 300));
 	canvases.back() -> cd();
 	redesignCanvas(canvases.back().get(), &mergedEvents_H.layer2);
 	mergedEvents_H.layer2.Draw("COLZ");
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", "canvas", 656, 50, 300, 300));
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", mergedEvents_H.layer3.GetTitle(), 656, 50, 300, 300));
 	canvases.back() -> cd();
 	redesignCanvas(canvases.back().get(), &mergedEvents_H.layer3);
 	// Axes
@@ -166,12 +178,19 @@ int main(int argc, char** argv) try
 	mergedEvents_H.layer1.GetXaxis() -> SetRangeUser(-330, -280);
 	mergedEvents_H.layer1.GetYaxis() -> SetRangeUser(-1040, -900);
 	mergedEvents_H.layer2.GetXaxis() -> SetRangeUser(1240, 1420);
-	mergedEvents_H.layer2.GetYaxis() -> SetRangeUser(-1980, -1830);
+	mergedEvents_H.layer2.GetYaxis() -> SetRangeUser(-1950, -1830);
 	mergedEvents_H.layer3.GetXaxis() -> SetRangeUser(860, 940);
 	mergedEvents_H.layer3.GetYaxis() -> SetRangeUser(-1000, -850);
 	for(const auto& canvas: canvases)
 	{
 		canvas -> Update();
+		if(savePlots)
+		{
+			std::string filename = canvas -> GetTitle();
+			std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
+			filename = "results/" + filename + ".eps";
+			canvas -> SaveAs(filename.c_str());
+		}
 	}
 	std::cout << process_prompt << "PlotEventClusters terminated succesfully." << std::endl;
 	theApp -> Run();
@@ -220,52 +239,112 @@ void processArgs(int& argc, char** argv, std::string& inputFileName, unsigned in
 	}
 }
 
+int moduleAndColToXCoordinate(const int& module, const int& col)
+{
+	int moduleCoordinate = NOVAL_I;
+	if(module < 0) moduleCoordinate = (module - 0.5) * 416 + col + 1;
+	if(0 < module) moduleCoordinate = (module - 0.5) * 416 + col;
+	return moduleCoordinate;
+}
+
+int ladderAndRowToYCoordinate(const int& ladder, const int& row)
+{
+	int ladderCoordinate = NOVAL_I;
+	int isReversedModule = (ladder + (0 < ladder)) % 2;
+	if(isReversedModule)
+	{
+		if(ladder < 0) ladderCoordinate = (ladder + 0.5) * 160 - row;
+		if(0 < ladder) ladderCoordinate = (ladder + 0.5) * 160 - row - 1;
+		if(ladder == 1)  ladderCoordinate += 80;
+		if(ladder == -1) ladderCoordinate -= 80;
+	}
+	else
+	{
+		if(ladder < 0) ladderCoordinate = (ladder - 0.5) * 160 + row + 1;
+		if(0 < ladder) ladderCoordinate = (ladder - 0.5) * 160 + row;
+		if(ladder == 1)  ladderCoordinate += 80;
+		if(ladder == -1) ladderCoordinate -= 80;
+	}
+	return ladderCoordinate;
+}
+
+void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers)
+{
+	colModifiers.clear();
+	rowModifiers.clear();
+	static auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
+	{
+		if(pixelIsMarked)
+		{
+			colModifiers.push_back(col);
+			rowModifiers.push_back(row);
+		}
+	};
+	checkInsertIndexPair(markerState & 1 << 0, -1, -1);
+	checkInsertIndexPair(markerState & 1 << 1, -1,  0);
+	checkInsertIndexPair(markerState & 1 << 2, -1, +1);
+	checkInsertIndexPair(markerState & 1 << 3,  0, -1);
+	checkInsertIndexPair(markerState & 1 << 4,  0, +1);
+	checkInsertIndexPair(markerState & 1 << 5, +1, -1);
+	checkInsertIndexPair(markerState & 1 << 6, +1,  0);
+	checkInsertIndexPair(markerState & 1 << 7, +1, +1);
+}
+
 void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule)
 {
 	std::cout << c_blue << "Warning: " << c_def << "Filling (" << moduleCoordinate << ", " << ladderCoordinate << ") that has already been filled. Value before filling: " << histogram.GetBinContent(moduleCoordinate, ladderCoordinate) << ". Reversed module? " << isReversedModule << std::endl; 
 	std::cout << c_blue << "Warning: " << c_def << "mod_on.layer: "  << mod_on.layer  << ". mod_on.ladder: " << mod_on.ladder << ". mod_on.module: " << mod_on.module << std::endl;
 	std::cout << c_blue << "Warning: " << c_def << "row: " << row << ". col: " << col << std::endl;
-};
+}
 
-void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState)
+void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels)
 {
 	if(mod_on.det == 1) return;
-	int isReversedModule = (mod_on.ladder + (0 < mod_on.ladder)) % 2;
-	int moduleCoordinate = NOVAL_I;
-	int ladderCoordinate = NOVAL_I;
-	if(isReversedModule)
-	{
-		if(mod_on.ladder < 0) ladderCoordinate = (mod_on.ladder + 0.5) * 160 - row;
-		if(0 < mod_on.ladder) ladderCoordinate = (mod_on.ladder + 0.5) * 160 - row - 1;
-		if(mod_on.ladder == 1)  ladderCoordinate += 80;
-		if(mod_on.ladder == -1) ladderCoordinate -= 80;
-	}
-	else
-	{
-		if(mod_on.ladder < 0) ladderCoordinate = (mod_on.ladder - 0.5) * 160 + row + 1;
-		if(0 < mod_on.ladder) ladderCoordinate = (mod_on.ladder - 0.5) * 160 + row;
-		if(mod_on.ladder == 1)  ladderCoordinate += 80;
-		if(mod_on.ladder == -1) ladderCoordinate -= 80;
-	}
-	if(mod_on.module < 0) moduleCoordinate = (mod_on.module - 0.5) * 416 + col + 1;
-	if(0 < mod_on.module) moduleCoordinate = (mod_on.module - 0.5) * 416 + col;
+	int moduleCoordinate = moduleAndColToXCoordinate(mod_on.module, col);
+	int ladderCoordinate = ladderAndRowToYCoordinate(mod_on.ladder, row);
 	int fillWeight = markerState ? 2 : 1;
+	std::vector<int> colModifiers;
+	std::vector<int> rowModifiers;
+	if(fillMissingPixels) markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
 	switch(mod_on.layer)
 	{
 		case 1:
-			if(histogramTriplet.layer1.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer1, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
+			// if(histogramTriplet.layer1.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer1, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
 			histogramTriplet.layer1.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
-			break;
+			if(fillMissingPixels)
+			{
+				for(int markedNeighbourIndex: range(colModifiers.size()))
+				{
+					histogramTriplet.layer1.SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
+				}
+				break;
+			}
 		case 2:
-			if(histogramTriplet.layer2.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer2, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
+			// if(histogramTriplet.layer2.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer2, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
 			histogramTriplet.layer2.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
+			if(fillMissingPixels)
+			{
+				for(int markedNeighbourIndex: range(colModifiers.size()))
+				{
+					histogramTriplet.layer2.SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
+				}
+				break;
+			}
 			break;
 		case 3:
-			if(histogramTriplet.layer3.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer3, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
+			// if(histogramTriplet.layer3.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer3, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
 			histogramTriplet.layer3.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
+			if(fillMissingPixels)
+			{
+				for(int markedNeighbourIndex: range(colModifiers.size()))
+				{
+					histogramTriplet.layer3.SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
+				}
+				break;
+			}
 			break;
 		default:
-			std::cout << c_red << "Error: " << c_def << "layer coordinate of a pixel is invalid: " << mod_on.layer << std::endl;
+			// std::cout << c_red << "Error: " << c_def << "layer coordinate of a pixel is invalid: " << mod_on.layer << std::endl;
 			std::cout << "Info: Det: " << mod_on.det << ". Ladder:" << mod_on.ladder << ". Module:" << mod_on.module << "." << std::endl;
 			break;
 	}

@@ -5,6 +5,7 @@
 #include "../../../interface/TTreeTools.h"
 #include "../../../interface/CommonActors.h"
 #include "../../../interface/HelperFunctionsCommon.h"
+#include "../../../interface/CanvasExtras.h"
 
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
 
@@ -131,17 +132,33 @@ int main(int argc, char** argv) try
 			}
 		}
 	}
-	TCanvas canvas("canvas", "canvas", 10, 10, 1600, 500);
-	canvas.Divide(4, 1);
-	canvas.cd(1);
+	std::vector<std::shared_ptr<TCanvas>> canvases;
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", clusterAngle_H.GetTitle(), 50, 50, 300, 300));
+	canvases.back() -> cd();
+	redesignCanvas(canvases.back().get(), &clusterAngle_H);
 	clusterAngle_H.Draw();
-	canvas.cd(2);
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", clusterPairIndAngle_H.GetTitle(), 353, 50, 300, 300));
+	canvases.back() -> cd();
+	redesignCanvas(canvases.back().get(), &clusterPairIndAngle_H);
 	clusterPairIndAngle_H.Draw();
-	canvas.cd(3);
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", clusterPairRelAngle_H.GetTitle(), 656, 50, 300, 300));
+	canvases.back() -> cd();
+	redesignCanvas(canvases.back().get(), &clusterPairRelAngle_H);
 	clusterPairRelAngle_H.Draw("COLZ");
-	canvas.cd(4);
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_4", clusterPairAngle_vs_clusterAngle_H.GetTitle(), 959, 50, 300, 300));
+	canvases.back() -> cd();
 	clusterPairAngle_vs_clusterAngle_H.Draw("COLZ");
-	canvas.Update();
+	for(const auto& canvas: canvases)
+	{
+		canvas -> Update();
+		if(savePlots)
+		{
+			std::string filename = canvas -> GetTitle();
+			std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
+			filename = "results/" + filename + ".eps";
+			canvas -> SaveAs(filename.c_str());
+		}
+	}
 	theApp -> Run();
 	inputFile -> Close();
 	std::cout << process_prompt << "PlotEventClusters terminated succesfully." << std::endl;
