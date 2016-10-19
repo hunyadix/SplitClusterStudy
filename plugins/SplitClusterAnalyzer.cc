@@ -71,7 +71,7 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	iEvent.getByToken(trajTrackCollectionToken, trajTrackCollection);
 	// Trying to access the clusters
 	if(!digiFlagsCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch dcol lost digis.");
-	if(!clusterCollection.isValid())   handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
+	if(!clusterCollection  .isValid()) handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
 	if(!trajTrackCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch trajectory measurements.");
 	// Resetting data fields
 	clearAllContainers();
@@ -82,6 +82,151 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	handleTrajectories(trajTrackCollection, clusterCollection, trackerTopology, onTrackClusters);
 	handleClusters(clusterCollection, digiFlagsCollection, onTrackClusters, trackerTopology, fedErrors);
 	eventTree -> Fill();
+
+
+
+
+
+	debugPlots.layer1.Reset();
+	debugPlots.layer2.Reset();
+	debugPlots.layer3.Reset();
+	for(const edmNew::DetSet<SiPixelCluster>& clusterSetOnModule: *clusterCollection)
+	{
+		DetId detId(clusterSetOnModule.id());
+		unsigned int subdetId = detId.subdetId();
+		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
+		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, fedErrors);
+		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
+		for(const SiPixelCluster& currentCluster: clusterSetOnModule)
+		{
+			unsigned int numPixels = currentCluster.size();
+			const auto currentPixelPositions = currentCluster.pixels();
+			const auto currentAdcs           = currentCluster.pixelADC();
+			for(unsigned int pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
+			{
+				fillEventPlot(debugPlots, mod_on, currentPixelPositions[pixelIndex].y, currentPixelPositions[pixelIndex].x, currentAdcs[pixelIndex] / 1000.0);
+			}
+		}
+	}
+	gStyle -> SetPalette(1);
+	std::vector<std::shared_ptr<TCanvas>> canvases;
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", "1", 50, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer1.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", "4", 353, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer2.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", "7", 656, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer3.Draw("COLZ");
+	// Axes
+	debugPlots.layer1.GetXaxis() -> SetRangeUser(-350, -210);
+	debugPlots.layer1.GetYaxis() -> SetRangeUser(-1050, -900);
+	debugPlots.layer2.GetXaxis() -> SetRangeUser(1270, 1420);
+	debugPlots.layer2.GetYaxis() -> SetRangeUser(-1980, -1830);
+	debugPlots.layer3.GetXaxis() -> SetRangeUser(830, 980);
+	debugPlots.layer3.GetYaxis() -> SetRangeUser(-1000, -850);
+	debugPlots.layer1.GetZaxis() -> SetRangeUser(-5, 2);
+	debugPlots.layer2.GetZaxis() -> SetRangeUser(-5, 2);
+	debugPlots.layer3.GetZaxis() -> SetRangeUser(-5, 2);
+	for(const auto& canvas: canvases)
+	{
+		canvas -> Update();
+		std::string filename = canvas -> GetTitle();
+		std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
+		filename =  filename + ".eps";
+		canvas -> SaveAs(filename.c_str());
+	}
+
+	debugPlots.layer1.Reset();
+	debugPlots.layer2.Reset();
+	debugPlots.layer3.Reset();
+	for(const edm::DetSet<PixelDigi>& markedDigisOnModule: *digiFlagsCollection)
+	{
+		DetId detId(markedDigisOnModule.detId());
+		unsigned int subdetId = detId.subdetId();
+		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
+		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, fedErrors);
+		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
+		for(const PixelDigi& pixel: markedDigisOnModule)
+		{
+			fillEventPlot(debugPlots, mod_on, pixel.column(), pixel.row(), pixel.adc());
+		}
+	}
+	canvases.clear();
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_4", "2", 50, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer1.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_5", "5", 353, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer2.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_6", "8", 656, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer3.Draw("COLZ");
+	// Axes
+	debugPlots.layer1.GetXaxis() -> SetRangeUser(-350, -210);
+	debugPlots.layer1.GetYaxis() -> SetRangeUser(-1050, -900);
+	debugPlots.layer2.GetXaxis() -> SetRangeUser(1270, 1420);
+	debugPlots.layer2.GetYaxis() -> SetRangeUser(-1980, -1830);
+	debugPlots.layer3.GetXaxis() -> SetRangeUser(830, 980);
+	debugPlots.layer3.GetYaxis() -> SetRangeUser(-1000, -850);
+	debugPlots.layer1.GetZaxis() -> SetRangeUser(-5, 2);
+	debugPlots.layer2.GetZaxis() -> SetRangeUser(-5, 2);
+	debugPlots.layer3.GetZaxis() -> SetRangeUser(-5, 2);
+	for(const auto& canvas: canvases)
+	{
+		canvas -> Update();
+		std::string filename = canvas -> GetTitle();
+		std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
+		filename =  filename + ".eps";
+		canvas -> SaveAs(filename.c_str());
+	}
+
+
+
+	debugPlots.layer1.Reset();
+	debugPlots.layer2.Reset();
+	debugPlots.layer3.Reset();
+	for(const edm::DetSet<PixelDigi>& markedDigisOnModule: *digiFlagsCollection)
+	{
+		DetId detId(markedDigisOnModule.detId());
+		unsigned int subdetId = detId.subdetId();
+		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
+		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, fedErrors);
+		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
+		for(const PixelDigi& pixel: markedDigisOnModule)
+		{
+			fillEventPlot(debugPlots, mod_on, pixel.column(), pixel.row(), pixel.adc(), true);
+		}
+	}
+	canvases.clear();
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_7", "3", 50, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer1.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_8", "6", 353, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer2.Draw("COLZ");
+	canvases.emplace_back(std::make_shared<TCanvas>("canvas_9", "9", 656, 50, 300, 300));
+	canvases.back() -> cd();
+	debugPlots.layer3.Draw("COLZ");
+	// Axes
+	debugPlots.layer1.GetXaxis() -> SetRangeUser(-350, -210);
+	debugPlots.layer1.GetYaxis() -> SetRangeUser(-1050, -900);
+	debugPlots.layer2.GetXaxis() -> SetRangeUser(1270, 1420);
+	debugPlots.layer2.GetYaxis() -> SetRangeUser(-1980, -1830);
+	debugPlots.layer3.GetXaxis() -> SetRangeUser(830, 980);
+	debugPlots.layer3.GetYaxis() -> SetRangeUser(-1000, -850);
+	debugPlots.layer1.GetZaxis() -> SetRangeUser(-5, 2);
+	debugPlots.layer2.GetZaxis() -> SetRangeUser(-5, 2);
+	debugPlots.layer3.GetZaxis() -> SetRangeUser(-5, 2);
+	for(const auto& canvas: canvases)
+	{
+		canvas -> Update();
+		std::string filename = canvas -> GetTitle();
+		std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
+		filename =  filename + ".eps";
+		canvas -> SaveAs(filename.c_str());
+	}
 }
 
 void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, std::vector<TrajClusterAssociationData>& onTrackClusters) try
@@ -180,10 +325,10 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 	std::map<DetId, const edm::DetSet<PixelDigi>*> detIdToMarkerPtrMap;
 	for(const auto& markerSet: *digiFlagsCollection)
 	{
-		detIdToMarkerPtrMap.insert(std::pair<DetId, const edm::DetSet<PixelDigi>*>(markerSet.detId(), &markerSet));
+		detIdToMarkerPtrMap.insert(std::make_pair<DetId, const edm::DetSet<PixelDigi>*>(markerSet.detId(), &markerSet));
 	}
 	// Looping on all the clusters
-	for(const auto& clusterSetOnModule: *clusterCollection)
+	for(const edmNew::DetSet<SiPixelCluster>& clusterSetOnModule: *clusterCollection)
 	{
 		// std::cerr << "Num clusters on module: " << clusterSetOnModule.size() << std::endl;
 		DetId detId(clusterSetOnModule.id());
@@ -456,6 +601,93 @@ void SplitClusterAnalyzer::printEvtInfo(const std::string& streamType)
 		" Ls: "    << currentEvent -> luminosityBlock() << 
 		" Event: " << currentEvent -> id().event()      << c_def << std::endl;
 }
+
+
+int moduleAndColToXCoordinate(const int& module, const int& col)
+{
+	int moduleCoordinate = NOVAL_I;
+	if(module < 0) moduleCoordinate = (module - 0.5) * 416 + col + 1;
+	if(0 < module) moduleCoordinate = (module - 0.5) * 416 + col;
+	return moduleCoordinate;
+}
+
+int ladderAndRowToYCoordinate(const int& ladder, const int& row)
+{
+	int ladderCoordinate = NOVAL_I;
+	int isReversedModule = (ladder + (0 < ladder)) % 2;
+	if(isReversedModule)
+	{
+		if(ladder < 0) ladderCoordinate = (ladder + 0.5) * 160 - row;
+		if(0 < ladder) ladderCoordinate = (ladder + 0.5) * 160 - row - 1;
+		if(ladder == 1)  ladderCoordinate += 80;
+		if(ladder == -1) ladderCoordinate -= 80;
+	}
+	else
+	{
+		if(ladder < 0) ladderCoordinate = (ladder - 0.5) * 160 + row + 1;
+		if(0 < ladder) ladderCoordinate = (ladder - 0.5) * 160 + row;
+		if(ladder == 1)  ladderCoordinate += 80;
+		if(ladder == -1) ladderCoordinate -= 80;
+	}
+	return ladderCoordinate;
+}
+
+void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers)
+{
+	colModifiers.clear();
+	rowModifiers.clear();
+	static auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
+	{
+		if(pixelIsMarked)
+		{
+			colModifiers.push_back(col);
+			rowModifiers.push_back(row);
+		}
+	};
+	checkInsertIndexPair(markerState & (1 << 0), -1, -1);
+	checkInsertIndexPair(markerState & (1 << 1), -1,  0);
+	checkInsertIndexPair(markerState & (1 << 2), -1, +1);
+	checkInsertIndexPair(markerState & (1 << 3),  0, -1);
+	checkInsertIndexPair(markerState & (1 << 4),  0, +1);
+	checkInsertIndexPair(markerState & (1 << 5), +1, -1);
+	checkInsertIndexPair(markerState & (1 << 6), +1,  0);
+	checkInsertIndexPair(markerState & (1 << 7), +1, +1);
+}
+
+void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels)
+{
+	if(mod_on.det == 1) return;
+	int moduleCoordinate = moduleAndColToXCoordinate(mod_on.module, col);
+	int ladderCoordinate = ladderAndRowToYCoordinate(mod_on.ladder, row);
+	TH2D* plotToFill = nullptr;
+	if(mod_on.layer == 1)      plotToFill = &(histogramTriplet.layer1);
+	else if(mod_on.layer == 2) plotToFill = &(histogramTriplet.layer2);
+	else if(mod_on.layer == 3) plotToFill = &(histogramTriplet.layer3);
+	else
+	{
+		std::cout << c_red << "Error: " << c_def << "layer coordinate of a pixel is invalid: " << mod_on.layer << std::endl;
+		std::cout << "Info: Det: " << mod_on.det << ". Ladder:" << mod_on.ladder << ". Module:" << mod_on.module << "." << std::endl;
+		return;
+	}
+	if(markerState == 0) plotToFill -> Fill(moduleCoordinate, ladderCoordinate, -1);
+	if(markerState != 0) plotToFill -> Fill(moduleCoordinate, ladderCoordinate, markerState);
+	if(!fillMissingPixels) return;
+	std::vector<int> colModifiers;
+	std::vector<int> rowModifiers;
+	float xAxisBinWidth = plotToFill -> GetXaxis() -> GetBinWidth(1);
+	float yAxisBinWidth = plotToFill -> GetYaxis() -> GetBinWidth(1);
+	markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
+	// std::cout << "moduleCoordinate: " << moduleCoordinate << std::endl;
+	// std::cout << "ladderCoordinate: " << moduleCoordinate << std::endl;
+	for(unsigned int markedNeighbourIndex = 0; markedNeighbourIndex < colModifiers.size(); ++markedNeighbourIndex)
+	{
+		// std::cout << "colModifier: " << colModifiers[markedNeighbourIndex] << std::endl;
+		// std::cout << "rwModifier: "  << rowModifiers[markedNeighbourIndex] << std::endl;
+		plotToFill -> SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex] * xAxisBinWidth, ladderCoordinate + rowModifiers[markedNeighbourIndex] * yAxisBinWidth, -5);
+	}
+}
+
+
 
 DEFINE_FWK_MODULE(SplitClusterAnalyzer);
 

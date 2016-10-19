@@ -77,6 +77,8 @@
 // #include <TH1F.h>
 // #include <TH2I.h>
 #include <TH2D.h>
+#include <TStyle.h>
+#include <TCanvas.h>
 // #include <TRandom3.h>
 
 ////////////////
@@ -87,8 +89,22 @@
 #include <string>
 #include <vector>
 
+struct LayerEventPlotTriplet
+{
+	LayerEventPlotTriplet(int nameIndex) : 
+		layer1(("event_plot_layer_1_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_1_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
+		layer2(("event_plot_layer_2_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_2_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
+		layer3(("event_plot_layer_3_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_3_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
+	TH2D layer1;
+	TH2D layer2;
+	TH2D layer3;
+};
+
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
+
+	LayerEventPlotTriplet debugPlots = LayerEventPlotTriplet(1);
+
 	private:
 		struct TrajClusterAssociationData
 		{
@@ -164,5 +180,11 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 };
 
+int moduleAndColToXCoordinate(const int& module, const int& col);
+int ladderAndRowToYCoordinate(const int& ladder, const int& row);
+void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
+void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
+void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
+void printClusterFieldInfo(const Cluster& clusterField);
 
 #endif
