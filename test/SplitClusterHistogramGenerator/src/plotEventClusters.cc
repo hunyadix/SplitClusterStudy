@@ -303,50 +303,25 @@ void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mo
 	int moduleCoordinate = moduleAndColToXCoordinate(mod_on.module, col);
 	int ladderCoordinate = ladderAndRowToYCoordinate(mod_on.ladder, row);
 	int fillWeight = markerState ? 2 : 1;
+	TH2D* plotToFill = nullptr;
+	if(mod_on.layer == 1)      plotToFill = &(histogramTriplet.layer1);
+	else if(mod_on.layer == 2) plotToFill = &(histogramTriplet.layer2);
+	else if(mod_on.layer == 3) plotToFill = &(histogramTriplet.layer3);
+	else
+	{
+		std::cout << c_red << "Error: " << c_def << "layer coordinate of a pixel is invalid: " << mod_on.layer << std::endl;
+		std::cout << "Info: Det: " << mod_on.det << ". Ladder:" << mod_on.ladder << ". Module:" << mod_on.module << "." << std::endl;
+		return;
+	}
+	// if(plotToFill -> GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer3, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
+	plotToFill -> Fill(moduleCoordinate, ladderCoordinate, fillWeight);
+	if(!fillMissingPixels) return;
 	std::vector<int> colModifiers;
 	std::vector<int> rowModifiers;
-	if(fillMissingPixels) markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
-	switch(mod_on.layer)
+	markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
+	for(unsigned int markedNeighbourIndex = 0; markedNeighbourIndex < colModifiers.size(); ++markedNeighbourIndex)
 	{
-		case 1:
-			// if(histogramTriplet.layer1.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer1, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
-			histogramTriplet.layer1.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
-			if(fillMissingPixels)
-			{
-				for(int markedNeighbourIndex: range(colModifiers.size()))
-				{
-					histogramTriplet.layer1.SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
-				}
-				break;
-			}
-		case 2:
-			// if(histogramTriplet.layer2.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer2, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
-			histogramTriplet.layer2.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
-			if(fillMissingPixels)
-			{
-				for(int markedNeighbourIndex: range(colModifiers.size()))
-				{
-					histogramTriplet.layer2.SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
-				}
-				break;
-			}
-			break;
-		case 3:
-			// if(histogramTriplet.layer3.GetBinContent(moduleCoordinate, ladderCoordinate) != 0) printFillEventPlotError(histogramTriplet.layer3, mod_on, col, row, markerState, moduleCoordinate, ladderCoordinate, isReversedModule);
-			histogramTriplet.layer3.Fill(moduleCoordinate, ladderCoordinate, fillWeight);
-			if(fillMissingPixels)
-			{
-				for(int markedNeighbourIndex: range(colModifiers.size()))
-				{
-					histogramTriplet.layer3.SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
-				}
-				break;
-			}
-			break;
-		default:
-			// std::cout << c_red << "Error: " << c_def << "layer coordinate of a pixel is invalid: " << mod_on.layer << std::endl;
-			std::cout << "Info: Det: " << mod_on.det << ". Ladder:" << mod_on.ladder << ". Module:" << mod_on.module << "." << std::endl;
-			break;
+		plotToFill -> SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex], ladderCoordinate + rowModifiers[markedNeighbourIndex], 20);
 	}
 }
 

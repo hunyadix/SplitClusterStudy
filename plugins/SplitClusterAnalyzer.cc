@@ -71,7 +71,7 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	iEvent.getByToken(trajTrackCollectionToken, trajTrackCollection);
 	// Trying to access the clusters
 	if(!digiFlagsCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch dcol lost digis.");
-	if(!clusterCollection.isValid())   handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
+	if(!clusterCollection  .isValid()) handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
 	if(!trajTrackCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch trajectory measurements.");
 	// Resetting data fields
 	clearAllContainers();
@@ -180,10 +180,10 @@ void SplitClusterAnalyzer::handleClusters(const edm::Handle<edmNew::DetSetVector
 	std::map<DetId, const edm::DetSet<PixelDigi>*> detIdToMarkerPtrMap;
 	for(const auto& markerSet: *digiFlagsCollection)
 	{
-		detIdToMarkerPtrMap.insert(std::pair<DetId, const edm::DetSet<PixelDigi>*>(markerSet.detId(), &markerSet));
+		detIdToMarkerPtrMap.insert(std::make_pair<DetId, const edm::DetSet<PixelDigi>*>(markerSet.detId(), &markerSet));
 	}
 	// Looping on all the clusters
-	for(const auto& clusterSetOnModule: *clusterCollection)
+	for(const edmNew::DetSet<SiPixelCluster>& clusterSetOnModule: *clusterCollection)
 	{
 		// std::cerr << "Num clusters on module: " << clusterSetOnModule.size() << std::endl;
 		DetId detId(clusterSetOnModule.id());
