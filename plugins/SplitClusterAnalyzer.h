@@ -89,21 +89,55 @@
 #include <string>
 #include <vector>
 
-struct LayerEventPlotTriplet
-{
-	LayerEventPlotTriplet(int nameIndex) : 
-		layer1(("event_plot_layer_1_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_1_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
-		layer2(("event_plot_layer_2_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_2_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
-		layer3(("event_plot_layer_3_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_3_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
-	TH2D layer1;
-	TH2D layer2;
-	TH2D layer3;
-};
 
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
 
-	LayerEventPlotTriplet debugPlots = LayerEventPlotTriplet(1);
+	struct LayerEventPlotTriplet
+	{
+		TH2D layer1;
+		TH2D layer2;
+		TH2D layer3;
+		LayerEventPlotTriplet(int nameIndex) : 
+			layer1(("event_plot_layer_1_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_1_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
+			layer2(("event_plot_layer_2_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_2_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
+			layer3(("event_plot_layer_3_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_3_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
+		LayerEventPlotTriplet(const std::string& name, const std::string& title) : 
+			layer1((name + "_layer_1").c_str(), (title + "_layer_1").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
+			layer2((name + "_layer_2").c_str(), (title + "_layer_2").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
+			layer3((name + "_layer_3").c_str(), (title + "_layer_3").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
+
+	};
+
+	struct PlotDefinition
+	{
+		enum Type {digi, digiFromMarker, cluster};
+		int startEventIndex;
+		int endEventIndex;
+		std::string plotTitle;
+		Type type;
+		std::vector<std::pair<int, int>> xAxisRange;
+		std::vector<std::pair<int, int>> yAxisRange;
+		LayerEventPlotTriplet histograms;
+		PlotDefinition(const int& startEventIndexArg, const int& endEventIndexArg, const std::string& plotTitleArg, Type typeArg, const std::vector<std::pair<int, int>>& xAxisRangeArg, const std::vector<std::pair<int, int>>& yAxisRangeArg) :
+			startEventIndex(startEventIndexArg),
+			endEventIndex(endEventIndexArg),
+			plotTitle(plotTitleArg),
+			type(typeArg),
+			xAxisRange(xAxisRangeArg),
+			yAxisRange(yAxisRangeArg),
+			histograms(plotTitle, plotTitle)
+			{
+				if(xAxisRange.size() != 3 || yAxisRange.size() != 3)
+				{
+					std::cout << "Check axis range sizes for plot definitions!" << std::endl;
+					exit(-1);
+				}
+			}
+	};
+
+	int eventCounter = 0;
+	std::vector<PlotDefinition> plotDefinitionCollection;
 
 	private:
 		struct TrajClusterAssociationData
@@ -118,7 +152,7 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		const edm::Event* currentEvent;
 		// Tokens
 		edm::EDGetTokenT<edm::DetSetVector<SiPixelRawDataError>> rawDataErrorToken;
-		// edm::EDGetTokenT<edm::DetSetVector<PixelDigi>>           pixelDigisToken;
+		edm::EDGetTokenT<edm::DetSetVector<PixelDigi>>           pixelDigisToken;
 		edm::EDGetTokenT<edm::DetSetVector<PixelDigi>>           digiFlagsToken;
 		edm::EDGetTokenT<edmNew::DetSetVector<SiPixelCluster>>   clustersToken;
 		edm::EDGetTokenT<TrajTrackAssociationCollection>         trajTrackCollectionToken;
@@ -162,6 +196,22 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		void handleDefaultError(const std::string& exceptionType, const std::string& streamType, std::vector<std::string> msg);
 		void printEvtInfo(const std::string& streamType);
 
+		///////////////////////////////////////
+		// Added for plotting event clusters //
+		///////////////////////////////////////
+
+		void        defineEventPlots();
+		void        updateEventPlots(const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
+		void        saveReadyEventPlots();
+		static int  moduleAndColToXCoordinate(const int& module, const int& col);
+		static int  ladderAndRowToYCoordinate(const int& ladder, const int& row);
+		static void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
+		static void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
+		static void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
+		static void printClusterFieldInfo(const Cluster& clusterField);
+		void        fillEventPlotWithClusters(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
+		void        fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
+
 		/////////////
 		// Utility //
 		/////////////
@@ -179,12 +229,5 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 		virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 };
-
-int moduleAndColToXCoordinate(const int& module, const int& col);
-int ladderAndRowToYCoordinate(const int& ladder, const int& row);
-void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
-void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
-void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
-void printClusterFieldInfo(const Cluster& clusterField);
 
 #endif
