@@ -79,6 +79,9 @@
 #include <TH2D.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <TLegend.h>
+#include <TLegendEntry.h>
+#include <TAttFill.h>
 // #include <TRandom3.h>
 
 ////////////////
@@ -103,15 +106,15 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 			layer2(("event_plot_layer_2_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_2_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
 			layer3(("event_plot_layer_3_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_3_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
 		LayerEventPlotTriplet(const std::string& name, const std::string& title) : 
-			layer1((name + "_layer_1").c_str(), (title + "_layer_1").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
-			layer2((name + "_layer_2").c_str(), (title + "_layer_2").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
-			layer3((name + "_layer_3").c_str(), (title + "_layer_3").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
+			layer1((name + "_layer_1").c_str(), (title + "_layer_1" + ";pixel column;pixel row").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
+			layer2((name + "_layer_2").c_str(), (title + "_layer_2" + ";pixel column;pixel row").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
+			layer3((name + "_layer_3").c_str(), (title + "_layer_3" + ";pixel column;pixel row").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
 
 	};
 
 	struct PlotDefinition
 	{
-		enum Type {digi, digiFromMarker, cluster};
+		enum Type {digi, digiFromMarker, digiFromMarkerWithNeighbours, cluster};
 		int startEventIndex;
 		int endEventIndex;
 		std::string plotTitle;
@@ -209,8 +212,8 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		static void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
 		static void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
 		static void printClusterFieldInfo(const Cluster& clusterField);
+		void        fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors, bool fillMissingPixels = false);
 		void        fillEventPlotWithClusters(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
-		void        fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
 
 		/////////////
 		// Utility //

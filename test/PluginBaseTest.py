@@ -19,7 +19,7 @@ process.MessageLogger = cms.Service("MessageLogger",
 	cerr = cms.untracked.PSet(threshold  = cms.untracked.string('DEBUG')),
 	debugModules = cms.untracked.vstring('SplitClusterAnalyzerPlugin'))
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1))
 process.source = cms.Source("PoolSource",
 	fileNames = cms.untracked.vstring('file:./GENSIMRECO.root'),
 	secondaryFileNames = cms.untracked.vstring()
