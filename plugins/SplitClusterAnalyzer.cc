@@ -94,18 +94,8 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	eventTree -> Fill();
 	updateEventPlots(digiCollection, digiFlagsCollection, clusterCollection, trackerTopology, fedErrors);
 	saveReadyEventPlots();
+	std::cout << "Number of digi collection entries: " << CMSSWPluginTools::getNumDigiCollectionEntries(digiCollection) << std::endl;
 	++eventCounter;
-	// TH1D adcs("adcs", "Adc values", 256, 0, 256);
-	// for(const auto& digisOnModulePtr: *digiCollection)
-	// {
-	// 	for(const auto& digi: digisOnModulePtr)
-	// 	{
-	// 		adcs.Fill(digi.adc());
-	// 	}
-	// }
-	// TCanvas canvas("adcCanvas", "Adc values");
-	// adcs.Draw();
-	// canvas.SaveAs("adc_values.eps");
 }
 
 void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, std::vector<TrajClusterAssociationData>& onTrackClusters) try
@@ -531,7 +521,7 @@ void SplitClusterAnalyzer::defineEventPlots()
 
 	// Harmadik: A szomszédokat tartalmazó marker kollekcióból készült plot
 
-	plotDefinitionCollection.push_back({0, 0, "Markers with neighbours, lowEta, event 0", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+	// plotDefinitionCollection.push_back({0, 0, "Markers with neighbours, lowEta, event 0", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
 	// plotDefinitionCollection.push_back({1, 1, "Markers with neighbours, lowEta, event 1", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
 	// plotDefinitionCollection.push_back({2, 2, "Markers with neighbours, lowEta, event 2", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
 	// plotDefinitionCollection.push_back({3, 3, "Markers with neighbours, lowEta, event 3", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
@@ -542,7 +532,7 @@ void SplitClusterAnalyzer::defineEventPlots()
 	// plotDefinitionCollection.push_back({8, 8, "Markers with neighbours, lowEta, event 8", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
 	// plotDefinitionCollection.push_back({9, 9, "Markers with neighbours, lowEta, event 9", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
 
-	plotDefinitionCollection.push_back({0, 0, "Markers with neighbours, highEta, event 0", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+	// plotDefinitionCollection.push_back({0, 0, "Markers with neighbours, highEta, event 0", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
 	// plotDefinitionCollection.push_back({1, 1, "Markers with neighbours, highEta, event 1", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
 	// plotDefinitionCollection.push_back({2, 2, "Markers with neighbours, highEta, event 2", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
 	// plotDefinitionCollection.push_back({3, 3, "Markers with neighbours, highEta, event 3", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
@@ -676,90 +666,6 @@ void SplitClusterAnalyzer::saveReadyEventPlots()
 	}
 }
 
-int SplitClusterAnalyzer::moduleAndColToXCoordinate(const int& module, const int& col)
-{
-	int moduleCoordinate = NOVAL_I;
-	if(module < 0) moduleCoordinate = (module - 0.5) * 416 + col + 1;
-	if(0 < module) moduleCoordinate = (module - 0.5) * 416 + col;
-	return moduleCoordinate;
-}
-
-int SplitClusterAnalyzer::ladderAndRowToYCoordinate(const int& ladder, const int& row)
-{
-	int ladderCoordinate = NOVAL_I;
-	int isReversedModule = (ladder + (0 < ladder)) % 2;
-	if(isReversedModule)
-	{
-		if(ladder < 0) ladderCoordinate = (ladder + 0.5) * 160 - row;
-		if(0 < ladder) ladderCoordinate = (ladder + 0.5) * 160 - row - 1;
-		if(ladder == 1)  ladderCoordinate += 80;
-		if(ladder == -1) ladderCoordinate -= 80;
-	}
-	else
-	{
-		if(ladder < 0) ladderCoordinate = (ladder - 0.5) * 160 + row + 1;
-		if(0 < ladder) ladderCoordinate = (ladder - 0.5) * 160 + row;
-		if(ladder == 1)  ladderCoordinate += 80;
-		if(ladder == -1) ladderCoordinate -= 80;
-	}
-	return ladderCoordinate;
-}
-
-void SplitClusterAnalyzer::markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers)
-{
-	colModifiers.clear();
-	rowModifiers.clear();
-	static auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
-	{
-		if(pixelIsMarked)
-		{
-			colModifiers.push_back(col);
-			rowModifiers.push_back(row);
-		}
-	};
-	checkInsertIndexPair(markerState & (1 << 0), -1, -1);
-	checkInsertIndexPair(markerState & (1 << 1), -1,  0);
-	checkInsertIndexPair(markerState & (1 << 2), -1, +1);
-	checkInsertIndexPair(markerState & (1 << 3),  0, -1);
-	checkInsertIndexPair(markerState & (1 << 4),  0, +1);
-	checkInsertIndexPair(markerState & (1 << 5), +1, -1);
-	checkInsertIndexPair(markerState & (1 << 6), +1,  0);
-	checkInsertIndexPair(markerState & (1 << 7), +1, +1);
-}
-
-void SplitClusterAnalyzer::fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels)
-{
-	if(mod_on.det != 0) return;
-	int moduleCoordinate = moduleAndColToXCoordinate(mod_on.module, col);
-	int ladderCoordinate = ladderAndRowToYCoordinate(mod_on.ladder, row);
-	TH2D* plotToFill = nullptr;
-	if(mod_on.layer == 1)      plotToFill = &(histogramTriplet.layer1);
-	else if(mod_on.layer == 2) plotToFill = &(histogramTriplet.layer2);
-	else if(mod_on.layer == 3) plotToFill = &(histogramTriplet.layer3);
-	else
-	{
-		std::cout << c_red << "Error: " << c_def << "layer coordinate of a pixel is invalid: " << mod_on.layer << std::endl;
-		std::cout << "Info: Det: " << mod_on.det << ". Ladder:" << mod_on.ladder << ". Module:" << mod_on.module << "." << std::endl;
-		return;
-	}
-	if(markerState == 0) plotToFill -> Fill(moduleCoordinate, ladderCoordinate, 0.5);
-	if(markerState != 0) plotToFill -> Fill(moduleCoordinate, ladderCoordinate, markerState);
-	if(!fillMissingPixels) return;
-	std::vector<int> colModifiers;
-	std::vector<int> rowModifiers;
-	float xAxisBinWidth = plotToFill -> GetXaxis() -> GetBinWidth(1);
-	float yAxisBinWidth = plotToFill -> GetYaxis() -> GetBinWidth(1);
-	markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
-	std::cout << "moduleCoordinate: " << moduleCoordinate << std::endl;
-	std::cout << "ladderCoordinate: " << ladderCoordinate << std::endl;
-	for(unsigned int markedNeighbourIndex = 0; markedNeighbourIndex < colModifiers.size(); ++markedNeighbourIndex)
-	{
-		std::cout << "modified moduleCoordinate  (col): " << moduleCoordinate + colModifiers[markedNeighbourIndex] * xAxisBinWidth << std::endl;
-		std::cout << "modified ladderCoordinate (row): "  << ladderCoordinate + rowModifiers[markedNeighbourIndex] * yAxisBinWidth << std::endl;
-		plotToFill -> SetBinContent(moduleCoordinate + colModifiers[markedNeighbourIndex] * xAxisBinWidth, ladderCoordinate + rowModifiers[markedNeighbourIndex] * yAxisBinWidth, 1000);
-		std::cin.get();
-	}
-}
 
 void SplitClusterAnalyzer::fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors, bool fillMissingPixels)
 {
@@ -772,7 +678,7 @@ void SplitClusterAnalyzer::fillEventPlotWithDigis(LayerEventPlotTriplet& histogr
 		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
 		for(const PixelDigi& pixel: markedDigisOnModule)
 		{
-			fillEventPlot(histogramTriplet, mod_on, pixel.column(), pixel.row(), pixel.adc(), fillMissingPixels);
+			histogramTriplet.fillEventPlot(mod_on, pixel.column(), pixel.row(), pixel.adc(), fillMissingPixels);
 		}
 	}
 }
@@ -793,7 +699,7 @@ void SplitClusterAnalyzer::fillEventPlotWithClusters(LayerEventPlotTriplet& hist
 			const auto currentAdcs           = currentCluster.pixelADC();
 			for(unsigned int pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
 			{
-				fillEventPlot(histogramTriplet, mod_on, currentPixelPositions[pixelIndex].y, currentPixelPositions[pixelIndex].x, currentAdcs[pixelIndex] / 1000.0);
+				histogramTriplet.fillEventPlot(mod_on, currentPixelPositions[pixelIndex].y, currentPixelPositions[pixelIndex].x, static_cast<int>(currentAdcs[pixelIndex] / 1000.0));
 			}
 		}
 	}

@@ -24,6 +24,8 @@
 // Tools //
 ///////////
 
+// Common tools
+#include "../CMSSWPluginToolkit/interface/CMSSWPluginTools.h"
 // Fed errors
 #include "../FedErrorFetcher/interface/FedErrorFetcher.h"
 // Tree branching
@@ -48,8 +50,7 @@
 // Position
 #include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
 // #include "Geometry/TrackerNumberingBuilder/interface/GeometricDet.h"
-
-
+// Timer
 #include "../TimerForBenchmarking/interface/TimerColored.h"
 
 ///////////
@@ -66,6 +67,8 @@
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 // For the merging
 #include "../interface/ClusterPairMergingValidator.h"
+
+#include "../interface/LayerEventPlotTriplet.h"
 
 ////////////////////
 // Root libraries //
@@ -92,26 +95,8 @@
 #include <string>
 #include <vector>
 
-
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
-
-	struct LayerEventPlotTriplet
-	{
-		TH2D layer1;
-		TH2D layer2;
-		TH2D layer3;
-		LayerEventPlotTriplet(int nameIndex) : 
-			layer1(("event_plot_layer_1_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_1_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
-			layer2(("event_plot_layer_2_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_2_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
-			layer3(("event_plot_layer_3_" + std::to_string(nameIndex)).c_str(), ("event_plot_layer_3_" + std::to_string(nameIndex) + ";module pix. (col);ladder pix. (row)").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
-		LayerEventPlotTriplet(const std::string& name, const std::string& title) : 
-			layer1((name + "_layer_1").c_str(), (title + "_layer_1" + ";pixel column;pixel row").c_str(), 3743, -1871.5, 1871.5, 3359, -1679.5, 1679.5),
-			layer2((name + "_layer_2").c_str(), (title + "_layer_2" + ";pixel column;pixel row").c_str(), 3743, -1871.5, 1871.5, 5279, -2639.5, 2639.5),
-			layer3((name + "_layer_3").c_str(), (title + "_layer_3" + ";pixel column;pixel row").c_str(), 3743, -1871.5, 1871.5, 7199, -3599.5, 3599.5) {}
-
-	};
-
 	struct PlotDefinition
 	{
 		enum Type {digi, digiFromMarker, digiFromMarkerWithNeighbours, cluster};
