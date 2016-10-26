@@ -230,8 +230,8 @@ void BenchmarkingTest::beginJob()
 	ntupleOutputFile = new TFile(ntupleOutputFilename.c_str(), "RECREATE");
 	clusterTree = new TTree("clustTree", "Pixel clusters");
 	// Clusters
-	clusterTree -> Branch("module",       &clusterField.mod,          ModuleData::list.c_str());
-	clusterTree -> Branch("module_on",    &clusterField.mod_on,       ModuleData::list.c_str());
+	// clusterTree -> Branch("module",       &clusterField.mod,          ModuleData::list.c_str());
+	// clusterTree -> Branch("module_on",    &clusterField.mod_on,       ModuleData::list.c_str());
 	clusterTree -> Branch("x",            &clusterField.x,            "x/F");
 	clusterTree -> Branch("y",            &clusterField.y,            "y/F");
 	clusterTree -> Branch("clust_sizeX",  &clusterField.sizeX,        "sizeX/I");

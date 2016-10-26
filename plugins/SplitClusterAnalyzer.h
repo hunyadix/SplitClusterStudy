@@ -68,7 +68,9 @@
 // For the merging
 #include "../interface/ClusterPairMergingValidator.h"
 
+#include "../interface/CanvasExtras.h"
 #include "../interface/LayerEventPlotTriplet.h"
+#include "../interface/ModuleClusterPlot.h"
 
 ////////////////////
 // Root libraries //
@@ -123,6 +125,8 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 				}
 			}
 	};
+
+	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
 
 	int eventCounter = 0;
 	std::vector<PlotDefinition> plotDefinitionCollection;

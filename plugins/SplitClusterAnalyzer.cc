@@ -43,10 +43,87 @@ void SplitClusterAnalyzer::beginJob()
 	mergeTree   = new TTree("mergeTree", "Cluster merging informations");
 	MergingStatisticsTree::defineMergingStatTreeBranches(mergeTree, mergeStatField);
 	// Plots
-	gStyle -> SetPalette(1);
-	gStyle -> SetOptStat(0);
 	eventCounter = 0;
 	defineEventPlots();
+	// ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg)
+
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 0, 0));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 1, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 2, 2));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 3, 3));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 4, 4));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 5, 5));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 6, 6));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 7, 7));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 8, 8));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 9, 9));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 0, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 2, 2, 0, 9));
+
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 0, 0));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 1, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 2, 2));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 3, 3));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 4, 4));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 5, 5));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 6, 6));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 7, 7));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 8, 8));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 9, 9));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 0, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 2, 2, 0, 9));
+
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 0, 0));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 1, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 2, 2));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 3, 3));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 4, 4));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 5, 5));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 6, 6));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 7, 7));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 8, 8));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 9, 9));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 0, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 2, 2, 0, 9));
+	
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 0, 0));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 1, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 2, 2));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 3, 3));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 4, 4));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 5, 5));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 6, 6));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 7, 7));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 8, 8));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 9, 9));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 0, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digi, 1, 4, 6, 0, 9));
+
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 0, 0));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 1, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 2, 2));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 3, 3));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 4, 4));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 5, 5));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 6, 6));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 7, 7));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 8, 8));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 9, 9));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 0, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarker, 1, 4, 6, 0, 9));
+
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 0, 0));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 1, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 2, 2));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 3, 3));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 4, 4));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 5, 5));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 6, 6));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 7, 7));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 8, 8));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 9, 9));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 0, 1));
+	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digiFromMarkerWithNeighbours, 1, 4, 6, 0, 9));
 }
 
 void SplitClusterAnalyzer::endJob()
@@ -95,6 +172,8 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	updateEventPlots(digiCollection, digiFlagsCollection, clusterCollection, trackerTopology, fedErrors);
 	saveReadyEventPlots();
 	std::cout << "Number of digi collection entries: " << CMSSWPluginTools::getNumDigiCollectionEntries(digiCollection) << std::endl;
+	ModuleClusterPlot::fillAll(digiCollection, digiFlagsCollection, trackerTopology, eventCounter);
+	ModuleClusterPlot::saveAllFinished(eventCounter);
 	++eventCounter;
 }
 
@@ -161,7 +240,7 @@ SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew
 	for(const auto& clusterSetOnModule: *clusterCollection)
 	{
 		DetId detId(clusterSetOnModule.id());
-		// Discarding clusters on a different module
+		// Discarding clusters on a different mod2ule
 		if(detId.rawId() != rawId) continue;
 		unsigned int subdetId = detId.subdetId();
 		// Discarding non-pixel clusters
@@ -575,19 +654,10 @@ void SplitClusterAnalyzer::updateEventPlots(const edm::Handle<edm::DetSetVector<
 
 void SplitClusterAnalyzer::saveReadyEventPlots()
 {
-	const Int_t NRGBs = 11;
-	const Int_t NCont = 999;
-	const Int_t nLevels = 999;
-	Double_t levels[nLevels] = {0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0};
-	Double_t stops[NRGBs] = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
-	Double_t red[NRGBs]   = { 0.00, 0.60, 0.90, 0.40, 0.00, 0.00, 0.10, 0.30, 0.70, 1.00, 1.00 };
-	Double_t green[NRGBs] = { 0.00, 0.30, 0.10, 0.60, 0.80, 0.80, 0.60, 0.80, 0.30, 0.50, 0.00 };
-	Double_t blue[NRGBs]  = { 0.00, 0.60, 0.90, 0.40, 0.00, 0.60, 1.00, 1.00, 0.10, 0.10, 0.00 };
-	auto colorNotFlagged = TColor::GetColor(0.0f, 0.0f, 0.0f);
-	auto colorFlagged    = TColor::GetColor(0.1f, 1.0f, 0.6f);
-	auto colorNeighbour  = TColor::GetColor(1.0f, 0.0f, 0.0f);
-	TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
-	gStyle -> SetNumberContours(NCont);
+	CanvasExtras::setMulticolorColzPalette();
+    auto colorNotFlagged = TColor::GetColor(0.0f, 0.0f, 0.0f);
+    auto colorFlagged    = TColor::GetColor(0.1f, 1.0f, 0.6f);
+    auto colorNeighbour  = TColor::GetColor(1.0f, 0.0f, 0.0f);
 	for(PlotDefinition& definition: plotDefinitionCollection)
 	{
 		if(eventCounter == definition.endEventIndex)
@@ -598,7 +668,7 @@ void SplitClusterAnalyzer::saveReadyEventPlots()
 			definition.histograms.layer1.GetYaxis() -> SetRangeUser(definition.yAxisRange[0].first, definition.yAxisRange[0].second);
 			definition.histograms.layer2.GetYaxis() -> SetRangeUser(definition.yAxisRange[1].first, definition.yAxisRange[1].second);
 			definition.histograms.layer3.GetYaxis() -> SetRangeUser(definition.yAxisRange[2].first, definition.yAxisRange[2].second);
-			definition.histograms.layer2.SetContour((sizeof(levels)/sizeof(Double_t)), levels);
+			// definition.histograms.layer2.SetContour((sizeof(CanvasExtras::levels)/sizeof(Double_t)), CanvasExtras::levels);
 			definition.histograms.layer1.GetZaxis() -> SetRangeUser(0.5, 1500.0);
 			definition.histograms.layer2.GetZaxis() -> SetRangeUser(0.5, 1500.0);
 			definition.histograms.layer3.GetZaxis() -> SetRangeUser(0.5, 1500.0);
