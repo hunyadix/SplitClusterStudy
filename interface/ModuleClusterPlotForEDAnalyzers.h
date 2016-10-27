@@ -72,7 +72,7 @@ void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std
 {
 	colModifiers.clear();
 	rowModifiers.clear();
-	static auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
+	static const auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
 	{
 		if(pixelIsMarked)
 		{
@@ -154,7 +154,7 @@ void ModuleClusterPlot::fill(const edm::Handle<edm::DetSetVector<PixelDigi>> dig
 void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> digiCollection, const edm::Handle<edm::DetSetVector<PixelDigi>> digiFlagsCollection, const TrackerTopology* const trackerTopology, const int& eventNum)
 {
 	auto digiPlotsInRange = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
-	digiPlotsInRange      = filter(digiPlotsInRange,            [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type == digi; });
+	digiPlotsInRange      = filter(digiPlotsInRange,            []          (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type == digi; });
 	for(const edm::DetSet<PixelDigi>& digisOnModule: *digiCollection)
 	{
 		DetId detId(digisOnModule.detId());
@@ -177,7 +177,7 @@ void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> 
 		}
 	}
 	auto markerPlotsInRange = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
-	markerPlotsInRange      = filter(markerPlotsInRange,          [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type != digi; });
+	markerPlotsInRange      = filter(markerPlotsInRange,          []          (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type != digi; });
 	for(const edm::DetSet<PixelDigi>& markersOnModule: *digiFlagsCollection)
 	{
 		DetId detId(markersOnModule.detId());
