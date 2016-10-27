@@ -1,6 +1,8 @@
 include Makefile.arch
 SrcSuf = cc
 
+CXX += -std=c++11
+
 # Utility
 
 CONSOLECOLORS_S = ../../src/ConsoleColors.$(SrcSuf)
@@ -30,6 +32,10 @@ OBJS     += $(TTREETOOLS_O)
 CLUSTERDATATREE_S = ../../src/ClusterDataTree.$(SrcSuf)
 CLUSTERDATATREE_O = ./obj/ClusterDataTree.$(ObjSuf)
 OBJS     += $(TTREETOOLS_O)
+
+MODULECLUSTERPLOT_S = ./src/ModuleClusterPlot.$(SrcSuf)
+MODULECLUSTERPLOT_O = ./obj/ModuleClusterPlot.$(ObjSuf)
+OBJS     += $(MODULECLUSTERPLOT_O)
 
 # PROGRAMS
 
@@ -86,7 +92,7 @@ all: $(PROGRAMS)
 
 # Executables
 
-$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(MODULECLUSTERPLOT_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -176,6 +182,11 @@ $(TTREETOOLS_O): $(TTREETOOLS_S)
 
 $(CLUSTERDATATREE_O): $(CLUSTERDATATREE_S)
 	@printf "Compiling utility: \"ClusterDataTree\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(MODULECLUSTERPLOT_O): $(MODULECLUSTERPLOT_S)
+	@printf "Compiling utility: \"ModuleClusterPlot\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 

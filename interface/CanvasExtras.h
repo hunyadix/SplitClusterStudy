@@ -4,6 +4,8 @@
 #include "TCanvas.h"
 #include "TPaletteAxis.h"
 #include "TH2.h"
+#include "TList.h"
+#include "TColor.h"
 #include "TStyle.h"
 
 namespace CanvasExtras

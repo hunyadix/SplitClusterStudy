@@ -70,7 +70,7 @@
 
 #include "../interface/CanvasExtras.h"
 #include "../interface/LayerEventPlotTriplet.h"
-#include "../interface/ModuleClusterPlot.h"
+#include "../interface/ModuleClusterPlotForEDAnalyzers.h"
 
 ////////////////////
 // Root libraries //
@@ -99,37 +99,37 @@
 
 class SplitClusterAnalyzer : public edm::EDAnalyzer
 {
-	struct PlotDefinition
-	{
-		enum Type {digi, digiFromMarker, digiFromMarkerWithNeighbours, cluster};
-		int startEventIndex;
-		int endEventIndex;
-		std::string plotTitle;
-		Type type;
-		std::vector<std::pair<int, int>> xAxisRange;
-		std::vector<std::pair<int, int>> yAxisRange;
-		LayerEventPlotTriplet histograms;
-		PlotDefinition(const int& startEventIndexArg, const int& endEventIndexArg, const std::string& plotTitleArg, Type typeArg, const std::vector<std::pair<int, int>>& xAxisRangeArg, const std::vector<std::pair<int, int>>& yAxisRangeArg) :
-			startEventIndex(startEventIndexArg),
-			endEventIndex(endEventIndexArg),
-			plotTitle(plotTitleArg),
-			type(typeArg),
-			xAxisRange(xAxisRangeArg),
-			yAxisRange(yAxisRangeArg),
-			histograms(plotTitle, plotTitle)
-			{
-				if(xAxisRange.size() != 3 || yAxisRange.size() != 3)
-				{
-					std::cout << "Check axis range sizes for plot definitions!" << std::endl;
-					exit(-1);
-				}
-			}
-	};
+	// struct PlotDefinition
+	// {
+	// 	enum Type {digi, digiFromMarker, digiFromMarkerWithNeighbours, cluster};
+	// 	int startEventIndex;
+	// 	int endEventIndex;
+	// 	std::string plotTitle;
+	// 	Type type;
+	// 	std::vector<std::pair<int, int>> xAxisRange;
+	// 	std::vector<std::pair<int, int>> yAxisRange;
+	// 	LayerEventPlotTriplet histograms;
+	// 	PlotDefinition(const int& startEventIndexArg, const int& endEventIndexArg, const std::string& plotTitleArg, Type typeArg, const std::vector<std::pair<int, int>>& xAxisRangeArg, const std::vector<std::pair<int, int>>& yAxisRangeArg) :
+	// 		startEventIndex(startEventIndexArg),
+	// 		endEventIndex(endEventIndexArg),
+	// 		plotTitle(plotTitleArg),
+	// 		type(typeArg),
+	// 		xAxisRange(xAxisRangeArg),
+	// 		yAxisRange(yAxisRangeArg),
+	// 		histograms(plotTitle, plotTitle)
+	// 		{
+	// 			if(xAxisRange.size() != 3 || yAxisRange.size() != 3)
+	// 			{
+	// 				std::cout << "Check axis range sizes for plot definitions!" << std::endl;
+	// 				exit(-1);
+	// 			}
+	// 		}
+	// };
 
 	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
 
 	int eventCounter = 0;
-	std::vector<PlotDefinition> plotDefinitionCollection;
+	// std::vector<PlotDefinition> plotDefinitionCollection;
 
 	private:
 		struct TrajClusterAssociationData
@@ -192,17 +192,17 @@ class SplitClusterAnalyzer : public edm::EDAnalyzer
 		// Added for plotting event clusters //
 		///////////////////////////////////////
 
-		void        defineEventPlots();
-		void        updateEventPlots(const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
-		void        saveReadyEventPlots();
-		static int  moduleAndColToXCoordinate(const int& module, const int& col);
-		static int  ladderAndRowToYCoordinate(const int& ladder, const int& row);
-		static void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
-		static void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
-		static void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
-		static void printClusterFieldInfo(const Cluster& clusterField);
-		void        fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors, bool fillMissingPixels = false);
-		void        fillEventPlotWithClusters(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
+		// void        defineEventPlots();
+		// void        updateEventPlots(const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
+		// void        saveReadyEventPlots();
+		// static int  moduleAndColToXCoordinate(const int& module, const int& col);
+		// static int  ladderAndRowToYCoordinate(const int& ladder, const int& row);
+		// static void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
+		// static void printFillEventPlotError(const TH2D& histogram, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, const int& moduleCoordinate, const int& ladderCoordinate, const int& isReversedModule);
+		// static void fillEventPlot(LayerEventPlotTriplet& histogramTriplet, const ModuleData& mod_on, const int& col, const int& row, const int& markerState, bool fillMissingPixels = false);
+		// static void printClusterFieldInfo(const Cluster& clusterField);
+		// void        fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digisCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors, bool fillMissingPixels = false);
+		// void        fillEventPlotWithClusters(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors);
 
 		/////////////
 		// Utility //
