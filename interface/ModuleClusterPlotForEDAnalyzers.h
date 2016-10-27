@@ -70,8 +70,6 @@ ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const in
 
 void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers)
 {
-	colModifiers.clear();
-	rowModifiers.clear();
 	static const auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
 	{
 		if(pixelIsMarked)
@@ -80,6 +78,8 @@ void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std
 			rowModifiers.push_back(row);
 		}
 	};
+	colModifiers.clear();
+	rowModifiers.clear();
 	checkInsertIndexPair(markerState & (1 << 0), -1, -1);
 	checkInsertIndexPair(markerState & (1 << 1), -1,  0);
 	checkInsertIndexPair(markerState & (1 << 2), -1, +1);
@@ -162,7 +162,7 @@ void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> 
 		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
 		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, std::map<uint32_t, int>());
 		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
-		auto filteredList = filter(digiPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer;   });
+		auto filteredList = filter(digiPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer;  });
 		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck)     { return mod_on.module == plotToCheck -> module; });
 		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck)     { return mod_on.ladder == plotToCheck -> ladder; });
 		for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
@@ -184,9 +184,10 @@ void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> 
 		unsigned int subdetId = detId.subdetId();
 		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
 		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, std::map<uint32_t, int>());
-		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);		auto filteredList = filter(markerPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer;   });
-		filteredList      = filter(markerPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.module == plotToCheck -> module; });
-		filteredList      = filter(markerPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.ladder == plotToCheck -> ladder; });
+		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);		
+		auto filteredList = filter(markerPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer; });
+		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.module == plotToCheck -> module; });
+		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.ladder == plotToCheck -> ladder; });
 		for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 		{
 			TH2D& histogramToFill = plotDefinitionPtr -> histogram;
