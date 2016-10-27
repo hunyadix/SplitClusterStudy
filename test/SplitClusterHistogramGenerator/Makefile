@@ -1,7 +1,7 @@
 include Makefile.arch
 SrcSuf = cc
 
-CXX += -std=c++11
+CXX += -std=c++14
 
 # Utility
 
@@ -33,6 +33,10 @@ CLUSTERDATATREE_S = ../../src/ClusterDataTree.$(SrcSuf)
 CLUSTERDATATREE_O = ./obj/ClusterDataTree.$(ObjSuf)
 OBJS     += $(TTREETOOLS_O)
 
+CANVASEXTRAS_S = ./../../src/CanvasExtras.$(SrcSuf)
+CANVASEXTRAS_O = ./obj/CanvasExtras.$(ObjSuf)
+OBJS     += $(CANVASEXTRAS_O)
+
 MODULECLUSTERPLOT_S = ./src/ModuleClusterPlot.$(SrcSuf)
 MODULECLUSTERPLOT_O = ./obj/ModuleClusterPlot.$(ObjSuf)
 OBJS     += $(MODULECLUSTERPLOT_O)
@@ -44,6 +48,12 @@ PLOTEVENTCLUSTERS_O = ./obj/plotEventClusters.$(ObjSuf)
 PLOTEVENTCLUSTERS_A = ./bin/plotEventClusters$(ExeSuf)
 OBJS     += $(PLOTEVENTCLUSTERS_O)
 PROGRAMS += $(PLOTEVENTCLUSTERS_A)
+
+PLOTEVENTPAIREDCLUSTERS_S = ./src/plotEventPairedClusters.$(SrcSuf)
+PLOTEVENTPAIREDCLUSTERS_O = ./obj/plotEventPairedClusters.$(ObjSuf)
+PLOTEVENTPAIREDCLUSTERS_A = ./bin/plotEventPairedClusters$(ExeSuf)
+OBJS     += $(PLOTEVENTPAIREDCLUSTERS_O)
+PROGRAMS += $(PLOTEVENTPAIREDCLUSTERS_A)
 
 PLOTCLUSTERSIZES_S = ./src/plotClusterSizes.$(SrcSuf)
 PLOTCLUSTERSIZES_O = ./obj/plotClusterSizes.$(ObjSuf)
@@ -92,56 +102,63 @@ all: $(PROGRAMS)
 
 # Executables
 
-$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(MODULECLUSTERPLOT_O)
+$(PLOTEVENTCLUSTERS_A): $(PLOTEVENTCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O) $(MODULECLUSTERPLOT_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTCLUSTERSIZES_A): $(PLOTCLUSTERSIZES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTEVENTPAIREDCLUSTERS_A): $(PLOTEVENTPAIREDCLUSTERS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O) $(MODULECLUSTERPLOT_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTCLUSTERANGLES_A): $(PLOTCLUSTERANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTCLUSTERSIZES_A): $(PLOTCLUSTERSIZES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTCLUSTERANGLESPARAMMAP_A): $(PLOTCLUSTERANGLESPARAMMAP_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTCLUSTERANGLES_A): $(PLOTCLUSTERANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(ONHITANGLESCHECK_A): $(ONHITANGLESCHECK_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTCLUSTERANGLESPARAMMAP_A): $(PLOTCLUSTERANGLESPARAMMAP_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTEVENTCLUSTERSBYDIRECTION_A): $(PLOTEVENTCLUSTERSBYDIRECTION_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(ONHITANGLESCHECK_A): $(ONHITANGLESCHECK_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTSMALLCLUFAKEMERGEFF_A): $(PLOTSMALLCLUFAKEMERGEFF_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTEVENTCLUSTERSBYDIRECTION_A): $(PLOTEVENTCLUSTERSBYDIRECTION_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTSMALLCLUFAKEMERGEFFV2_A): $(PLOTSMALLCLUFAKEMERGEFFV2_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O)
+$(PLOTSMALLCLUFAKEMERGEFF_A): $(PLOTSMALLCLUFAKEMERGEFF_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(PLOTSMALLCLUFAKEMERGEFFV2_A): $(PLOTSMALLCLUFAKEMERGEFFV2_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -185,6 +202,11 @@ $(CLUSTERDATATREE_O): $(CLUSTERDATATREE_S)
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
+$(CANVASEXTRAS_O): $(CANVASEXTRAS_S)
+	@printf "Compiling utility: \"CanvasExtras\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
 $(MODULECLUSTERPLOT_O): $(MODULECLUSTERPLOT_S)
 	@printf "Compiling utility: \"ModuleClusterPlot\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
@@ -194,6 +216,11 @@ $(MODULECLUSTERPLOT_O): $(MODULECLUSTERPLOT_S)
 
 $(PLOTEVENTCLUSTERS_O): $(PLOTEVENTCLUSTERS_S)  
 	@printf "Compiling test: \"plotEventClusters\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(PLOTEVENTPAIREDCLUSTERS_O): $(PLOTEVENTPAIREDCLUSTERS_S)  
+	@printf "Compiling test: \"plotEventPairedClusters\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
@@ -234,7 +261,7 @@ $(PLOTSMALLCLUFAKEMERGEFFV2_O): $(PLOTSMALLCLUFAKEMERGEFFV2_S)
 	@printf "Done.\n"
 
 clean:
-	@rm -f $(OBJS) core
+	@rm -f $(OBJS) $(PROGRAMS) core
 
 
 distclean: clean

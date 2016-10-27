@@ -107,7 +107,7 @@ int main(int argc, char** argv) try
 		const std::vector<Cluster>& clusterCollection = eventNumClusterCollectionPair.second;
 		for(const Cluster& cluster: clusterCollection)
 		{
-			ModuleClusterPlot::fillAll(cluster, eventNum);
+			ModuleClusterPlot::fillDigisMarkers(cluster, eventNum);
 		}
 		ModuleClusterPlot::saveAllFinished(eventNum);
 		++eventNum;

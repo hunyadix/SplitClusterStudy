@@ -23,9 +23,9 @@
 class ModuleClusterPlot
 {
 	public:
-		enum Type { digi = 0, digiFromMarker, digiFromMarkerWithNeighbours };
+		enum Type { digis = 0, digisFromMarkers, digisFromMarkersWithNeighbours };
 	private:
-		static constexpr std::array<const char*, 4> histogramTypePrefixes = {{ "Digis", "Marked digis", "Markers with neighbours" }};
+		static constexpr std::array<const char*, 3> histogramTypePrefixes = {{ "Digis", "Marked digis", "Markers with neighbours" }};
 		static constexpr float BASE_DIGI_FILL_VALUE    = 0.5f;
 		static constexpr float MISSING_NEIGHBOUR_VALUE = 1000.0f;
 		static constexpr float PALETTE_MINIMUM    = 0.5f;
@@ -40,7 +40,8 @@ class ModuleClusterPlot
 		static std::vector<ModuleClusterPlot*> moduleClusterPlotCollection;
 	private:
 		static void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
-		static void fillMissingPixels(const int& col, const int& row, const int& markerState, TH2D& histo, const int& weight);
+		void        fillDigi(const PixelDigi& pixel);
+		void        fillMissingPixels(const int& col, const int& row, const int& markerState, const int& weight);
 	public:
 		ModuleClusterPlot(Type typeArg, const int& layer, const int& module, const int& ladder, const int& startEventArg, const int& endEventArg);
 		int         isEventNumInRange(const int& eventNum);
@@ -49,7 +50,7 @@ class ModuleClusterPlot
 		static void saveAllFinished(const int& eventNum);
 };
 
-constexpr std::array<const char*, 4> ModuleClusterPlot::histogramTypePrefixes;
+constexpr std::array<const char*, 3> ModuleClusterPlot::histogramTypePrefixes;
 std::vector<ModuleClusterPlot*> ModuleClusterPlot::moduleClusterPlotCollection;
 
 ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg):
@@ -90,17 +91,44 @@ void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std
 	checkInsertIndexPair(markerState & (1 << 7), +1, +1);
 }
 
-void ModuleClusterPlot::fillMissingPixels(const int& col, const int& row, const int& markerState, TH2D& histo, const int& weight)
+void ModuleClusterPlot::fillDigi(const PixelDigi& pixel)
+{
+	int col         = pixel.column();
+	int row         = pixel.row();
+	int markerState = pixel.adc();
+	switch(type)
+	{
+		case digis:
+			histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+			break;
+		case digisFromMarkers:
+			if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+			else                 histogram.SetBinContent(col, row, markerState);
+			break;
+		case digisFromMarkersWithNeighbours:
+			// if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+			// else                 histogram.SetBinContent(col, row, markerState);
+			histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+			fillMissingPixels(col, row, markerState, MISSING_NEIGHBOUR_VALUE);
+			break;
+		default:
+			std::cerr << "Error in ModuleClusterPlot::fill(): Error deducing type for histogram type." << std::endl; 
+			break;
+	}
+}
+
+
+void ModuleClusterPlot::fillMissingPixels(const int& col, const int& row, const int& markerState, const int& weight)
 {
 	std::vector<int> colModifiers;
 	std::vector<int> rowModifiers;
-	float xAxisBinWidth = histo.GetXaxis() -> GetBinWidth(1);
-	float yAxisBinWidth = histo.GetYaxis() -> GetBinWidth(1);
+	float xAxisBinWidth = histogram.GetXaxis() -> GetBinWidth(1);
+	float yAxisBinWidth = histogram.GetYaxis() -> GetBinWidth(1);
 	markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
 	for(unsigned int markedNeighbourIndex = 0; markedNeighbourIndex < colModifiers.size(); ++markedNeighbourIndex)
 	{
-		int bin = histo.GetBin(col + colModifiers[markedNeighbourIndex] * xAxisBinWidth, row + rowModifiers[markedNeighbourIndex] * yAxisBinWidth);
-		if(histo.GetBinContent(bin) == 0) histo.SetBinContent(bin, weight);
+		int bin = histogram.GetBin(col + colModifiers[markedNeighbourIndex] * xAxisBinWidth, row + rowModifiers[markedNeighbourIndex] * yAxisBinWidth);
+		if(histogram.GetBinContent(bin) == 0) histogram.SetBinContent(bin, weight);
 	}
 }
 
@@ -126,27 +154,7 @@ void ModuleClusterPlot::fill(const edm::Handle<edm::DetSetVector<PixelDigi>> dig
 		if(mod_on.ladder != ladder) continue;
 		for(const PixelDigi& pixel: markersOnModule)
 		{
-			int col         = pixel.column();
-			int row         = pixel.row();
-			int markerState = pixel.adc();
-			switch(type)
-			{
-				case digi:
-					histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					break;
-				case digiFromMarker:
-					if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					else                 histogram.SetBinContent(col, row, markerState);
-					break;
-				case digiFromMarkerWithNeighbours:
-					if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					else                 histogram.SetBinContent(col, row, markerState);
-					fillMissingPixels(col, row, markerState, histogram, MISSING_NEIGHBOUR_VALUE);
-					break;
-				default:
-					std::cerr << "Error in ModuleClusterPlot::fill(): Error deducing type for histogram type." << std::endl; 
-					break;
-			}
+			fillDigi(pixel);
 		}
 	}
 }
@@ -154,7 +162,7 @@ void ModuleClusterPlot::fill(const edm::Handle<edm::DetSetVector<PixelDigi>> dig
 void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> digiCollection, const edm::Handle<edm::DetSetVector<PixelDigi>> digiFlagsCollection, const TrackerTopology* const trackerTopology, const int& eventNum)
 {
 	auto digiPlotsInRange = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
-	digiPlotsInRange      = filter(digiPlotsInRange,            []          (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type == digi; });
+	digiPlotsInRange      = filter(digiPlotsInRange,            []          (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type == digis; });
 	for(const edm::DetSet<PixelDigi>& digisOnModule: *digiCollection)
 	{
 		DetId detId(digisOnModule.detId());
@@ -162,22 +170,23 @@ void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> 
 		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
 		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, std::map<uint32_t, int>());
 		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
-		auto filteredList = filter(digiPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer;  });
-		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck)     { return mod_on.module == plotToCheck -> module; });
-		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck)     { return mod_on.ladder == plotToCheck -> ladder; });
+		auto filteredList = filter(digiPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck)
+		{
+			return 
+				mod_on.layer  == plotToCheck -> layer &&
+				mod_on.module == plotToCheck -> module &&
+				mod_on.ladder == plotToCheck -> ladder;
+		});
 		for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 		{
-			TH2D& histogramToFill = plotDefinitionPtr -> histogram;
 			for(const PixelDigi& pixel: digisOnModule)
 			{
-				int col         = pixel.column();
-				int row         = pixel.row();
-				histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				plotDefinitionPtr -> fillDigi(pixel);
 			}
 		}
 	}
 	auto markerPlotsInRange = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
-	markerPlotsInRange      = filter(markerPlotsInRange,          []          (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type != digi; });
+	markerPlotsInRange      = filter(markerPlotsInRange,          []          (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type != digis; });
 	for(const edm::DetSet<PixelDigi>& markersOnModule: *digiFlagsCollection)
 	{
 		DetId detId(markersOnModule.detId());
@@ -185,32 +194,18 @@ void ModuleClusterPlot::fillAll(const edm::Handle<edm::DetSetVector<PixelDigi>> 
 		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
 		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, std::map<uint32_t, int>());
 		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);		
-		auto filteredList = filter(markerPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer; });
-		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.module == plotToCheck -> module; });
-		filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.ladder == plotToCheck -> ladder; });
+		auto filteredList = filter(markerPlotsInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) 
+		{
+			return 
+				mod_on.layer  == plotToCheck -> layer &&
+				mod_on.module == plotToCheck -> module &&
+				mod_on.ladder == plotToCheck -> ladder;
+		});
 		for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 		{
-			TH2D& histogramToFill = plotDefinitionPtr -> histogram;
 			for(const PixelDigi& pixel: markersOnModule)
 			{
-				int col         = pixel.column();
-				int row         = pixel.row();
-				int markerState = pixel.adc();
-				switch(plotDefinitionPtr -> type)
-				{
-					case digiFromMarker:
-						if(markerState == 0) histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-						else                 histogramToFill.SetBinContent(col, row, markerState);
-						break;
-					case digiFromMarkerWithNeighbours:
-						if(markerState == 0) histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-						else                 histogramToFill.SetBinContent(col, row, markerState);
-						fillMissingPixels(col, row, markerState, histogramToFill, MISSING_NEIGHBOUR_VALUE);
-						break;
-					default:
-						std::cerr << "Error in ModuleClusterPlot::fill(): Error deducing type for histogram type." << std::endl; 
-						break;
-				}
+				plotDefinitionPtr -> fillDigi(pixel);
 			}
 		}
 	}

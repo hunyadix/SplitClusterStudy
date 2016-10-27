@@ -1,7 +1,6 @@
 #include "../interface/ModuleClusterPlot.h"
-#include "../../../interface/CanvasExtras.h"
 
-constexpr std::array<const char*, 4> ModuleClusterPlot::histogramTypePrefixes;
+constexpr std::array<const char*, 6> ModuleClusterPlot::histogramTypePrefixes;
 std::vector<ModuleClusterPlot*> ModuleClusterPlot::moduleClusterPlotCollection;
 
 ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg):
@@ -22,9 +21,7 @@ ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const in
 
 void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers)
 {
-	colModifiers.clear();
-	rowModifiers.clear();
-	static auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
+	static const auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
 	{
 		if(pixelIsMarked)
 		{
@@ -32,6 +29,8 @@ void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std
 			rowModifiers.push_back(row);
 		}
 	};
+	colModifiers.clear();
+	rowModifiers.clear();
 	checkInsertIndexPair(markerState & (1 << 0), -1, -1);
 	checkInsertIndexPair(markerState & (1 << 1), -1,  0);
 	checkInsertIndexPair(markerState & (1 << 2), -1, +1);
@@ -42,17 +41,49 @@ void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std
 	checkInsertIndexPair(markerState & (1 << 7), +1, +1);
 }
 
-void ModuleClusterPlot::fillMissingPixels(const int& col, const int& row, const int& markerState, TH2D& histo, const int& weight)
+void ModuleClusterPlot::fillMissingPixels(const int& col, const int& row, const int& markerState, const int& weight)
 {
 	std::vector<int> colModifiers;
 	std::vector<int> rowModifiers;
-	float xAxisBinWidth = histo.GetXaxis() -> GetBinWidth(1);
-	float yAxisBinWidth = histo.GetYaxis() -> GetBinWidth(1);
+	float xAxisBinWidth = histogram.GetXaxis() -> GetBinWidth(1);
+	float yAxisBinWidth = histogram.GetYaxis() -> GetBinWidth(1);
 	markerToRowColModifierArrays(markerState, colModifiers, rowModifiers);
 	for(unsigned int markedNeighbourIndex = 0; markedNeighbourIndex < colModifiers.size(); ++markedNeighbourIndex)
 	{
-		int bin = histo.GetBin(col + colModifiers[markedNeighbourIndex] * xAxisBinWidth, row + rowModifiers[markedNeighbourIndex] * yAxisBinWidth);
-		if(histo.GetBinContent(bin) == 0) histo.SetBinContent(bin, weight);
+		int bin = histogram.GetBin(col + colModifiers[markedNeighbourIndex] * xAxisBinWidth, row + rowModifiers[markedNeighbourIndex] * yAxisBinWidth);
+		if(histogram.GetBinContent(bin) == 0) histogram.SetBinContent(bin, weight);
+	}
+}
+
+void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster)
+{
+	for(const int& digiIndex: range(cluster.pixelsCol.size()))
+	{
+		int col         = cluster.pixelsCol[digiIndex];
+		int row         = cluster.pixelsRow[digiIndex];
+		int markerState = cluster.pixelsMarker[digiIndex];
+		switch(type)
+		{
+			case digis:
+			case pairs:
+				histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				break;
+			case digisFromMarkers:
+			case pairsWithMarkers:
+				if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				else                 histogram.SetBinContent(col, row, markerState);
+				break;
+			case digisFromMarkersWithNeighbours:
+			case pairsWithNeighbours:
+				// if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				// else                 histogram.SetBinContent(col, row, markerState);
+				histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				fillMissingPixels(col, row, markerState, MISSING_NEIGHBOUR_VALUE);
+				break;
+			default:
+				std::cerr << "Error in ModuleClusterPlot::fill(): Error deducing type for histogram type." << std::endl; 
+				break;
+		}
 	}
 }
 
@@ -62,72 +93,90 @@ int ModuleClusterPlot::isEventNumInRange(const int& eventNum)
 	return false;
 }
 
-// TODO: Finish and add this to the next commit
-
-// void ModuleClusterPlot::fillAllPairs(std::vector<Cluster> clusterCollection, const int& eventNum)
-// {
-// 	auto plotsToFillInTheEvent = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
-// 	plotsToFillInTheEvent      = filter(plotsToFillInTheEvent,       [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> type == pairs; });
-// 	const ModuleData& mod_on = clusterField.mod_on;
-// 	if(mod_on.det    != 0) return;
-// 	auto filteredList = filter(plotsToFillInTheEvent, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer;   });
-// 	filteredList      = filter(digisInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.module == plotToCheck -> module; });
-// 	filteredList      = filter(digisInRange, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.ladder == plotToCheck -> ladder; });
-// 	for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
-// 	{
-// 		TH2D& histogramToFill = plotDefinitionPtr -> histogram;
-// 		for(const int& digiIndex: range(clusterField.pixelsCol.size()))
-// 		{
-// 			int col         = clusterField.pixelsCol[digiIndex];
-// 			int row         = clusterField.pixelsRow[digiIndex];
-// 			int markerState = clusterField.pixelsMarker[digiIndex];
-// 			histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-// 			break;
-// 		}
-// 	}
-// }
-
-void ModuleClusterPlot::fillAll(const Cluster& clusterField, const int& eventNum)
+int ModuleClusterPlot::areClustersPair(const Cluster& lhs, const Cluster& rhs)
 {
-	auto plotsToFillInTheEvent = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
-	plotsToFillInTheEvent      = filter(plotsToFillInTheEvent,       [&eventNum] (ModuleClusterPlot* plotToCheck)
+	if(5 < std::abs(rhs.x - lhs.x)) return 0;
+	auto lhsColMinmax = std::minmax_element(lhs.pixelsCol.begin(), lhs.pixelsCol.end());
+	const int &lhsColMin = *(lhsColMinmax.first);
+	const int &lhsColMax = *(lhsColMinmax.second);
+	auto rhsColMinmax = std::minmax_element(rhs.pixelsCol.begin(), rhs.pixelsCol.end());
+	const int &rhsColMin = *(rhsColMinmax.first);
+	const int &rhsColMax = *(rhsColMinmax.second);
+	int lhsFirst = (lhsColMin < rhsColMin);
+	if(lhsFirst)
+	{
+		if(lhsColMax % 2 != 1 || lhsColMax + 3 != rhsColMin) return 0;
+	}
+	else
+	{
+		if(rhsColMax % 2 != 1 || rhsColMax + 3 != lhsColMin) return 0;
+	}
+	return 1;
+}
+
+void ModuleClusterPlot::fillDigisMarkers(const Cluster& cluster, const int& eventNum)
+{
+	auto filteredList = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
+	filteredList      = filter(filteredList,                []          (ModuleClusterPlot* plotToCheck)
 	{
 		return 
 			(plotToCheck -> type == digis) || 
 			(plotToCheck -> type == digisFromMarkers) || 
 			(plotToCheck -> type == digisFromMarkersWithNeighbours); 
 	});
-	const ModuleData& mod_on = clusterField.mod_on;
-	if(mod_on.det    != 0) return;
-	auto filteredList = filter(plotsToFillInTheEvent, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.layer  == plotToCheck -> layer;  });
-	filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.module == plotToCheck -> module; });
-	filteredList      = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck) { return mod_on.ladder == plotToCheck -> ladder; });
+	const ModuleData& mod_on = cluster.mod_on;
+	if(mod_on.det != 0) return;
+	filteredList = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck)
+	{
+		return 
+			mod_on.layer  == plotToCheck -> layer &&
+			mod_on.module == plotToCheck -> module &&
+			mod_on.ladder == plotToCheck -> ladder;
+	});
 	for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 	{
-		TH2D& histogramToFill = plotDefinitionPtr -> histogram;
-		for(const int& digiIndex: range(clusterField.pixelsCol.size()))
+		plotDefinitionPtr -> fillDigisFromCluster(cluster);
+	}
+}
+void ModuleClusterPlot::fillDigisMarkers(const std::vector<Cluster>& clusterCollection, const int& eventNum)
+{
+	for(const auto& cluster: clusterCollection)
+	{
+		fillDigisMarkers(cluster, eventNum);
+	}
+}
+
+void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollection, const int& eventNum)
+{
+	auto plotsToFillInTheEvent = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
+	plotsToFillInTheEvent      = filter(plotsToFillInTheEvent,       []          (ModuleClusterPlot* plotToCheck)
+	{ 
+		return 
+			(plotToCheck -> type == pairs) || 
+			(plotToCheck -> type == pairsWithMarkers) || 
+			(plotToCheck -> type == pairsWithNeighbours); 
+	});
+	for(auto firstClusterIt = clusterCollection.begin(); firstClusterIt != clusterCollection.end(); ++firstClusterIt)
+	{
+		const ModuleData& mod1 = firstClusterIt -> mod_on;
+		if(mod1.det != 0) continue;
+		auto filteredList = filter(plotsToFillInTheEvent, [&mod1] (ModuleClusterPlot* plotToCheck) 
 		{
-			int col         = clusterField.pixelsCol[digiIndex];
-			int row         = clusterField.pixelsRow[digiIndex];
-			int markerState = clusterField.pixelsMarker[digiIndex];
-			switch(plotDefinitionPtr -> type)
+			return 
+				mod1.layer  == plotToCheck -> layer &&
+				mod1.module == plotToCheck -> module &&
+				mod1.ladder == plotToCheck -> ladder;
+		});
+		if(filteredList.size() == 0) continue;
+		for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != clusterCollection.end(); ++secondClusterIt)
+		{
+			const ModuleData& mod2 = secondClusterIt -> mod_on;
+			if(!(mod1 == mod2)) continue;
+			if(!areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
+			for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 			{
-				case digis:
-					histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					break;
-				case digisFromMarkers:
-					if(markerState == 0) histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					else                 histogramToFill.SetBinContent(col, row, markerState);
-					break;
-				case digisFromMarkersWithNeighbours:
-					// if(markerState == 0) histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					// else                 histogramToFill.SetBinContent(col, row, markerState);
-					histogramToFill.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-					fillMissingPixels(col, row, markerState, histogramToFill, MISSING_NEIGHBOUR_VALUE);
-					break;
-				default:
-					std::cerr << "Error in ModuleClusterPlot::fill(): Error deducing type for histogram type." << std::endl; 
-					break;
+				plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt);
+				plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt);
 			}
 		}
 	}
