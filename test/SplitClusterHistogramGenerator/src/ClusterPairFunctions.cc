@@ -23,28 +23,23 @@ namespace ClusterPairFunctions
 		return 1;
 	}
 	
-	std::vector<float> getClusterPairAngles(const std::vector<Cluster>& clusterCollection)
-	{
-		for(auto firstClusterIt = clusterCollection.begin(); firstClusterIt != clusterCollection.end(); ++firstClusterIt)
-		{
-			const ModuleData& mod1 = firstClusterIt -> mod_on;
-			if(mod1.det != 0) continue;
-			for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != clusterCollection.end(); ++secondClusterIt)
-			{
-				const ModuleData& mod2 = secondClusterIt -> mod_on;
-				if(!(mod1 == mod2)) continue;
-				if(!areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
-				for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
-				{
-					plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt);
-					plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt);
-				}
-			}
-		}
-	}
-	TH2D getClusterPairAngles(const std::vector<Cluster>& clusterCollection)
-	{
-		std::vector<float> pairAngles = getClusterPairAngles(clusterCollection);
-		TH2D pairAnglesPlot
-	}
+	// std::vector<float> getClusterPairAngles(const std::vector<Cluster>& clusterCollection)
+	// {
+	// 	for(auto firstClusterIt = clusterCollection.begin(); firstClusterIt != clusterCollection.end(); ++firstClusterIt)
+	// 	{
+	// 		const ModuleData& mod1 = firstClusterIt -> mod_on;
+	// 		if(mod1.det != 0) continue;
+	// 		for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != clusterCollection.end(); ++secondClusterIt)
+	// 		{
+	// 			const ModuleData& mod2 = secondClusterIt -> mod_on;
+	// 			if(!(mod1 == mod2)) continue;
+	// 			if(!areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
+	// 		}
+	// 	}
+	// }
+	// TH2D getClusterPairAngles(const std::vector<Cluster>& clusterCollection)
+	// {
+	// 	std::vector<float> pairAngles = getClusterPairAngles(clusterCollection);
+	// 	TH2D pairAnglesPlot
+	// }
 } // ClusterPairFunctions
