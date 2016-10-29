@@ -174,6 +174,7 @@ std::map<int, std::vector<Cluster>> getClusterCollectionSortedByEvtnum(TTree* cl
 		{
 			eventClustersIt = eventClustersMap.emplace(eventField.evt, std::vector<Cluster>()).first;
 		}
+		eventClustersIt -> second.push_back(clusterField);
 	}
 	return eventClustersMap;
 }
