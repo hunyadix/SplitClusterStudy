@@ -9,6 +9,7 @@ SplitClusterAnalyzer::SplitClusterAnalyzer(edm::ParameterSet const& iConfigArg) 
 {
 	// Tokens
 	rawDataErrorToken        = consumes<edm::DetSetVector<SiPixelRawDataError>>(edm::InputTag("siPixelDigis"));
+	pixelDigisToken         = consumes<edm::DetSetVector<PixelDigi>>          (edm::InputTag("simSiPixelDigis"));
 	digiFlagsToken           = consumes<edm::DetSetVector<PixelDigi>>          (edm::InputTag("simSiPixelDigis", "dcolLostNeighbourDigiFlags"));
 	clustersToken            = consumes<edmNew::DetSetVector<SiPixelCluster>>  (edm::InputTag("siPixelClusters"));
 	trajTrackCollectionToken = consumes<TrajTrackAssociationCollection>(iConfig.getParameter<edm::InputTag>("trajectoryInput"));
@@ -41,6 +42,34 @@ void SplitClusterAnalyzer::beginJob()
 	ClusterDataTree::defineClusterTreeBranches(clusterTree, eventField, clusterField);
 	mergeTree   = new TTree("mergeTree", "Cluster merging informations");
 	MergingStatisticsTree::defineMergingStatTreeBranches(mergeTree, mergeStatField);
+	// Plots
+	eventCounter = 0;
+	// defineEventPlots();
+	// ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg)
+
+	const auto& digisType = ModuleClusterPlot::Type::digis;
+	const auto& digisFromMarkersType = ModuleClusterPlot::Type::digisFromMarkers;
+	const auto& digisFromMarkersWithNeighboursType = ModuleClusterPlot::Type::digisFromMarkersWithNeighbours;
+	// const auto& digisAndMarkersType = ModuleClusterPlot::Type::digisAndMarkers;
+
+	const auto defineStandardPlots = [this] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
+	{
+		for(const int& i: range(10))
+		{
+			this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, i, i));
+		}
+		this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
+		this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
+	};
+
+	defineStandardPlots(digisType,                          1, 2, 2);
+	defineStandardPlots(digisFromMarkersType,               1, 2, 2);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 2, 2);
+	// defineStandardPlots(digisAndMarkersType,                1, 2, 2);
+	defineStandardPlots(digisType,                          1, 4, 6);
+	defineStandardPlots(digisFromMarkersType,               1, 4, 6);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 4, 6);
+	// defineStandardPlots(digisAndMarkersType,                1, 4, 6);
 }
 
 void SplitClusterAnalyzer::endJob()
@@ -60,6 +89,9 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	const TrackerTopology* const trackerTopology = trackerTopologyHandle.product();
 	// FED errors
 	std::map<uint32_t, int> fedErrors = FedErrorFetcher::getFedErrors(iEvent, rawDataErrorToken);
+	// Fetching pixel digis
+	edm::Handle<edm::DetSetVector<PixelDigi>> digiCollection;
+	iEvent.getByToken(pixelDigisToken,        digiCollection);
 	// Fetching the markers for digis that have a dcol lost digi next to them
 	edm::Handle<edm::DetSetVector<PixelDigi>> digiFlagsCollection;
 	iEvent.getByToken(digiFlagsToken,         digiFlagsCollection);
@@ -70,6 +102,7 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	edm::Handle<TrajTrackAssociationCollection> trajTrackCollection;
 	iEvent.getByToken(trajTrackCollectionToken, trajTrackCollection);
 	// Trying to access the clusters
+	if(!digiCollection.isValid())      handleDefaultError("data access", "data_access", "Failed to fetch digi collection.");
 	if(!digiFlagsCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch dcol lost digis.");
 	if(!clusterCollection  .isValid()) handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
 	if(!trajTrackCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch trajectory measurements.");
@@ -82,6 +115,12 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	handleTrajectories(trajTrackCollection, clusterCollection, trackerTopology, onTrackClusters);
 	handleClusters(clusterCollection, digiFlagsCollection, onTrackClusters, trackerTopology, fedErrors);
 	eventTree -> Fill();
+	// updateEventPlots(digiCollection, digiFlagsCollection, clusterCollection, trackerTopology, fedErrors);
+	// saveReadyEventPlots();
+	std::cout << "Number of digi collection entries: " << CMSSWPluginTools::getNumDigiCollectionEntries(digiCollection) << std::endl;
+	ModuleClusterPlot::fillAll(digiCollection, digiFlagsCollection, trackerTopology, eventCounter);
+	ModuleClusterPlot::saveAllFinished(eventCounter);
+	++eventCounter;
 }
 
 void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssociationCollection>& trajTrackCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, std::vector<TrajClusterAssociationData>& onTrackClusters) try
@@ -147,7 +186,7 @@ SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew
 	for(const auto& clusterSetOnModule: *clusterCollection)
 	{
 		DetId detId(clusterSetOnModule.id());
-		// Discarding clusters on a different module
+		// Discarding clusters on a different mod2ule
 		if(detId.rawId() != rawId) continue;
 		unsigned int subdetId = detId.subdetId();
 		// Discarding non-pixel clusters
@@ -413,6 +452,274 @@ void SplitClusterAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&) {}
 void SplitClusterAnalyzer::endRun(edm::Run const&, edm::EventSetup const&) {}
 void SplitClusterAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {}
 void SplitClusterAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {}
+
+// void SplitClusterAnalyzer::defineEventPlots()
+// {
+// 	// std::vector<std::pair<int, int>> defaultXRanges = 
+// 	// {
+// 	// 	std::make_pair<int, int>(-350, -210),
+// 	// 	std::make_pair<int, int>(1270, 1420),
+// 	// 	std::make_pair<int, int>(830, 980)
+// 	// };
+// 	// std::vector<std::pair<int, int>> defaultYRanges =
+// 	// {
+// 	// 	std::make_pair<int, int>(-1050, -900),
+// 	// 	std::make_pair<int, int>(-1980, -1830),
+// 	// 	std::make_pair<int, int>(-1000, -850)
+// 	// };
+// 	std::vector<std::pair<int, int>> lowEtaXRanges = 
+// 	{
+// 		std::make_pair<int, int>(200, 350),
+// 		std::make_pair<int, int>(200, 350),
+// 		std::make_pair<int, int>(200, 350)
+// 	};
+// 	std::vector<std::pair<int, int>> lowEtaYRanges =
+// 	{
+// 		std::make_pair<int, int>(200, 350),
+// 		std::make_pair<int, int>(200, 350),
+// 		std::make_pair<int, int>(200, 350)
+// 	};
+// 	std::vector<std::pair<int, int>> highEtaXRanges = 
+// 	{
+// 		std::make_pair<int, int>(-1800, -1650),
+// 		std::make_pair<int, int>(-1800, -1650),
+// 		std::make_pair<int, int>(-1800, -1650)
+// 	};
+// 	std::vector<std::pair<int, int>> highEtaYRanges =
+// 	{
+// 		std::make_pair<int, int>(-1600, -1450),
+// 		std::make_pair<int, int>(-2600, -2450),
+// 		std::make_pair<int, int>(-3500, -3350)
+// 	};
+// 	// Első: Digi kollekció event plot (monokróm)
+// 	// plotDefinitionCollection.push_back({0, 0, "Digis, lowEta, event 0", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({1, 1, "Digis, lowEta, event 1", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({2, 2, "Digis, lowEta, event 2", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({3, 3, "Digis, lowEta, event 3", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({4, 4, "Digis, lowEta, event 4", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({5, 5, "Digis, lowEta, event 5", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({6, 6, "Digis, lowEta, event 6", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({7, 7, "Digis, lowEta, event 7", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({8, 8, "Digis, lowEta, event 8", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({9, 9, "Digis, lowEta, event 9", PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+
+// 	// plotDefinitionCollection.push_back({0, 0, "Digis, highEta, event 0", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({1, 1, "Digis, highEta, event 1", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({2, 2, "Digis, highEta, event 2", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({3, 3, "Digis, highEta, event 3", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({4, 4, "Digis, highEta, event 4", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({5, 5, "Digis, highEta, event 5", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({6, 6, "Digis, highEta, event 6", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({7, 7, "Digis, highEta, event 7", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({8, 8, "Digis, highEta, event 8", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({9, 9, "Digis, highEta, event 9", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+
+// 	// plotDefinitionCollection.push_back({0, 9, "Digis, lowEta, event 0-9 summed",  PlotDefinition::Type::digi, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({0, 9, "Digis, highEta, event 0-9 summed", PlotDefinition::Type::digi, highEtaXRanges, highEtaYRanges});
+	
+// 	// Második: Marker kollekció marker értékeket fillelve a nulla ugyanazzal a színnel mint az elsőben
+
+// 	// plotDefinitionCollection.push_back({0, 0, "Markers, lowEta, event 0", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({1, 1, "Markers, lowEta, event 1", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({2, 2, "Markers, lowEta, event 2", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({3, 3, "Markers, lowEta, event 3", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({4, 4, "Markers, lowEta, event 4", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({5, 5, "Markers, lowEta, event 5", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({6, 6, "Markers, lowEta, event 6", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({7, 7, "Markers, lowEta, event 7", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({8, 8, "Markers, lowEta, event 8", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({9, 9, "Markers, lowEta, event 9", PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+
+// 	// plotDefinitionCollection.push_back({0, 0, "Markers, highEta, event 0", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({1, 1, "Markers, highEta, event 1", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({2, 2, "Markers, highEta, event 2", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({3, 3, "Markers, highEta, event 3", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({4, 4, "Markers, highEta, event 4", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({5, 5, "Markers, highEta, event 5", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({6, 6, "Markers, highEta, event 6", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({7, 7, "Markers, highEta, event 7", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({8, 8, "Markers, highEta, event 8", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({9, 9, "Markers, highEta, event 9", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+
+// 	// plotDefinitionCollection.push_back({0, 9, "Markers, lowEta, event 0-9 summed",  PlotDefinition::Type::digiFromMarker, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({0, 9, "Markers, highEta, event 0-9 summed", PlotDefinition::Type::digiFromMarker, highEtaXRanges, highEtaYRanges});
+
+// 	// Harmadik: A szomszédokat tartalmazó marker kollekcióból készült plot
+
+// 	// plotDefinitionCollection.push_back({0, 0, "Markers with neighbours, lowEta, event 0", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({1, 1, "Markers with neighbours, lowEta, event 1", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({2, 2, "Markers with neighbours, lowEta, event 2", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({3, 3, "Markers with neighbours, lowEta, event 3", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({4, 4, "Markers with neighbours, lowEta, event 4", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({5, 5, "Markers with neighbours, lowEta, event 5", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({6, 6, "Markers with neighbours, lowEta, event 6", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({7, 7, "Markers with neighbours, lowEta, event 7", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({8, 8, "Markers with neighbours, lowEta, event 8", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({9, 9, "Markers with neighbours, lowEta, event 9", PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+
+// 	// plotDefinitionCollection.push_back({0, 0, "Markers with neighbours, highEta, event 0", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({1, 1, "Markers with neighbours, highEta, event 1", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({2, 2, "Markers with neighbours, highEta, event 2", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({3, 3, "Markers with neighbours, highEta, event 3", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({4, 4, "Markers with neighbours, highEta, event 4", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({5, 5, "Markers with neighbours, highEta, event 5", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({6, 6, "Markers with neighbours, highEta, event 6", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({7, 7, "Markers with neighbours, highEta, event 7", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({8, 8, "Markers with neighbours, highEta, event 8", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// 	// plotDefinitionCollection.push_back({9, 9, "Markers with neighbours, highEta, event 9", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+
+// 	// plotDefinitionCollection.push_back({0, 9, "Markers with neighbours, lowEta, event 0-9 summed",  PlotDefinition::Type::digiFromMarkerWithNeighbours, lowEtaXRanges, lowEtaYRanges});
+// 	// plotDefinitionCollection.push_back({0, 9, "Markers with neighbours, highEta, event 0-9 summed", PlotDefinition::Type::digiFromMarkerWithNeighbours, highEtaXRanges, highEtaYRanges});
+// }
+
+// void SplitClusterAnalyzer::updateEventPlots(const edm::Handle<edm::DetSetVector<PixelDigi>>& digiCollection, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiFlagsCollection, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
+// {
+// 	for(PlotDefinition& definition: plotDefinitionCollection)
+// 	{
+// 		if(definition.startEventIndex <= eventCounter && eventCounter <= definition.endEventIndex)
+// 		{
+// 			if(definition.type == PlotDefinition::Type::digi)
+// 			{
+// 				fillEventPlotWithDigis(definition.histograms, digiCollection, trackerTopology, fedErrors);
+// 			}
+// 			if(definition.type == PlotDefinition::Type::digiFromMarker)
+// 			{
+// 				fillEventPlotWithDigis(definition.histograms, digiFlagsCollection, trackerTopology, fedErrors);
+// 			}
+// 			if(definition.type == PlotDefinition::Type::digiFromMarkerWithNeighbours)
+// 			{
+// 				fillEventPlotWithDigis(definition.histograms, digiFlagsCollection, trackerTopology, fedErrors, true);
+// 			}
+// 			if(definition.type == PlotDefinition::Type::cluster)
+// 			{
+// 				fillEventPlotWithClusters(definition.histograms, clusterCollection, trackerTopology, fedErrors);
+// 			}
+// 		}
+// 	}
+// }
+
+// void SplitClusterAnalyzer::saveReadyEventPlots()
+// {
+// 	CanvasExtras::setMulticolorColzPalette();
+//     auto colorNotFlagged = TColor::GetColor(0.0f, 0.0f, 0.0f);
+//     auto colorFlagged    = TColor::GetColor(0.1f, 1.0f, 0.6f);
+//     auto colorNeighbour  = TColor::GetColor(1.0f, 0.0f, 0.0f);
+// 	for(PlotDefinition& definition: plotDefinitionCollection)
+// 	{
+// 		if(eventCounter == definition.endEventIndex)
+// 		{
+// 			definition.histograms.layer1.GetXaxis() -> SetRangeUser(definition.xAxisRange[0].first, definition.xAxisRange[0].second);
+// 			definition.histograms.layer2.GetXaxis() -> SetRangeUser(definition.xAxisRange[1].first, definition.xAxisRange[1].second);
+// 			definition.histograms.layer3.GetXaxis() -> SetRangeUser(definition.xAxisRange[2].first, definition.xAxisRange[2].second);
+// 			definition.histograms.layer1.GetYaxis() -> SetRangeUser(definition.yAxisRange[0].first, definition.yAxisRange[0].second);
+// 			definition.histograms.layer2.GetYaxis() -> SetRangeUser(definition.yAxisRange[1].first, definition.yAxisRange[1].second);
+// 			definition.histograms.layer3.GetYaxis() -> SetRangeUser(definition.yAxisRange[2].first, definition.yAxisRange[2].second);
+// 			// definition.histograms.layer2.SetContour((sizeof(CanvasExtras::levels)/sizeof(Double_t)), CanvasExtras::levels);
+// 			definition.histograms.layer1.GetZaxis() -> SetRangeUser(0.5, 1500.0);
+// 			definition.histograms.layer2.GetZaxis() -> SetRangeUser(0.5, 1500.0);
+// 			definition.histograms.layer3.GetZaxis() -> SetRangeUser(0.5, 1500.0);
+// 			std::vector<std::shared_ptr<TCanvas>> canvases;
+// 			canvases.emplace_back(std::make_shared<TCanvas>((definition.plotTitle + "_layer_1").c_str(), (definition.plotTitle + " layer 1").c_str(), 50, 50, 250, 300));
+// 			canvases.back() -> cd();
+// 			canvases.back() -> SetLogz();
+// 			definition.histograms.layer1.Draw("COLZ");
+// 			// canvases.emplace_back(std::make_shared<TCanvas>((definition.plotTitle + "_layer_2").c_str(), (definition.plotTitle + " layer 2").c_str(), 353, 50, 200, 300));
+// 			// canvases.back() -> cd();
+// 			// definition.histograms.layer2.Draw("COLZ");
+// 			// canvases.emplace_back(std::make_shared<TCanvas>((definition.plotTitle + "_layer_3").c_str(), (definition.plotTitle + " layer 3").c_str(), 656, 50, 200, 300));
+// 			// canvases.back() -> cd();
+// 			// definition.histograms.layer3.Draw("COLZ");
+// 			auto leg = std::make_shared<TLegend>(0.1, 0.7 ,0.48, 0.9, "Color codes");;
+// 			if(definition.type == PlotDefinition::Type::digi || definition.type == PlotDefinition::Type::cluster)
+// 			{
+// 				auto legEntry = leg -> AddEntry((TObject*)0, "0.5: digi positon", "");
+// 				legEntry -> SetFillColor(colorNotFlagged);
+// 				legEntry -> SetFillStyle(1);
+// 				legEntry -> TAttFill::Modify();
+// 				leg -> Draw();
+// 			}
+// 			if(definition.type == PlotDefinition::Type::digiFromMarker)
+// 			{
+// 				auto legEntry = leg -> AddEntry((TObject*)0, "0.5: not flagged digi", "f");
+// 				legEntry -> SetFillColor(colorNotFlagged);
+// 				legEntry -> SetFillStyle(1);
+// 				legEntry -> TAttFill::Modify();
+// 				legEntry = leg -> AddEntry((TObject*)0, "1-255 bitcodes for flagged digis", "f");
+// 				legEntry -> SetFillColor(colorFlagged);
+// 				legEntry -> SetFillStyle(1);
+// 				legEntry -> TAttFill::Modify();
+// 				leg -> Draw();
+// 			}
+// 			if(definition.type == PlotDefinition::Type::digiFromMarkerWithNeighbours)
+// 			{
+// 				// leg -> SetHeader("Color codes","C"); // option "C" allows to center the header
+// 				// leg -> AddEntry((TObject*)0, "0.5: not flagged digi", "");
+// 				auto legEntry = leg -> AddEntry((TObject*)0, "0.5: not flagged digi", "f");
+// 				legEntry -> SetFillColor(colorNotFlagged);
+// 				legEntry -> SetFillStyle(1);
+// 				legEntry -> TAttFill::Modify();
+// 				// leg -> AddEntry((TObject*)0, "1-255 bitcodes for flagged digis", "");
+// 				legEntry = leg -> AddEntry((TObject*)0,    "1-255 bitcodes for flagged digis", "f");
+// 				legEntry -> SetFillColor(colorFlagged);
+// 				legEntry -> SetFillStyle(1);
+// 				legEntry -> TAttFill::Modify();
+// 				// leg -> AddEntry((TObject*)0, "1000: found as neighbour", "");
+// 				legEntry = leg -> AddEntry((TObject*)0,  "1000: found as neighbour", "f");
+// 				legEntry -> SetFillColor(colorNeighbour);
+// 				legEntry -> SetFillStyle(1);
+// 				legEntry -> TAttFill::Modify();
+// 				leg -> Draw();
+// 			}
+// 			for(const auto& canvas: canvases)
+// 			{
+// 				canvas -> Update();
+// 				std::string filename = canvas -> GetTitle();
+// 				std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
+// 				filename =  filename + ".eps";
+// 				canvas -> SaveAs(filename.c_str());
+// 			}
+// 		}
+// 	}
+// }
+
+
+// void SplitClusterAnalyzer::fillEventPlotWithDigis(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edm::DetSetVector<PixelDigi>>& digiCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors, bool fillMissingPixels)
+// {
+// 	for(const edm::DetSet<PixelDigi>& markedDigisOnModule: *digiCollection)
+// 	{
+// 		DetId detId(markedDigisOnModule.detId());
+// 		unsigned int subdetId = detId.subdetId();
+// 		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
+// 		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, fedErrors);
+// 		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
+// 		for(const PixelDigi& pixel: markedDigisOnModule)
+// 		{
+// 			histogramTriplet.fillEventPlot(mod_on, pixel.column(), pixel.row(), pixel.adc(), fillMissingPixels);
+// 		}
+// 	}
+// }
+
+// void SplitClusterAnalyzer::fillEventPlotWithClusters(LayerEventPlotTriplet& histogramTriplet, const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const TrackerTopology* const trackerTopology, const std::map<uint32_t, int>& fedErrors)
+// {
+// 	for(const edmNew::DetSet<SiPixelCluster>& clusterSetOnModule: *clusterCollection)
+// 	{
+// 		DetId detId(clusterSetOnModule.id());
+// 		unsigned int subdetId = detId.subdetId();
+// 		if((subdetId != PixelSubdetector::PixelBarrel) && (subdetId != PixelSubdetector::PixelEndcap)) continue;
+// 		ModuleData mod    = ModuleDataProducer::getPhaseZeroOfflineModuleData(detId.rawId(), trackerTopology, fedErrors);
+// 		ModuleData mod_on = ModuleDataProducer::convertPhaseZeroOfflineOnline(mod);
+// 		for(const SiPixelCluster& currentCluster: clusterSetOnModule)
+// 		{
+// 			unsigned int numPixels = currentCluster.size();
+// 			const auto currentPixelPositions = currentCluster.pixels();
+// 			const auto currentAdcs           = currentCluster.pixelADC();
+// 			for(unsigned int pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
+// 			{
+// 				histogramTriplet.fillEventPlot(mod_on, currentPixelPositions[pixelIndex].y, currentPixelPositions[pixelIndex].x, static_cast<int>(currentAdcs[pixelIndex] / 1000.0));
+// 			}
+// 		}
+// 	}
+// }
 
 /////////////
 // Utility //
