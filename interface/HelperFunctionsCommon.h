@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <exception>
 #include <algorithm>
+#include <iterator>
 
 template <typename IntType>
 std::vector<IntType> range(IntType start, IntType stop, IntType step)
@@ -51,6 +52,26 @@ std::vector<T> filter(const std::vector<T>& vectorToFilter, UnaryPredicate predi
 		if(predicate(*it)) result.push_back(*it);
 	}
 	return result;
+}
+
+// template <class T, std::size_t...Idx>
+// auto deref_impl(T &&tuple, std::index_sequence<Idx...>) 
+// {
+//     return std::tuple<decltype(*std::get<Idx>(std::forward<T>(tuple)))...>(*std::get<Idx>(std::forward<T>(tuple))...);
+// }
+
+// template <class T>
+// auto deref(T &&tuple)
+//     -> decltype(deref_impl(std::forward<T>(tuple), std::make_index_sequence<std::tuple_size<std::remove_reference_t<T>>::value>{})) 
+// {
+//     return deref_impl(std::forward<T>(tuple), std::make_index_sequence<std::tuple_size<std::remove_reference_t<T>>::value>{});
+// }
+
+template <class Iter, class R = typename std::iterator_traits<Iter>::reference>
+std::pair<R, R> deref_minmax_element(Iter first, Iter last)
+{
+    auto iters = std::minmax_element(first, last);
+    return std::pair<R, R>{*iters.first, *iters.second};
 }
 
 #endif

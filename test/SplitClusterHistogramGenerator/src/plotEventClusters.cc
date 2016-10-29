@@ -70,35 +70,19 @@ int main(int argc, char** argv) try
 	timer.restart("Measuring the time required for separating clusters by events...");
 	std::map<int, std::vector<Cluster>> eventClustersMap(getClusterCollectionSortedByEvtnum(clusterTree, eventField, clusterField));
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
-
+	const auto& digisFromMarkersWithNeighboursType = ModuleClusterPlot::Type::digisFromMarkersWithNeighbours;
 	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 2, 2, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(ModuleClusterPlot::Type::digisFromMarkersWithNeighbours, 1, 4, 6, 0, 9));
-	// Loop on data
+	const auto defineStandardPlots = [&moduleClusterPlots] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
+	{
+		for(const int& i: range(10))
+		{
+			moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, i, i));
+		}
+		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
+		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
+	};
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 2, 2);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 4, 6);
 	timer.restart("Measuring the time required to create the event plots...");
 	int eventNum = 0;
 	for(const std::pair<int, std::vector<Cluster>>& eventNumClusterCollectionPair: eventClustersMap)

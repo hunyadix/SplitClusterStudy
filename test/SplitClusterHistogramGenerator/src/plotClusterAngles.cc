@@ -8,6 +8,7 @@
 #include "../../../interface/CanvasExtras.h"
 
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
+#include "../interface/ClusterPairFunctions.h"
 
 // Root
 #include <TROOT.h>
@@ -41,8 +42,7 @@ struct ClusterStats
 
 void printUsage(int& argc, char** argv, bool killProcess);
 void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePlots);
-bool isMissingPartDoubleColumn(const int& firstCol, const int& firstRow, const int& secondCol, const int& secondRow);
-ClusterStats getClusterStats(const Cluster& clusterField);
+std::map<int, std::vector<Cluster>> getClusterCollectionSortedByEvtnum(TTree* clusterTree, EventData& eventField, Cluster& clusterField);
 
 int main(int argc, char** argv) try
 {
@@ -72,82 +72,40 @@ int main(int argc, char** argv) try
 	TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
 	TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
 	TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
-	std::map<int, std::vector<Cluster>> eventClustersMap;
-	std::cout << process_prompt << "Sorting the clusters by event numbers..." << std::endl;
-	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
-	{
-		clusterTree -> GetEntry(entryIndex);
-		int eventNum = eventField.evt;
-		auto eventClustersIt = eventClustersMap.find(eventNum);
-		// If key does not exist yet: add key
-		if(eventClustersIt == eventClustersMap.end())
-		{
-			eventClustersIt = eventClustersMap.emplace(eventField.evt, std::vector<Cluster>()).first;
-		}
-		eventClustersIt -> second.push_back(clusterField);
-	}
-	std::cout << process_prompt << "Done." << std::endl;
+	timer.restart("Measuring the time required for separating clusters by events...");
+	std::map<int, std::vector<Cluster>> eventClustersMap(getClusterCollectionSortedByEvtnum(clusterTree, eventField, clusterField));
+	timer.printSeconds("Loop done. Took about: ", " second(s).");
 	// STL classes require addresses of pointers as accessors, unfortunately I can't do this in the associateDataFields function
 	// Histogram definitions
-	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, 0, 3.6);
-	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, 0, 3.6);
-	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution", "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0, 3.6, 100, 0, 3.6);
-	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",  "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, 0, 3.6, 100, 0, 3.6, 100, 0, 3.6);
-	// Looping on events
-	for(auto eventClustersIt = eventClustersMap.begin(); eventClustersIt != eventClustersMap.end(); ++eventClustersIt)
+	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, -3.15, 3.15);
+	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, -3.15, 3.15);
+	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution", "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, -3.15, 3.15, 100, -3.15, 3.15);
+	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",  "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, -3.15, 3.15, 100, -3.15, 3.15, 100, -3.15, 3.15);
+	std::vector<std::shared_ptr<TH1*>> histograms;
+	histograms.emplace_back(std::make_shared<TH1*>(&clusterAngle_H));
+	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairIndAngle_H));
+	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairRelAngle_H));
+	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairAngle_vs_clusterAngle_H));
+	// Main loop
+	timer.restart("Measuring the time required to create the event angle plots...");
+	int eventNum = 0;
+	for(const std::pair<int, std::vector<Cluster>>& eventNumClusterCollectionPair: eventClustersMap)
 	{
-		std::vector<Cluster>& eventClusters = eventClustersIt -> second;
-		// Looping on clusters
-		for(auto firstClusterIt = eventClusters.begin(); firstClusterIt != eventClusters.end(); ++firstClusterIt)
-		{
-			if(firstClusterIt -> mod_on.det != 0) continue;
-			ClusterStats clusterStats1 = getClusterStats(*firstClusterIt);
-			// Looping on possible pairs
-			for(auto secondClusterIt = firstClusterIt + 1; secondClusterIt != eventClusters.end(); ++secondClusterIt)
-			{
-				if(secondClusterIt -> mod_on.det != 0) continue;
-				// Check if clusters are on the same module 
-				if(!(firstClusterIt -> mod_on == secondClusterIt -> mod_on)) continue;
-				// Quick checks
-				if(12 < std::abs(firstClusterIt -> x - secondClusterIt -> x)) continue;
-				if(12 < std::abs(firstClusterIt -> y - secondClusterIt -> y)) continue;
-				ClusterStats clusterStats2 = getClusterStats(*secondClusterIt);
-				std::pair<int, int> dist(0, 0);
-				if(clusterStats1.startCol <= clusterStats2.startCol) 
-				{
-					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
-					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
-				}
-				if(clusterStats2.startCol <  clusterStats1.startCol) 
-				{
-					if(!isMissingPartDoubleColumn(clusterStats1.endRow, clusterStats1.endCol, clusterStats2.startRow, clusterStats2.startCol)) continue;
-					dist = std::pair<int, int>(clusterStats1.startRow - clusterStats2.endRow, clusterStats1.startCol - clusterStats2.startCol);
-				}
-				int clusterPairAngle;
-				clusterPairAngle = std::atan2(dist.second, dist.first);
-				clusterAngle_H.Fill(clusterStats1.dir);
-				clusterPairIndAngle_H.Fill(clusterPairAngle);
-				clusterPairRelAngle_H.Fill(clusterStats1.dir, clusterStats2.dir);
-				clusterPairAngle_vs_clusterAngle_H.Fill(clusterStats1.dir, clusterStats2.dir, clusterPairAngle);
-			}
-		}
+		const std::vector<Cluster>& clusterCollection = eventNumClusterCollectionPair.second;
+		TH1D histoPart = ClusterPairFunctions::getClusterPairAngles(clusterCollection, ("rootDummy" + std::to_string(eventNum)).c_str(), "");
+		clusterPairIndAngle_H.Add(&histoPart);
+		++eventNum;
 	}
+	timer.printSeconds("Loop done. Took about: ", " second(s).");
 	std::vector<std::shared_ptr<TCanvas>> canvases;
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", clusterAngle_H.GetTitle(), 50, 50, 300, 300));
-	canvases.back() -> cd();
-	CanvasExtras::redesignCanvas(canvases.back().get(), &clusterAngle_H);
-	clusterAngle_H.Draw();
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", clusterPairIndAngle_H.GetTitle(), 353, 50, 300, 300));
-	canvases.back() -> cd();
-	CanvasExtras::redesignCanvas(canvases.back().get(), &clusterPairIndAngle_H);
-	clusterPairIndAngle_H.Draw();
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", clusterPairRelAngle_H.GetTitle(), 656, 50, 300, 300));
-	canvases.back() -> cd();
-	CanvasExtras::redesignCanvas(canvases.back().get(), &clusterPairRelAngle_H);
-	clusterPairRelAngle_H.Draw("COLZ");
-	canvases.emplace_back(std::make_shared<TCanvas>("canvas_4", clusterPairAngle_vs_clusterAngle_H.GetTitle(), 959, 50, 300, 300));
-	canvases.back() -> cd();
-	clusterPairAngle_vs_clusterAngle_H.Draw("COLZ");
+	for(const auto& i: range(histograms.size()))
+	{
+		auto& histogram = *(*histograms[i]);
+		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(i)).c_str(), histogram.GetTitle(), 50, 50, 300, 300));
+		canvases.back() -> cd();
+		CanvasExtras::redesignCanvas(canvases.back().get(), &histogram);
+		histogram.Draw("COLZ");
+	}
 	for(const auto& canvas: canvases)
 	{
 		canvas -> Update();
@@ -200,58 +158,21 @@ void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePl
 	}
 }
 
-bool isMissingPartDoubleColumn(const int& firstCol, const int& firstRow, const int& secondCol, const int& secondRow)
+std::map<int, std::vector<Cluster>> getClusterCollectionSortedByEvtnum(TTree* clusterTree, EventData& eventField, Cluster& clusterField)
 {
-	if(firstCol % 2 == 1 && secondCol == firstCol + 3)
+	std::map<int, std::vector<Cluster>> eventClustersMap;
+	Int_t totalNumEntries = clusterTree -> GetEntries();
+	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
 	{
-		if(std::abs(secondRow - firstRow) < 4)
+		clusterTree -> GetEntry(entryIndex);
+		int eventNum = eventField.evt;
+		auto eventClustersIt = eventClustersMap.find(eventNum);
+		// If key does not exist yet: add key
+		if(eventClustersIt == eventClustersMap.end())
 		{
-			return true;
+			eventClustersIt = eventClustersMap.emplace(eventField.evt, std::vector<Cluster>()).first;
 		}
-		return false;
+		eventClustersIt -> second.push_back(clusterField);
 	}
-	return false;
+	return eventClustersMap;
 }
-
-ClusterStats getClusterStats(const Cluster& clusterField)
-{
-	ClusterStats clusterStats;
-	auto colMinmax = std::minmax_element(clusterField.pixelsCol.begin(), clusterField.pixelsCol.end());
-	int colMin = *(colMinmax.first);
-	int colMax = *(colMinmax.second);
-	clusterStats.startCol   = colMin;
-	clusterStats.endCol     = colMax;
-	if(colMin == colMax)
-	{
-		clusterStats.startRow = clusterField.pixelsRow[0];
-		clusterStats.endRow   = clusterStats.startRow;
-		clusterStats.dir      = NOVAL_F;
-		return clusterStats;
-	}
-	clusterStats.startRow   = 0;
-	clusterStats.endRow     = 0;
-	int numEdgePixelsMinCol = 0;
-	int numEdgePixelsMaxCol = 0;
-	int adcMinCol           = 0;
-	int adcMaxCol           = 0;
-	for(int i: range(clusterField.pixelsCol.size()))
-	{
-		if(clusterField.pixelsCol[i] == colMin)
-		{
-			clusterStats.startRow += clusterField.pixelsRow[i] * clusterField.pixelsAdc[i];
-			adcMinCol += clusterField.pixelsAdc[i];
-			++numEdgePixelsMinCol;
-		}
-		if(clusterField.pixelsCol[i] == colMax)
-		{
-			clusterStats.endRow   += clusterField.pixelsRow[i] * clusterField.pixelsAdc[i];
-			adcMaxCol += clusterField.pixelsAdc[i];
-			++numEdgePixelsMaxCol;
-		}
-	}
-	clusterStats.startRow /= adcMinCol;
-	clusterStats.endRow   /= adcMaxCol;
-	clusterStats.dir = std::atan2(clusterStats.endCol - clusterStats.startCol, clusterStats.endRow - clusterStats.startRow);
-	return clusterStats;
-}
-
