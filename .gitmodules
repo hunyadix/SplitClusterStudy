@@ -10,3 +10,6 @@
 [submodule "TimerForBenchmarking"]
 	path = TimerForBenchmarking
 	url = git@github.com:hunyadix/TimerForBenchmarking.git
+[submodule "CMSSWPluginToolkit"]
+	path = CMSSWPluginToolkit
+	url = git@github.com:hunyadix/CMSSWPluginToolkit.git

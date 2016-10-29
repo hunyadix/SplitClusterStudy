@@ -135,15 +135,15 @@ int main(int argc, char** argv) try
 	std::vector<std::shared_ptr<TCanvas>> canvases;
 	canvases.emplace_back(std::make_shared<TCanvas>("canvas_1", clusterAngle_H.GetTitle(), 50, 50, 300, 300));
 	canvases.back() -> cd();
-	redesignCanvas(canvases.back().get(), &clusterAngle_H);
+	CanvasExtras::redesignCanvas(canvases.back().get(), &clusterAngle_H);
 	clusterAngle_H.Draw();
 	canvases.emplace_back(std::make_shared<TCanvas>("canvas_2", clusterPairIndAngle_H.GetTitle(), 353, 50, 300, 300));
 	canvases.back() -> cd();
-	redesignCanvas(canvases.back().get(), &clusterPairIndAngle_H);
+	CanvasExtras::redesignCanvas(canvases.back().get(), &clusterPairIndAngle_H);
 	clusterPairIndAngle_H.Draw();
 	canvases.emplace_back(std::make_shared<TCanvas>("canvas_3", clusterPairRelAngle_H.GetTitle(), 656, 50, 300, 300));
 	canvases.back() -> cd();
-	redesignCanvas(canvases.back().get(), &clusterPairRelAngle_H);
+	CanvasExtras::redesignCanvas(canvases.back().get(), &clusterPairRelAngle_H);
 	clusterPairRelAngle_H.Draw("COLZ");
 	canvases.emplace_back(std::make_shared<TCanvas>("canvas_4", clusterPairAngle_vs_clusterAngle_H.GetTitle(), 959, 50, 300, 300));
 	canvases.back() -> cd();

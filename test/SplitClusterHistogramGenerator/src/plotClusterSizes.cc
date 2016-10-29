@@ -59,7 +59,7 @@ int main(int argc, char** argv) try
 	{
 		histograms.emplace_back(std::make_shared<TH1D>(("Sizes_layer_" + std::to_string(layerNum)).c_str(), ("Cluster sizes on layer " + std::to_string(layerNum) + ";size (pixels); num. clusters").c_str(), 50, 0, 50));
 		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(layerNum)).c_str(), ("canvas_" + std::to_string(layerNum)).c_str(), 50 + (layerNum - 1) * (canvasSizeX + 3), 50, canvasSizeX, canvasSizeY));
-		redesignCanvas(canvases.back().get(), histograms.back().get());
+		CanvasExtras::redesignCanvas(canvases.back().get(), histograms.back().get());
 	}
 	for(int layerNum = 1; layerNum <= 3; ++layerNum)
 	{
