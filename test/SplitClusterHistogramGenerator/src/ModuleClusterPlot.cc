@@ -93,27 +93,6 @@ int ModuleClusterPlot::isEventNumInRange(const int& eventNum)
 	return false;
 }
 
-int ModuleClusterPlot::areClustersPair(const Cluster& lhs, const Cluster& rhs)
-{
-	if(5 < std::abs(rhs.x - lhs.x)) return 0;
-	auto lhsColMinmax = std::minmax_element(lhs.pixelsCol.begin(), lhs.pixelsCol.end());
-	const int &lhsColMin = *(lhsColMinmax.first);
-	const int &lhsColMax = *(lhsColMinmax.second);
-	auto rhsColMinmax = std::minmax_element(rhs.pixelsCol.begin(), rhs.pixelsCol.end());
-	const int &rhsColMin = *(rhsColMinmax.first);
-	const int &rhsColMax = *(rhsColMinmax.second);
-	int lhsFirst = (lhsColMin < rhsColMin);
-	if(lhsFirst)
-	{
-		if(lhsColMax % 2 != 1 || lhsColMax + 3 != rhsColMin) return 0;
-	}
-	else
-	{
-		if(rhsColMax % 2 != 1 || rhsColMax + 3 != lhsColMin) return 0;
-	}
-	return 1;
-}
-
 void ModuleClusterPlot::fillDigisMarkers(const Cluster& cluster, const int& eventNum)
 {
 	auto filteredList = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> isEventNumInRange(eventNum); });
@@ -172,7 +151,7 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 		{
 			const ModuleData& mod2 = secondClusterIt -> mod_on;
 			if(!(mod1 == mod2)) continue;
-			if(!areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
+			if(!ClusterPairFunctions::areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
 			for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 			{
 				plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt);

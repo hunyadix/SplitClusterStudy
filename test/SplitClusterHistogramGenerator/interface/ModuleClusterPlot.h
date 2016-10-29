@@ -4,6 +4,7 @@
 #include "../../../interface/Cluster.h"
 #include "../../../interface/HelperFunctionsCommon.h"
 #include "../../../interface/CanvasExtras.h"
+#include "../interface/ClusterPairFunctions.h"
 
 #include <TH2D.h>
 #include <TCanvas.h>
@@ -57,7 +58,6 @@ class ModuleClusterPlot
 	public:
 		ModuleClusterPlot(Type typeArg, const int& layer, const int& module, const int& ladder, const int& startEventArg, const int& endEventArg);
 		int         isEventNumInRange(const int& eventNum);
-		static int  areClustersPair(const Cluster& lhs, const Cluster& rhs);
 		static void fillDigisMarkers(const Cluster& Cluster, const int& eventNum);
 		static void fillDigisMarkers(const std::vector<Cluster>& clusterCollection, const int& eventNum);
 		static void fillAllPairs(const std::vector<Cluster>& clusterCollection, const int& eventNum);

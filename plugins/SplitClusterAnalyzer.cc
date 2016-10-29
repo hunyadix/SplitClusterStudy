@@ -50,84 +50,26 @@ void SplitClusterAnalyzer::beginJob()
 	const auto& digisType = ModuleClusterPlot::Type::digis;
 	const auto& digisFromMarkersType = ModuleClusterPlot::Type::digisFromMarkers;
 	const auto& digisFromMarkersWithNeighboursType = ModuleClusterPlot::Type::digisFromMarkersWithNeighbours;
+	// const auto& digisAndMarkersType = ModuleClusterPlot::Type::digisAndMarkers;
 
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 0, 9));
+	const auto defineStandardPlots = [this] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
+	{
+		for(const int& i: range(10))
+		{
+			this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, i, i));
+		}
+		this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
+		this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
+	};
 
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 2, 2, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 2, 2, 0, 9));
-	
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersType, 1, 4, 6, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisFromMarkersWithNeighboursType, 1, 4, 6, 0, 9));
+	defineStandardPlots(digisType,                          1, 2, 2);
+	defineStandardPlots(digisFromMarkersType,               1, 2, 2);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 2, 2);
+	// defineStandardPlots(digisAndMarkersType,                1, 2, 2);
+	defineStandardPlots(digisType,                          1, 4, 6);
+	defineStandardPlots(digisFromMarkersType,               1, 4, 6);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 4, 6);
+	// defineStandardPlots(digisAndMarkersType,                1, 4, 6);
 }
 
 void SplitClusterAnalyzer::endJob()
