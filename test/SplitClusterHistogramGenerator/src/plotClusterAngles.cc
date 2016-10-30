@@ -77,14 +77,16 @@ int main(int argc, char** argv) try
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
 	// STL classes require addresses of pointers as accessors, unfortunately I can't do this in the associateDataFields function
 	// Histogram definitions
-	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, -3.15, 3.15);
-	TH1D clusterPairIndAngle_H             ("ClustePairAngleIndDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, -3.15, 3.15);
-	TH2D clusterPairRelAngle_H             ("ClustePairAngleRelDistribution", "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, -3.15, 3.15, 100, -3.15, 3.15);
-	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",  "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, -3.15, 3.15, 100, -3.15, 3.15, 100, -3.15, 3.15);
+	TH1D clusterAngle_H                    ("ClusteAngleDistribution",        "Cluster Angle Distribution;angle;nclusters",                                                                     100, 0.0, 3.15);
+	TH1D clusterPairIndAngle_H             ("ClustePairIndAngleDistribution", "Cluster Pair Individual Angle Distribution;angle;nclusters",                                                     100, 0.0, 3.15);
+	TH1D clusterPairRelAngle_H             ("ClustePairRelAngleDistribution", "Cluster Pair Relative Angle Distribution;angle;nclusters",                                                       100, 0.0, 3.15);
+	TH2D clusterPairAngleCorresondence_H   ("ClustePairAngleCorrespondence",  "Cluster Pair Individual Angle Correspondence;angle of first cluster;angle of second cluster;nclusters",          100, 0.0, 3.15, 100, 0.0, 3.15);
+	TH3D clusterPairAngle_vs_clusterAngle_H("ClustePairAngleVSClusterAngle",  "Cluster Pair Angle vs Cluster Pair Angle;angle of first cluster;angle of second cluster;relative cluster angle", 100, 0.0, 3.15, 100, 0.0, 3.15, 100, 0.0, 3.15);
 	std::vector<std::shared_ptr<TH1*>> histograms;
 	histograms.emplace_back(std::make_shared<TH1*>(&clusterAngle_H));
 	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairIndAngle_H));
 	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairRelAngle_H));
+	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairAngleCorresondence_H));
 	histograms.emplace_back(std::make_shared<TH1*>(&clusterPairAngle_vs_clusterAngle_H));
 	// Main loop
 	timer.restart("Measuring the time required to create the event angle plots...");
@@ -92,8 +94,23 @@ int main(int argc, char** argv) try
 	for(const std::pair<int, std::vector<Cluster>>& eventNumClusterCollectionPair: eventClustersMap)
 	{
 		const std::vector<Cluster>& clusterCollection = eventNumClusterCollectionPair.second;
-		TH1D histoPart = ClusterPairFunctions::getClusterPairAngles(clusterCollection, ("rootDummy" + std::to_string(eventNum)).c_str(), "");
-		clusterPairIndAngle_H.Add(&histoPart);
+		for(const Cluster& cluster: clusterCollection)
+		{
+			float angle = ClusterPairFunctions::getClusterIndAngle(cluster);
+			clusterAngle_H.Fill(angle);
+		}
+		ClusterPairFunctions::PairCollectionType pairCollection(ClusterPairFunctions::getClusterPairCollection(clusterCollection));
+		for(const ClusterPairFunctions::PairType& pair: pairCollection)
+		{
+			float firstAngle  = ClusterPairFunctions::getClusterIndAngle(*pair.first);
+			float secondAngle = ClusterPairFunctions::getClusterIndAngle(*pair.second);
+			float pairAngle   = ClusterPairFunctions::getClusterPairAngle(pair);
+			clusterPairIndAngle_H.Fill(firstAngle);
+			clusterPairIndAngle_H.Fill(secondAngle);
+			clusterPairRelAngle_H.Fill(pairAngle);
+			clusterPairAngleCorresondence_H.Fill(std::min(firstAngle, secondAngle), std::max(firstAngle, secondAngle));
+			clusterPairAngle_vs_clusterAngle_H.Fill(std::min(firstAngle, secondAngle), std::max(firstAngle, secondAngle), pairAngle);
+		}
 		++eventNum;
 	}
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
@@ -101,7 +118,7 @@ int main(int argc, char** argv) try
 	for(const auto& i: range(histograms.size()))
 	{
 		auto& histogram = *(*histograms[i]);
-		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(i)).c_str(), histogram.GetTitle(), 50, 50, 300, 300));
+		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(i)).c_str(), histogram.GetTitle(), 50 + i * 303, 50, 300, 300));
 		canvases.back() -> cd();
 		CanvasExtras::redesignCanvas(canvases.back().get(), &histogram);
 		histogram.Draw("COLZ");

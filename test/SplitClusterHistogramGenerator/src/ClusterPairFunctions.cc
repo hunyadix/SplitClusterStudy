@@ -54,6 +54,15 @@ namespace ClusterPairFunctions
 		return static_cast<float>(rowSum) / adcSum;
 	}
 
+	float getClusterIndAngle(const Cluster& cluster)
+	{
+		int colMin, colMax;
+		std::tie(colMin, colMax) = deref_minmax_element(cluster.pixelsCol.begin(), cluster.pixelsCol.end());
+		float startRow = getAdcWeightedRowCoordinateInCol(cluster, colMin);
+		float endRow   = getAdcWeightedRowCoordinateInCol(cluster, colMax);
+		return std::atan2(colMax - colMin, endRow - startRow);
+	}
+
 	// If this is slow, the speed can be increased to almost 2x by only looping once on the collection and only calculating
 	// the min and max values required. Finding both the min and max together should not be that slow though.
 	float getClusterPairAngle(const PairType& pair)
@@ -82,7 +91,7 @@ namespace ClusterPairFunctions
 	TH1D getClusterPairAngles(const std::vector<Cluster>& clusterCollection, const std::string& histoName, const std::string& histoTitle)
 	{
 		std::vector<float> pairAngles = getClusterPairAngles(clusterCollection);
-		TH1D pairAnglesPlot(histoName.c_str(), histoTitle.c_str(), 100, -3.15, 3.15);
+		TH1D pairAnglesPlot(histoName.c_str(), histoTitle.c_str(), 100, 0.0, 3.15);
 		for(const float& angle: pairAngles)
 		{
 			pairAnglesPlot.Fill(angle);

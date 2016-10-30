@@ -26,23 +26,30 @@ class ModuleClusterPlot
 			digisFromMarkersWithNeighbours,
 			pairs,
 			pairsWithMarkers,
-			pairsWithNeighbours
+			pairsWithNeighbours,
+			pairsWithAngleLabels,
+			pairsWithAngleColorCodes,
 		};
 	private:
-		static constexpr std::array<const char*, 6> histogramTypePrefixes = 
+		static constexpr std::array<const char*, 8> histogramTypePrefixes = 
 		{{ 
 			"Digis",
 			"Marked digis",
 			"Ntuple markers with neighbours",
-			"Marked digi pairs",
-			"Marked digi pairs with marker positions",
-			"Marked digi pairs with neighbours"
+			"Cluster pairs",
+			"Cluster pairs with marker positions",
+			"Cluster pairs with neighbours",
+			"Cluster pairs with angle labels",
+			"Cluster pairs with angle color codes"
 		}};
 		static constexpr float BASE_DIGI_FILL_VALUE    = 0.5f;
 		static constexpr float MISSING_NEIGHBOUR_VALUE = 1000.0f;
-		static constexpr float PALETTE_MINIMUM    = 0.5f;
-		static constexpr float PALETTE_MAXIMUM    = 1500.0f;
+		static constexpr float NORMAL_PALETTE_MINIMUM  = 0.5f;
+		static constexpr float NORMAL_PALETTE_MAXIMUM  = 1500.0f;
+		static constexpr float ANGLE_PALETTE_MINIMUM   = 0.0;
+		static constexpr float ANGLE_PALETTE_MAXIMUM   = 3.15;
 		TH2D histogram;
+		TCanvas canvas;
 		Type type;
 		int layer;
 		int module;
@@ -53,8 +60,7 @@ class ModuleClusterPlot
 	private:
 		static void markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers);
 		void        fillMissingPixels(const int& col, const int& row, const int& markerState, const int& weight);
-		void        fillDigisFromCluster(const Cluster& cluster);
-
+		void        fillDigisFromCluster(const Cluster& cluster, const float& fillWeight = 0);
 	public:
 		ModuleClusterPlot(Type typeArg, const int& layer, const int& module, const int& ladder, const int& startEventArg, const int& endEventArg);
 		int         isEventNumInRange(const int& eventNum);

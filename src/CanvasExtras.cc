@@ -268,4 +268,13 @@ namespace CanvasExtras
 		gStyle -> SetNumberContours(NCont);
 	}
 
+	void setLabelStyleNote(TText& label)
+	{
+		label.SetNDC();
+		label.SetTextFont(1);
+		label.SetTextColor(1);
+		label.SetTextSize(0.04);
+		label.SetTextAlign(22);
+		label.SetTextAngle(0);
+	}
 }; // namespace CanvasExtras

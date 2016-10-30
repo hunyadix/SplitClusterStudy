@@ -1,6 +1,6 @@
 #include "../interface/ModuleClusterPlot.h"
 
-constexpr std::array<const char*, 6> ModuleClusterPlot::histogramTypePrefixes;
+constexpr std::array<const char*, 8> ModuleClusterPlot::histogramTypePrefixes;
 std::vector<ModuleClusterPlot*> ModuleClusterPlot::moduleClusterPlotCollection;
 
 ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg):
@@ -9,6 +9,7 @@ ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const in
 		(std::string(histogramTypePrefixes[typeArg]) + " on layer " + std::to_string(layerArg) + ", module " + std::to_string(moduleArg) + ", ladder " + std::to_string(ladderArg) + ";module pix. (col);ladder pix. (row)").c_str(),
 		416, 0, 416,
 		160, 0, 160),
+	canvas(histogram.GetName(), (histogram.GetTitle() + std::string(" ") + std::to_string(startEventArg) + " " + std::to_string(endEventArg)).c_str(), 50, 50, 400, 300),
 	type(typeArg),
 	layer(layerArg),
 	module(moduleArg),
@@ -16,6 +17,7 @@ ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const in
 	startEvent(startEventArg),
 	endEvent(endEventArg)
 {
+	CanvasExtras::redesignCanvas(&canvas, &histogram);
 	moduleClusterPlotCollection.push_back(this);
 }
 
@@ -55,7 +57,7 @@ void ModuleClusterPlot::fillMissingPixels(const int& col, const int& row, const 
 	}
 }
 
-void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster)
+void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster, const float& fillWeight)
 {
 	for(const int& digiIndex: range(cluster.pixelsCol.size()))
 	{
@@ -66,6 +68,7 @@ void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster)
 		{
 			case digis:
 			case pairs:
+			case pairsWithAngleLabels:
 				histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
 				break;
 			case digisFromMarkers:
@@ -79,6 +82,10 @@ void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster)
 				// else                 histogram.SetBinContent(col, row, markerState);
 				histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
 				fillMissingPixels(col, row, markerState, MISSING_NEIGHBOUR_VALUE);
+				break;
+			case pairsWithAngleColorCodes:
+				// std::cout << "fillWeight: " << fillWeight << std::endl;
+				histogram.SetBinContent(col, row, fillWeight);
 				break;
 			default:
 				std::cerr << "Error in ModuleClusterPlot::fill(): Error deducing type for histogram type." << std::endl; 
@@ -103,6 +110,7 @@ void ModuleClusterPlot::fillDigisMarkers(const Cluster& cluster, const int& even
 			(plotToCheck -> type == digisFromMarkers) || 
 			(plotToCheck -> type == digisFromMarkersWithNeighbours); 
 	});
+	if(filteredList.empty()) return;
 	const ModuleData& mod_on = cluster.mod_on;
 	if(mod_on.det != 0) return;
 	filteredList = filter(filteredList, [&mod_on] (ModuleClusterPlot* plotToCheck)
@@ -131,10 +139,13 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 	plotsToFillInTheEvent      = filter(plotsToFillInTheEvent,       []          (ModuleClusterPlot* plotToCheck)
 	{ 
 		return 
-			(plotToCheck -> type == pairs) || 
-			(plotToCheck -> type == pairsWithMarkers) || 
-			(plotToCheck -> type == pairsWithNeighbours); 
+			(plotToCheck -> type == pairs                    ) || 
+			(plotToCheck -> type == pairsWithMarkers         ) || 
+			(plotToCheck -> type == pairsWithNeighbours      ) || 
+			(plotToCheck -> type == pairsWithAngleLabels     ) ||
+			(plotToCheck -> type == pairsWithAngleColorCodes);
 	});
+	if(plotsToFillInTheEvent.empty()) return;
 	for(auto firstClusterIt = clusterCollection.begin(); firstClusterIt != clusterCollection.end(); ++firstClusterIt)
 	{
 		const ModuleData& mod1 = firstClusterIt -> mod_on;
@@ -142,7 +153,7 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 		auto filteredList = filter(plotsToFillInTheEvent, [&mod1] (ModuleClusterPlot* plotToCheck) 
 		{
 			return 
-				mod1.layer  == plotToCheck -> layer &&
+				mod1.layer  == plotToCheck -> layer  &&
 				mod1.module == plotToCheck -> module &&
 				mod1.ladder == plotToCheck -> ladder;
 		});
@@ -154,8 +165,23 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 			if(!ClusterPairFunctions::areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
 			for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 			{
+				if(plotDefinitionPtr -> type == pairsWithAngleColorCodes)
+				{
+					float angle = ClusterPairFunctions::getClusterPairAngle(std::make_pair(
+						std::make_shared<Cluster>(*firstClusterIt),
+						std::make_shared<Cluster>(*secondClusterIt)));
+					plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt,  angle);
+					plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt, angle);
+				}
 				plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt);
 				plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt);
+				if(plotDefinitionPtr -> type == pairsWithAngleLabels)
+				{
+					plotDefinitionPtr -> canvas.cd();
+					TText* eventlabel = new TText();
+					CanvasExtras::setLabelStyleNote(*eventlabel);		
+					eventlabel -> DrawText(0.32, 0.48, std::string("FIXME").c_str());
+				}
 			}
 		}
 	}
@@ -165,36 +191,41 @@ void ModuleClusterPlot::saveAllFinished(const int& eventNum)
 {
 	auto filteredList = filter(moduleClusterPlotCollection, [&eventNum] (ModuleClusterPlot* plotToCheck) { return plotToCheck -> endEvent == eventNum; });
 	if(filteredList.size() == 0) return;
+	// Quick and dirty palette
 	CanvasExtras::setMulticolorColzPalette();
-	std::vector<std::shared_ptr<TCanvas>> canvases;
 	for(auto moduleClusterPlotToSave: filteredList)
 	{
-		// std::cout << "Saving plot!!!" << std::endl;
 		TH2D& histogram = moduleClusterPlotToSave -> histogram;
-		canvases.emplace_back(std::make_shared<TCanvas>(histogram.GetName(), (histogram.GetTitle() + std::string(" ") + std::to_string(moduleClusterPlotToSave -> startEvent) + " " + std::to_string(moduleClusterPlotToSave -> endEvent)).c_str(), 50, 50, 400, 300));
-		canvases.back() -> cd();
-		CanvasExtras::redesignCanvas(canvases.back().get(), &histogram);
-		histogram.GetZaxis() -> SetRangeUser(PALETTE_MINIMUM, PALETTE_MAXIMUM);
-		histogram.GetZaxis() -> SetRangeUser(PALETTE_MINIMUM, PALETTE_MAXIMUM);
-		histogram.GetZaxis() -> SetRangeUser(PALETTE_MINIMUM, PALETTE_MAXIMUM);
-		canvases.back() -> SetLogz();
+		TCanvas& canvas = moduleClusterPlotToSave -> canvas;
+		canvas.cd();
+		// Angle identifier colors
+		if(moduleClusterPlotToSave -> type == pairsWithAngleColorCodes)
+		{
+			histogram.GetZaxis() -> SetRangeUser(ANGLE_PALETTE_MINIMUM, ANGLE_PALETTE_MAXIMUM);
+			histogram.GetZaxis() -> SetRangeUser(ANGLE_PALETTE_MINIMUM, ANGLE_PALETTE_MAXIMUM);
+			histogram.GetZaxis() -> SetRangeUser(ANGLE_PALETTE_MINIMUM, ANGLE_PALETTE_MAXIMUM);			
+		}
+		// Marker identifier colors
+		else
+		{
+			histogram.GetZaxis() -> SetRangeUser(NORMAL_PALETTE_MINIMUM, NORMAL_PALETTE_MAXIMUM);
+			histogram.GetZaxis() -> SetRangeUser(NORMAL_PALETTE_MINIMUM, NORMAL_PALETTE_MAXIMUM);
+			histogram.GetZaxis() -> SetRangeUser(NORMAL_PALETTE_MINIMUM, NORMAL_PALETTE_MAXIMUM);
+			canvas.SetLogz();
+		}
+		// Slow, but accurate palette
+		// CanvasExtras::setMulticolorColzPalette();
 		histogram.Draw("COLZ");
-		TText* xlabel = new TText();
-		xlabel -> SetNDC();
-		xlabel -> SetTextFont(1);
-		xlabel -> SetTextColor(1);
-		xlabel -> SetTextSize(0.04);
-		xlabel -> SetTextAlign(22);
-		xlabel -> SetTextAngle(0);
-		xlabel -> DrawText(0.22, 0.98, ("Events: [" + std::to_string(moduleClusterPlotToSave -> startEvent) + " - " + std::to_string(moduleClusterPlotToSave -> endEvent) + "]").c_str());
-		// std::cout << histogram.GetTitle() << " is ready." << std::endl;
-	}
-	for(const auto& canvas: canvases)
-	{
-		canvas -> Update();
-		std::string filename = canvas -> GetTitle();
+		TText* eventlabel = new TText();
+		CanvasExtras::setLabelStyleNote(*eventlabel);		
+		eventlabel -> DrawText(0.22, 0.98, (
+			"Events: [" + 
+			std::to_string(moduleClusterPlotToSave -> startEvent) + " - " +
+			std::to_string(moduleClusterPlotToSave -> endEvent  ) + "]").c_str());
+		canvas.Update();
+		std::string filename = canvas.GetTitle();
 		std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });
 		filename =  "results/" + filename + ".eps";
-		canvas -> SaveAs(filename.c_str());
+		canvas.SaveAs(filename.c_str());
 	}
 }

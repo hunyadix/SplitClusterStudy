@@ -67,9 +67,11 @@ int main(int argc, char** argv) try
 	TTreeTools::checkGetBranch(clusterTree, "pixelsRow")    -> SetAddress(&pixelsRowWrapper);
 	TTreeTools::checkGetBranch(clusterTree, "pixelsAdc")    -> SetAddress(&pixelsAdcWrapper);
 	TTreeTools::checkGetBranch(clusterTree, "pixelsMarker") -> SetAddress(&pixelsMarkerWrapper);
+	// Loop to separate events
 	timer.restart("Measuring the time required for separating clusters by events...");
 	std::map<int, std::vector<Cluster>> eventClustersMap(getClusterCollectionSortedByEvtnum(clusterTree, eventField, clusterField));
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
+	// Histogram definitions
 	const auto& digisFromMarkersWithNeighboursType = ModuleClusterPlot::Type::digisFromMarkersWithNeighbours;
 	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
 	const auto defineStandardPlots = [&moduleClusterPlots] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
@@ -81,13 +83,13 @@ int main(int argc, char** argv) try
 		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
 		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
 	};
-	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 2, 2);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 1, 2);
 	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 4, 6);
+	// Primary loop
 	timer.restart("Measuring the time required to create the event plots...");
 	int eventNum = 0;
 	for(const std::pair<int, std::vector<Cluster>>& eventNumClusterCollectionPair: eventClustersMap)
 	{
-		// const int&                  eventNum          = eventNumClusterCollectionPair.first;
 		const std::vector<Cluster>& clusterCollection = eventNumClusterCollectionPair.second;
 		for(const Cluster& cluster: clusterCollection)
 		{
@@ -97,7 +99,7 @@ int main(int argc, char** argv) try
 		++eventNum;
 	}
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
-	std::cout << process_prompt << "PlotEventClusters terminated succesfully." << std::endl;
+	std::cout << process_prompt << argv[0] << " terminated succesfully." << std::endl;
 	inputFile -> Close();
 	theApp -> Run();
 	return 0; 

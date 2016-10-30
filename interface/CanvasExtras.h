@@ -7,6 +7,7 @@
 #include "TList.h"
 #include "TColor.h"
 #include "TStyle.h"
+#include "TText.h"
 
 namespace CanvasExtras
 {
@@ -32,6 +33,7 @@ namespace CanvasExtras
 	void redesignCanvas(TCanvas* canvas, TH1* histogram);
 	void redesignCanvas(TCanvas* canvas, TH2* histogram, const std::string& draw="COLZ");
 	void setMulticolorColzPalette();
+	void setLabelStyleNote(TText& label);
 }; // namespace CanvasExtras
 
 #endif

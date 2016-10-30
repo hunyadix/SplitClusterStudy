@@ -1,7 +1,7 @@
 include Makefile.arch
 SrcSuf = cc
 
-CXX += -std=c++14
+CXX += -std=c++11
 
 # Utility
 

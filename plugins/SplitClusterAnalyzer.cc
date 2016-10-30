@@ -62,10 +62,10 @@ void SplitClusterAnalyzer::beginJob()
 		this -> moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
 	};
 
-	defineStandardPlots(digisType,                          1, 2, 2);
-	defineStandardPlots(digisFromMarkersType,               1, 2, 2);
-	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 2, 2);
-	// defineStandardPlots(digisAndMarkersType,                1, 2, 2);
+	defineStandardPlots(digisType,                          1, 1, 2);
+	defineStandardPlots(digisFromMarkersType,               1, 1, 2);
+	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 1, 2);
+	// defineStandardPlots(digisAndMarkersType,                1, 1, 2);
 	defineStandardPlots(digisType,                          1, 4, 6);
 	defineStandardPlots(digisFromMarkersType,               1, 4, 6);
 	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 4, 6);

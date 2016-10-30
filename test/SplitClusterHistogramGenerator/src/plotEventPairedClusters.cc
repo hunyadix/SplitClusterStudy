@@ -70,117 +70,32 @@ int main(int argc, char** argv) try
 	timer.restart("Measuring the time required for separating clusters by events...");
 	std::map<int, std::vector<Cluster>> eventClustersMap(getClusterCollectionSortedByEvtnum(clusterTree, eventField, clusterField));
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
-
+	// Histogram definitions
+	const auto& digisType                    = ModuleClusterPlot::Type::digis;
+	const auto& pairsType                    = ModuleClusterPlot::Type::pairs;
+	const auto& pairsWithMarkersType         = ModuleClusterPlot::Type::pairsWithMarkers;
+	const auto& pairsWithNeighboursType      = ModuleClusterPlot::Type::pairsWithNeighbours;
+	const auto& pairsWithAngleColorCodesType = ModuleClusterPlot::Type::pairsWithAngleColorCodes;
 	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
-
-	const auto& digisType               = ModuleClusterPlot::Type::digis;
-	const auto& pairsType               = ModuleClusterPlot::Type::pairs;
-	const auto& pairsWithMarkersType    = ModuleClusterPlot::Type::pairsWithMarkers;
-	const auto& pairsWithNeighboursType = ModuleClusterPlot::Type::pairsWithNeighbours;
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 2, 2, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 2, 2, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 2, 2, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 2, 2, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(digisType, 1, 4, 6, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsType, 1, 4, 6, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithMarkersType, 1, 4, 6, 0, 9));
-
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 0, 0));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 1, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 2, 2));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 3, 3));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 4, 4));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 5, 5));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 6, 6));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 7, 7));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 8, 8));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 9, 9));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 0, 1));
-	moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(pairsWithNeighboursType, 1, 4, 6, 0, 9));
+	const auto defineStandardPlots = [&moduleClusterPlots] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
+	{
+		for(const int& i: range(10))
+		{
+			moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, i, i));
+		}
+		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
+		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
+	};
+	defineStandardPlots(digisType,                    1, 1, 2);
+	defineStandardPlots(pairsType,                    1, 1, 2);
+	defineStandardPlots(pairsWithMarkersType,         1, 1, 2);
+	defineStandardPlots(pairsWithNeighboursType,      1, 1, 2);
+	defineStandardPlots(pairsWithAngleColorCodesType, 1, 1, 2);
+	defineStandardPlots(digisType,                    1, 4, 6);
+	defineStandardPlots(pairsType,                    1, 4, 6);
+	defineStandardPlots(pairsWithMarkersType,         1, 4, 6);
+	defineStandardPlots(pairsWithNeighboursType,      1, 4, 6);
+	defineStandardPlots(pairsWithAngleColorCodesType, 1, 4, 6);
 	// Loop on data
 	timer.restart("Measuring the time required to create the event plots...");
 	int eventNum = 0;
@@ -193,7 +108,7 @@ int main(int argc, char** argv) try
 		++eventNum;
 	}
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
-	std::cout << process_prompt << "PlotEventClusters terminated succesfully." << std::endl;
+	std::cout << process_prompt << argv[0] << " terminated succesfully." << std::endl;
 	inputFile -> Close();
 	theApp -> Run();
 	return 0; 
