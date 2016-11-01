@@ -277,4 +277,14 @@ namespace CanvasExtras
 		label.SetTextAlign(22);
 		label.SetTextAngle(0);
 	}
+
+	void setLabelStyleComment(TText& label)
+	{
+		label.SetNDC(kFALSE);
+		label.SetTextFont(1);
+		label.SetTextColor(1);
+		label.SetTextSize(0.02);
+		// label.SetTextAlign(22);
+		label.SetTextAngle(0);
+	}
 }; // namespace CanvasExtras

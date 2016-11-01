@@ -29,9 +29,11 @@ class ModuleClusterPlot
 			pairsWithNeighbours,
 			pairsWithAngleLabels,
 			pairsWithAngleColorCodes,
+			pairsWithIndividualAngleLabels,
+			pairsWithIndividualAngleColors,
 		};
 	private:
-		static constexpr std::array<const char*, 8> histogramTypePrefixes = 
+		static constexpr std::array<const char*, 10> histogramTypePrefixes = 
 		{{ 
 			"Digis",
 			"Marked digis",
@@ -40,7 +42,9 @@ class ModuleClusterPlot
 			"Cluster pairs with marker positions",
 			"Cluster pairs with neighbours",
 			"Cluster pairs with angle labels",
-			"Cluster pairs with angle color codes"
+			"Cluster pairs with angle color codes",
+			"Cluster pairs with individual angle labels",
+			"Cluster pairs with individual angle color codes"
 		}};
 		static constexpr float BASE_DIGI_FILL_VALUE    = 0.5f;
 		static constexpr float MISSING_NEIGHBOUR_VALUE = 1000.0f;
@@ -49,6 +53,7 @@ class ModuleClusterPlot
 		static constexpr float ANGLE_PALETTE_MINIMUM   = 0.0;
 		static constexpr float ANGLE_PALETTE_MAXIMUM   = 3.15;
 		TH2D histogram;
+		std::vector<std::shared_ptr<TText>> labels;
 		TCanvas canvas;
 		Type type;
 		int layer;

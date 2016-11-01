@@ -1,6 +1,6 @@
 #include "../interface/ModuleClusterPlot.h"
 
-constexpr std::array<const char*, 8> ModuleClusterPlot::histogramTypePrefixes;
+constexpr std::array<const char*, 10> ModuleClusterPlot::histogramTypePrefixes;
 std::vector<ModuleClusterPlot*> ModuleClusterPlot::moduleClusterPlotCollection;
 
 ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg):
@@ -69,6 +69,7 @@ void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster, const float
 			case digis:
 			case pairs:
 			case pairsWithAngleLabels:
+			case pairsWithIndividualAngleLabels:
 				histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
 				break;
 			case digisFromMarkers:
@@ -84,6 +85,7 @@ void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster, const float
 				fillMissingPixels(col, row, markerState, MISSING_NEIGHBOUR_VALUE);
 				break;
 			case pairsWithAngleColorCodes:
+			case pairsWithIndividualAngleColors:
 				// std::cout << "fillWeight: " << fillWeight << std::endl;
 				histogram.SetBinContent(col, row, fillWeight);
 				break;
@@ -139,11 +141,13 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 	plotsToFillInTheEvent      = filter(plotsToFillInTheEvent,       []          (ModuleClusterPlot* plotToCheck)
 	{ 
 		return 
-			(plotToCheck -> type == pairs                    ) || 
-			(plotToCheck -> type == pairsWithMarkers         ) || 
-			(plotToCheck -> type == pairsWithNeighbours      ) || 
-			(plotToCheck -> type == pairsWithAngleLabels     ) ||
-			(plotToCheck -> type == pairsWithAngleColorCodes);
+			(plotToCheck -> type == pairs                         ) || 
+			(plotToCheck -> type == pairsWithMarkers              ) || 
+			(plotToCheck -> type == pairsWithNeighbours           ) || 
+			(plotToCheck -> type == pairsWithAngleLabels          ) ||
+			(plotToCheck -> type == pairsWithAngleColorCodes      ) ||
+			(plotToCheck -> type == pairsWithIndividualAngleLabels) ||
+			(plotToCheck -> type == pairsWithIndividualAngleColors);
 	});
 	if(plotsToFillInTheEvent.empty()) return;
 	for(auto firstClusterIt = clusterCollection.begin(); firstClusterIt != clusterCollection.end(); ++firstClusterIt)
@@ -165,22 +169,54 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 			if(!ClusterPairFunctions::areClustersPair(*firstClusterIt, *secondClusterIt)) continue;
 			for(ModuleClusterPlot* plotDefinitionPtr: filteredList)
 			{
-				if(plotDefinitionPtr -> type == pairsWithAngleColorCodes)
+				float relativeAngle = 0.0f;
+				float angle1        = 0.0f;
+				float angle2        = 0.0f;
+				// Calculate relative angle when necessary
+				if(plotDefinitionPtr -> type == pairsWithAngleColorCodes || plotDefinitionPtr -> type == pairsWithAngleLabels)
 				{
-					float angle = ClusterPairFunctions::getClusterPairAngle(std::make_pair(
+					relativeAngle = ClusterPairFunctions::getClusterPairAngle(std::make_pair(
 						std::make_shared<Cluster>(*firstClusterIt),
 						std::make_shared<Cluster>(*secondClusterIt)));
-					plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt,  angle);
-					plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt, angle);
 				}
-				plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt);
-				plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt);
+				// Calculate individual angles when necessary
+				if(plotDefinitionPtr -> type == pairsWithIndividualAngleColors || plotDefinitionPtr -> type == pairsWithIndividualAngleLabels)
+				{
+					angle1 = ClusterPairFunctions::getClusterIndAngle(*firstClusterIt);
+					angle2 = ClusterPairFunctions::getClusterIndAngle(*secondClusterIt);
+				}
+				// Fill clusters whith the appropriate weights
+				// Relative angle color codes
+				if(plotDefinitionPtr -> type == pairsWithAngleColorCodes)
+				{
+					plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt,  relativeAngle);
+					plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt, relativeAngle);
+				}
+				// Individual angle color codes
+				else if(plotDefinitionPtr -> type == pairsWithIndividualAngleColors)
+				{
+					plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt,  angle1);
+					plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt, angle2);
+				}
+				// Normal histogram filling
+				else
+				{
+					plotDefinitionPtr -> fillDigisFromCluster(*firstClusterIt);
+					plotDefinitionPtr -> fillDigisFromCluster(*secondClusterIt);
+				}
+				// Relative angle labels
 				if(plotDefinitionPtr -> type == pairsWithAngleLabels)
 				{
-					plotDefinitionPtr -> canvas.cd();
-					TText* eventlabel = new TText();
-					CanvasExtras::setLabelStyleNote(*eventlabel);		
-					eventlabel -> DrawText(0.32, 0.48, std::string("FIXME").c_str());
+					plotDefinitionPtr -> labels.emplace_back(std::make_shared<TText>(firstClusterIt -> pixelsCol[0] + 4, firstClusterIt -> pixelsRow[0] + 2, std::to_string(relativeAngle).c_str()));
+					CanvasExtras::setLabelStyleComment(*(plotDefinitionPtr -> labels.back()));
+				}
+				// Individual angle labels
+				if(plotDefinitionPtr -> type == pairsWithIndividualAngleLabels)
+				{
+					plotDefinitionPtr -> labels.emplace_back(std::make_shared<TText>(firstClusterIt -> pixelsCol[0] + 5, firstClusterIt -> pixelsRow[0] + 3, std::to_string(angle1).c_str()));
+					CanvasExtras::setLabelStyleComment(*(plotDefinitionPtr -> labels.back()));	
+					plotDefinitionPtr -> labels.emplace_back(std::make_shared<TText>(firstClusterIt -> pixelsCol[0] - 8, firstClusterIt -> pixelsRow[0] - 5, std::to_string(angle2).c_str()));
+					CanvasExtras::setLabelStyleComment(*(plotDefinitionPtr -> labels.back()));	
 				}
 			}
 		}
@@ -213,15 +249,22 @@ void ModuleClusterPlot::saveAllFinished(const int& eventNum)
 			histogram.GetZaxis() -> SetRangeUser(NORMAL_PALETTE_MINIMUM, NORMAL_PALETTE_MAXIMUM);
 			canvas.SetLogz();
 		}
-		// Slow, but accurate palette
+		// Slow, but a bit more accurate palette
 		// CanvasExtras::setMulticolorColzPalette();
 		histogram.Draw("COLZ");
-		TText* eventlabel = new TText();
-		CanvasExtras::setLabelStyleNote(*eventlabel);		
-		eventlabel -> DrawText(0.22, 0.98, (
+		TText eventlabel;
+		CanvasExtras::setLabelStyleNote(eventlabel);		
+		eventlabel.DrawText(0.22, 0.98, (
 			"Events: [" + 
 			std::to_string(moduleClusterPlotToSave -> startEvent) + " - " +
 			std::to_string(moduleClusterPlotToSave -> endEvent  ) + "]").c_str());
+		for(std::shared_ptr<TText>& label: moduleClusterPlotToSave -> labels)
+		{
+			label -> Draw();
+		}
+		canvas.Update();
+		// Just to make sure...
+		canvas.Update();
 		canvas.Update();
 		std::string filename = canvas.GetTitle();
 		std::transform(filename.begin(), filename.end(), filename.begin(), [] (char ch) { return ch == ' ' ? '_' : ch; });

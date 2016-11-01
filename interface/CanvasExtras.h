@@ -34,6 +34,7 @@ namespace CanvasExtras
 	void redesignCanvas(TCanvas* canvas, TH2* histogram, const std::string& draw="COLZ");
 	void setMulticolorColzPalette();
 	void setLabelStyleNote(TText& label);
+	void setLabelStyleComment(TText& label);
 }; // namespace CanvasExtras
 
 #endif

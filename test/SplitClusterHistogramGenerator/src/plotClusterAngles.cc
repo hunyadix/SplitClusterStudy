@@ -118,7 +118,7 @@ int main(int argc, char** argv) try
 	for(const auto& i: range(histograms.size()))
 	{
 		auto& histogram = *(*histograms[i]);
-		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(i)).c_str(), histogram.GetTitle(), 50 + i * 303, 50, 300, 300));
+		canvases.emplace_back(std::make_shared<TCanvas>(("canvas_" + std::to_string(i)).c_str(), histogram.GetTitle(), 50 + i * 403, 50, 400, 300));
 		canvases.back() -> cd();
 		CanvasExtras::redesignCanvas(canvases.back().get(), &histogram);
 		histogram.Draw("COLZ");

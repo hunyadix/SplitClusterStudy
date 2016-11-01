@@ -52,7 +52,7 @@ int main(int argc, char** argv) try
 	std::string inputFileName("");
 	int savePlots                 = 0;
 	processArgs(argc, argv, inputFileName, savePlots);
-	std::cout << debug_prompt << "PlotEventClusters started..." << std::endl;
+	std::cout << process_prompt << argv[0] << " started..." << std::endl;
 	gStyle -> SetPalette(1);
 	TimerColored timer(timer_prompt);
 	TApplication* theApp = new TApplication("App", &argc, argv);
@@ -160,7 +160,7 @@ int main(int argc, char** argv) try
 	canvas.Update();
 	theApp -> Run();
 	inputFile -> Close();
-	std::cout << debug_prompt << "PlotEventClusters terminated succesfully." << std::endl;
+	std::cout << process_prompt <<  argv[0] << " terminated succesfully." << std::endl;
 	return 0; 
 }
 catch(const std::exception& e)

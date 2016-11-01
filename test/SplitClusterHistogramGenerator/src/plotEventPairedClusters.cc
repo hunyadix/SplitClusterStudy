@@ -41,7 +41,7 @@ int main(int argc, char** argv) try
 	processArgs(argc, argv, inputFileName, numEventsToMerge, savePlots);
 	std::cout << process_prompt << argv[0] << " started..." << std::endl;
 	TimerColored timer(timer_prompt);
-	TApplication* theApp = new TApplication("App", &argc, argv);
+	// TApplication* theApp = new TApplication("App", &argc, argv);
 	TFile* inputFile = TFile::Open(inputFileName.c_str(), "READ");
 	TTree* clusterTree = (TTree*)(inputFile -> Get("clustTree"));
 	TTreeTools::treeCheck(clusterTree, "Tree missing.", true);
@@ -71,11 +71,14 @@ int main(int argc, char** argv) try
 	std::map<int, std::vector<Cluster>> eventClustersMap(getClusterCollectionSortedByEvtnum(clusterTree, eventField, clusterField));
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
 	// Histogram definitions
-	const auto& digisType                    = ModuleClusterPlot::Type::digis;
-	const auto& pairsType                    = ModuleClusterPlot::Type::pairs;
-	const auto& pairsWithMarkersType         = ModuleClusterPlot::Type::pairsWithMarkers;
-	const auto& pairsWithNeighboursType      = ModuleClusterPlot::Type::pairsWithNeighbours;
-	const auto& pairsWithAngleColorCodesType = ModuleClusterPlot::Type::pairsWithAngleColorCodes;
+	const auto& digisType                          = ModuleClusterPlot::Type::digis;
+	const auto& pairsType                          = ModuleClusterPlot::Type::pairs;
+	// const auto& pairsWithMarkersType               = ModuleClusterPlot::Type::pairsWithMarkers;
+	const auto& pairsWithNeighboursType            = ModuleClusterPlot::Type::pairsWithNeighbours;
+	// const auto& pairsWithAngleLabelsType           = ModuleClusterPlot::Type::pairsWithAngleLabels;
+	// const auto& pairsWithAngleColorCodesType       = ModuleClusterPlot::Type::pairsWithAngleColorCodes;
+	const auto& pairsWithIndividualAngleLabelsType = ModuleClusterPlot::Type::pairsWithIndividualAngleLabels;
+	const auto& pairsWithIndividualAngleColorsType = ModuleClusterPlot::Type::pairsWithIndividualAngleColors;
 	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
 	const auto defineStandardPlots = [&moduleClusterPlots] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
 	{
@@ -86,16 +89,24 @@ int main(int argc, char** argv) try
 		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
 		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
 	};
-	defineStandardPlots(digisType,                    1, 1, 2);
-	defineStandardPlots(pairsType,                    1, 1, 2);
-	defineStandardPlots(pairsWithMarkersType,         1, 1, 2);
-	defineStandardPlots(pairsWithNeighboursType,      1, 1, 2);
-	defineStandardPlots(pairsWithAngleColorCodesType, 1, 1, 2);
-	defineStandardPlots(digisType,                    1, 4, 6);
-	defineStandardPlots(pairsType,                    1, 4, 6);
-	defineStandardPlots(pairsWithMarkersType,         1, 4, 6);
-	defineStandardPlots(pairsWithNeighboursType,      1, 4, 6);
-	defineStandardPlots(pairsWithAngleColorCodesType, 1, 4, 6);
+	// Low eta
+	// defineStandardPlots(digisType,                          1, 1, 2);
+	defineStandardPlots(pairsType,                          1, 1, 2);
+	// defineStandardPlots(pairsWithMarkersType,               1, 1, 2);
+	defineStandardPlots(pairsWithNeighboursType,            1, 1, 2);
+	// defineStandardPlots(pairsWithAngleLabelsType,           1, 1, 2);
+	// defineStandardPlots(pairsWithAngleColorCodesType,       1, 1, 2);
+	defineStandardPlots(pairsWithIndividualAngleLabelsType, 1, 1, 2);
+	defineStandardPlots(pairsWithIndividualAngleColorsType, 1, 1, 2);
+	// High eta
+	defineStandardPlots(digisType,                          1, 4, 6);
+	defineStandardPlots(pairsType,                          1, 4, 6);
+	// defineStandardPlots(pairsWithMarkersType,               1, 4, 6);
+	defineStandardPlots(pairsWithNeighboursType,            1, 4, 6);
+	// defineStandardPlots(pairsWithAngleLabelsType,           1, 4, 6);
+	// defineStandardPlots(pairsWithAngleColorCodesType,       1, 4, 6);
+	defineStandardPlots(pairsWithIndividualAngleLabelsType, 1, 4, 6);
+	defineStandardPlots(pairsWithIndividualAngleColorsType, 1, 4, 6);
 	// Loop on data
 	timer.restart("Measuring the time required to create the event plots...");
 	int eventNum = 0;
@@ -110,7 +121,7 @@ int main(int argc, char** argv) try
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
 	std::cout << process_prompt << argv[0] << " terminated succesfully." << std::endl;
 	inputFile -> Close();
-	theApp -> Run();
+	// theApp -> Run();
 	return 0; 
 }
 catch(const std::out_of_range& e)
