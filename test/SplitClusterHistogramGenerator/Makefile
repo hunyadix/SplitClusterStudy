@@ -71,18 +71,6 @@ PLOTCLUSTERANGLES_A = ./bin/plotClusterAngles$(ExeSuf)
 OBJS     += $(PLOTCLUSTERANGLES_O)
 PROGRAMS += $(PLOTCLUSTERANGLES_A)
 
-PLOTCLUSTERANGLESPARAMMAP_S = ./src/plotClusterAnglesParamMap.$(SrcSuf)
-PLOTCLUSTERANGLESPARAMMAP_O = ./obj/plotClusterAnglesParamMap.$(ObjSuf)
-PLOTCLUSTERANGLESPARAMMAP_A = ./bin/plotClusterAnglesParamMap$(ExeSuf)
-OBJS     += $(PLOTCLUSTERANGLESPARAMMAP_O)
-PROGRAMS += $(PLOTCLUSTERANGLESPARAMMAP_A)
-
-ONHITANGLESCHECK_S = ./src/onHitAnglesCheck.$(SrcSuf)
-ONHITANGLESCHECK_O = ./obj/onHitAnglesCheck.$(ObjSuf)
-ONHITANGLESCHECK_A = ./bin/onHitAnglesCheck$(ExeSuf)
-OBJS     += $(ONHITANGLESCHECK_O)
-PROGRAMS += $(ONHITANGLESCHECK_A)
-
 PLOTEVENTCLUSTERSBYDIRECTION_S = ./src/plotEventClustersByDirection.$(SrcSuf)
 PLOTEVENTCLUSTERSBYDIRECTION_O = ./obj/plotEventClustersByDirection.$(ObjSuf)
 PLOTEVENTCLUSTERSBYDIRECTION_A = ./bin/plotEventClustersByDirection$(ExeSuf)
@@ -94,12 +82,6 @@ PLOTSMALLCLUFAKEMERGEFF_O = ./obj/plotSmallClusterMergingFakeRateAndEfficiency.$
 PLOTSMALLCLUFAKEMERGEFF_A = ./bin/plotSmallClusterMergingFakeRateAndEfficiency$(ExeSuf)
 OBJS     += $(PLOTSMALLCLUFAKEMERGEFF_O)
 PROGRAMS += $(PLOTSMALLCLUFAKEMERGEFF_A)
-
-PLOTSMALLCLUFAKEMERGEFFV2_S = ./src/plotSmallClusterMergingFakeRateAndEfficiency_v2.$(SrcSuf)
-PLOTSMALLCLUFAKEMERGEFFV2_O = ./obj/plotSmallClusterMergingFakeRateAndEfficiency_v2.$(ObjSuf)
-PLOTSMALLCLUFAKEMERGEFFV2_A = ./bin/plotSmallClusterMergingFakeRateAndEfficiency_v2$(ExeSuf)
-OBJS     += $(PLOTSMALLCLUFAKEMERGEFFV2_O)
-PROGRAMS += $(PLOTSMALLCLUFAKEMERGEFFV2_A)
 
 
 all: $(PROGRAMS)
@@ -134,20 +116,6 @@ $(PLOTCLUSTERANGLES_A): $(PLOTCLUSTERANGLES_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR
 	@echo "Succesful make..."
 	@echo "...$@ is ready to use."
 
-$(PLOTCLUSTERANGLESPARAMMAP_A): $(PLOTCLUSTERANGLESPARAMMAP_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
-	@printf "Compiling done, linking...\n"
-	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
-	$(MT_EXE)
-	@echo "Succesful make..."
-	@echo "...$@ is ready to use."
-
-$(ONHITANGLESCHECK_A): $(ONHITANGLESCHECK_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
-	@printf "Compiling done, linking...\n"
-	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
-	$(MT_EXE)
-	@echo "Succesful make..."
-	@echo "...$@ is ready to use."
-
 $(PLOTEVENTCLUSTERSBYDIRECTION_A): $(PLOTEVENTCLUSTERSBYDIRECTION_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
@@ -156,13 +124,6 @@ $(PLOTEVENTCLUSTERSBYDIRECTION_A): $(PLOTEVENTCLUSTERSBYDIRECTION_O) $(CONSOLECO
 	@echo "...$@ is ready to use."
 
 $(PLOTSMALLCLUFAKEMERGEFF_A): $(PLOTSMALLCLUFAKEMERGEFF_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
-	@printf "Compiling done, linking...\n"
-	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
-	$(MT_EXE)
-	@echo "Succesful make..."
-	@echo "...$@ is ready to use."
-
-$(PLOTSMALLCLUFAKEMERGEFFV2_A): $(PLOTSMALLCLUFAKEMERGEFFV2_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -243,28 +204,12 @@ $(PLOTCLUSTERANGLES_O): $(PLOTCLUSTERANGLES_S)
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
-$(PLOTCLUSTERANGLESPARAMMAP_O): $(PLOTCLUSTERANGLESPARAMMAP_S)  
-	@printf "Compiling test: \"plotClusterAnglesParamMap\"...\n"
-	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
-	@printf "Done.\n"
-
-$(ONHITANGLESCHECK_O): $(ONHITANGLESCHECK_S)  
-	@printf "Compiling test: \"onHitAnglesCheck\"...\n"
-	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
-	@printf "Done.\n"
-
 $(PLOTEVENTCLUSTERSBYDIRECTION_O): $(PLOTEVENTCLUSTERSBYDIRECTION_S)  
 	@printf "Compiling test: \"plotEventClustersByDirection\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 
 $(PLOTSMALLCLUFAKEMERGEFF_O): $(PLOTSMALLCLUFAKEMERGEFF_S)  
-	@printf "Compiling test: \"plotSmallClusterMergingFakeRateAndEfficiency\"...\n"
-	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
-	@printf "Done.\n"
-
-
-$(PLOTSMALLCLUFAKEMERGEFFV2_O): $(PLOTSMALLCLUFAKEMERGEFFV2_S)  
 	@printf "Compiling test: \"plotSmallClusterMergingFakeRateAndEfficiency_v2\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"

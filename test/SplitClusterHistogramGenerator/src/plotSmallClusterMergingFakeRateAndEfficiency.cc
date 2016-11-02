@@ -64,9 +64,9 @@ int main(int argc, char** argv) try
 	// Check if data is present
 	if(totalNumEntries == 0) throw std::runtime_error("No entries found in tree: clusterTree.");
 	// Histogram definitions
-	TH1I healthyUnhealthySmallClusters_H("healthyUnhealthySmallClusters", "# of six long healthy clusters and estimated # of unhealthy 6 long clusters;healthy/unhealthy;nclusters", 2, 0, 1);
-	TH1I sixLongClustersFakeRate_H("sixLongClustersFakeRate",             "# of six long split cluster pairs found, # of fake six long clusters;real/fake;nclusters", 2, 0, 1);
-	TH1I sixLongClustersEfficiency_H("sixLongClustersEfficiency",         "# of six long split cluster pairs found, # of non-restorable six long clusters with pixel-loss;restoreable/not restoreable;nclusters", 2, 0, 1);
+	TH1I healthyUnhealthySmallClusters_H("healthyUnhealthySmallClusters", "# of 4-6 long healthy clusters, # of 4-6 long split cluster pairs;healthy/unhealthy;nclusters", 2, 0, 1);
+	TH1I sixLongClustersFakeRate_H("sixLongClustersFakeRate",             "# of 4-6 long split cluster pairs, # of fake 4-6 long cluster pairs;real/fake;nclusters", 2, 0, 1);
+	TH1I sixLongClustersEfficiency_H("sixLongClustersEfficiency",         "# of 4-6 long healthy clusters, # of 4-6 long unhealthy clusters;restoreable/not restoreable;nclusters", 2, 0, 1);
 	// Loop on data
 	std::map<int, std::vector<Cluster>> eventClustersMap;
 	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex)
@@ -81,15 +81,23 @@ int main(int argc, char** argv) try
 		}
 		eventClustersIt -> second.push_back(clusterField);
 	}
-	int numFiveLongHealthy                = 0;
-	int numSevenLongHealthy               = 0;
-	int numSixLongHealthy                 = 0;
-	int numFourLongUnrestoreableCandidate = 0;
-	int numFiveLongUnrestoreableCandidate = 0;
-	int numFourLongOneEndMarked           = 0;
-	int numFiveLongOneEndMarked           = 0;
-	int numSixLongRealPairs               = 0;
-	int numSixLongFakePairs               = 0;
+	int numFourLongHealthy      = 0;
+	int numFiveLongHealthy      = 0;
+	int numSixLongHealthy       = 0;
+	int numFourLongUnhealthy    = 0;
+	int numFiveLongUnhealthy    = 0;
+	int numSixLongUnhealthy     = 0;
+	int numFourLongOneEndMarked = 0;
+	int numFiveLongOneEndMarked = 0;
+	int numSixLongRealPairs     = 0;
+	int numFiveLongRealPairs    = 0;
+	int numFourLongRealPairs    = 0;
+	int numSixLongFakePairs     = 0;
+	int numFiveLongFakePairs    = 0;
+	int numFourLongFakePairs    = 0;
+	int numSixMarkerlessPairs   = 0;
+	int numFiveMarkerlessPairs  = 0;
+	int numFourMarkerlessPairs  = 0;
 	for(auto eventClustersIt = eventClustersMap.begin(); eventClustersIt != eventClustersMap.end(); ++eventClustersIt)
 	{
 		std::vector<Cluster>& eventClusters = eventClustersIt -> second;
@@ -97,11 +105,12 @@ int main(int argc, char** argv) try
 		for(auto clusterIt = eventClusters.begin(); clusterIt != eventClusters.end(); ++clusterIt)
 		{
 			const Cluster& clusterField = *clusterIt;
-			if(clusterField.sizeY == 4 && isTaggedOnOneEndOnly(clusterField)) ++numFourLongUnrestoreableCandidate;
-			if(clusterField.sizeY == 5 && isTaggedOnOneEndOnly(clusterField)) ++numFiveLongUnrestoreableCandidate;
-			if(clusterField.sizeY == 5 && !isTagged(clusterField))            ++numFiveLongHealthy;
-			if(clusterField.sizeY == 7 && !isTagged(clusterField))            ++numSevenLongHealthy;
-			if(clusterField.sizeY == 6 && !isTagged(clusterField))            ++numSixLongHealthy;
+			if(clusterField.sizeY == 4 && !isTagged(clusterField)) ++numFourLongHealthy;
+			if(clusterField.sizeY == 5 && !isTagged(clusterField)) ++numFiveLongHealthy;
+			if(clusterField.sizeY == 6 && !isTagged(clusterField)) ++numSixLongHealthy;
+			if(clusterField.sizeY == 4 && isTagged(clusterField))  ++numFourLongUnhealthy;
+			if(clusterField.sizeY == 5 && isTagged(clusterField))  ++numFiveLongUnhealthy;
+			if(clusterField.sizeY == 6 && isTagged(clusterField))  ++numSixLongUnhealthy;
 			auto minMaxCol = std::minmax_element(clusterField.pixelsCol.begin(), clusterField.pixelsCol.end());
 			int clusterMinCol = *(minMaxCol.first);
 			int clusterMaxCol = *(minMaxCol.second);
@@ -125,31 +134,45 @@ int main(int argc, char** argv) try
 				if(( isMarkedOnMin && !isMarkedOnMax && !pairIsMarkedOnMin &&  pairIsMarkedOnMax && isMissingPartDoubleColumn(pairMaxCol,    pairCandidate.x, clusterMinCol, clusterField.x )) ||
 				   (!isMarkedOnMin &&  isMarkedOnMax &&  pairIsMarkedOnMin && !pairIsMarkedOnMax && isMissingPartDoubleColumn(clusterMaxCol, clusterField.x,  pairMinCol,    pairCandidate.x))) 
 				{
+					if(clusterField.sizeY + pairCandidate.sizeY == 2) ++numFourLongRealPairs;
+					if(clusterField.sizeY + pairCandidate.sizeY == 3) ++numFiveLongRealPairs;
 					if(clusterField.sizeY + pairCandidate.sizeY == 4) ++numSixLongRealPairs;
 				}
-				// Fake cluster pair
-				if( !( isMarkedOnMin && !isMarkedOnMax && !pairIsMarkedOnMin &&  pairIsMarkedOnMax) && isMissingPartDoubleColumn(pairMaxCol,    pairCandidate.x, clusterMinCol, clusterField.x ) ||
-				   (!(!isMarkedOnMin &&  isMarkedOnMax &&  pairIsMarkedOnMin && !pairIsMarkedOnMax) && isMissingPartDoubleColumn(clusterMaxCol, clusterField.x,  pairMinCol,    pairCandidate.x)))
+				// Not "only-middle-markers" pairs
+				if((!( isMarkedOnMin && !isMarkedOnMax  && !pairIsMarkedOnMin &&  pairIsMarkedOnMax) && isMissingPartDoubleColumn(pairMaxCol,    pairCandidate.x, clusterMinCol, clusterField.x )) ||
+				   (!(!isMarkedOnMin &&  isMarkedOnMax &&  pairIsMarkedOnMin  && !pairIsMarkedOnMax) && isMissingPartDoubleColumn(clusterMaxCol, clusterField.x,  pairMinCol,    pairCandidate.x)))
 				{
+					if(clusterField.sizeY + pairCandidate.sizeY == 2) ++numFourLongFakePairs;
+					if(clusterField.sizeY + pairCandidate.sizeY == 3) ++numFiveLongFakePairs;
 					if(clusterField.sizeY + pairCandidate.sizeY == 4) ++numSixLongFakePairs;
+				}
+				// Non-tagged pairs
+				if(!isTagged(clusterField) && !isTagged(pairCandidate) && (isMissingPartDoubleColumn(pairMaxCol, pairCandidate.x, clusterMinCol, clusterField.x ) || isMissingPartDoubleColumn(clusterMaxCol, clusterField.x,  pairMinCol,  pairCandidate.x)))
+				{
+					if(clusterField.sizeY + pairCandidate.sizeY == 2) ++numFourMarkerlessPairs;
+					if(clusterField.sizeY + pairCandidate.sizeY == 3) ++numFiveMarkerlessPairs;
+					if(clusterField.sizeY + pairCandidate.sizeY == 4) ++numSixMarkerlessPairs;
 				}
 			}
 		}
 	}
-	// std::cout << "numFiveLongHealthy: "                << numFiveLongHealthy                << std::endl;
-	// std::cout << "numSevenLongHealthy: "               << numSevenLongHealthy               << std::endl;
-	// std::cout << "numSixLongHealthy: "                 << numSixLongHealthy                 << std::endl;
-	// std::cout << "numFourLongUnrestoreableCandidate: " << numFourLongUnrestoreableCandidate << std::endl;
-	// std::cout << "numFourLongOneEndMarked: "           << numFourLongOneEndMarked           << std::endl;
-	// std::cout << "numFiveLongOneEndMarked: "           << numFiveLongOneEndMarked           << std::endl;
-	// std::cout << "numSixLongRealPairs: "               << numSixLongRealPairs               << std::endl;
-	// std::cout << "numSixLongFakePairs: "               << numSixLongFakePairs               << std::endl;
-	healthyUnhealthySmallClusters_H.AddBinContent(1, numSixLongHealthy);
-	healthyUnhealthySmallClusters_H.AddBinContent(2, numFourLongUnrestoreableCandidate * (numSixLongHealthy / static_cast<double>(numSixLongHealthy + numFiveLongHealthy)) + numFiveLongUnrestoreableCandidate * numSixLongHealthy / static_cast<double>(numSixLongHealthy + numSevenLongHealthy));
-	sixLongClustersFakeRate_H      .AddBinContent(1, numSixLongRealPairs);
-	sixLongClustersFakeRate_H      .AddBinContent(2, numSixLongFakePairs);
-	sixLongClustersEfficiency_H    .AddBinContent(1, numSixLongRealPairs);
-	sixLongClustersEfficiency_H    .AddBinContent(2, numFourLongOneEndMarked * (numSixLongHealthy / static_cast<double>(numSixLongHealthy + numFiveLongHealthy)) + numFiveLongOneEndMarked * (numSixLongHealthy / static_cast<double>(numSixLongHealthy + numSevenLongHealthy)));
+	int hc = numFourLongHealthy     + numFiveLongHealthy     + numSixLongHealthy;
+	int sc = numFourLongRealPairs   + numFiveLongRealPairs   + numSixLongRealPairs;
+	int fc = numFourMarkerlessPairs + numFiveMarkerlessPairs + numSixMarkerlessPairs;
+	std::cout << "hc: " << hc << std::endl;
+	std::cout << "sc: " << sc << std::endl;
+	std::cout << "fc: " << fc << std::endl;
+	std::cout << "fc / (sc + fc): " << fc / static_cast<double>(sc + fc) << std::endl;
+	std::cout << "sc / (sc + hc): " << sc / static_cast<double>(sc + hc) << std::endl;
+	std::cout << "fc / (hc + fc): " << fc / static_cast<double>(hc + fc) << std::endl;
+
+	healthyUnhealthySmallClusters_H.AddBinContent(1, numFourLongHealthy   + numFiveLongHealthy   + numSixLongHealthy);
+	healthyUnhealthySmallClusters_H.AddBinContent(2, numSixLongRealPairs  + numFiveLongRealPairs + numFourLongRealPairs);
+	// healthyUnhealthySmallClusters_H.AddBinContent(2, numFourLongUnhealthy, numFiveLongUnhealthy, numSixLongUnhealthy);
+	sixLongClustersFakeRate_H      .AddBinContent(1, numFiveLongRealPairs + numSixLongRealPairs  + numFourLongRealPairs);
+	sixLongClustersFakeRate_H      .AddBinContent(2, numFiveLongFakePairs + numSixLongFakePairs  + numFourLongFakePairs);
+	sixLongClustersEfficiency_H    .AddBinContent(1, numFourLongHealthy   + numFiveLongHealthy   + numSixLongHealthy);
+	sixLongClustersEfficiency_H    .AddBinContent(2, numFourLongUnhealthy + numFiveLongUnhealthy + numSixLongUnhealthy);
 	TCanvas canvas("canvas", "canvas", 10, 10, 1500, 500);
 	canvas.Divide(3, 1);
 	canvas.cd(1);
