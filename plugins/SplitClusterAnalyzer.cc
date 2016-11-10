@@ -101,7 +101,7 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	// Fetching the tracks by token
 	edm::Handle<TrajTrackAssociationCollection> trajTrackCollection;
 	iEvent.getByToken(trajTrackCollectionToken, trajTrackCollection);
-	// Trying to access the clusters
+	// Trying to access the data
 	if(!digiCollection.isValid())      handleDefaultError("data access", "data_access", "Failed to fetch digi collection.");
 	if(!digiFlagsCollection.isValid()) handleDefaultError("data access", "data_access", "Failed to fetch dcol lost digis.");
 	if(!clusterCollection  .isValid()) handleDefaultError("data access", "data_access", "Failed to fetch clusters.");
@@ -150,12 +150,10 @@ void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssocia
 			uint32_t subdetid = (detId.subdetId());
 			// Looking for pixel hits
 			bool isPixelHit = false;
-			isPixelHit |= subdetid == PixelSubdetector::PixelBarrel;
-			isPixelHit |= subdetid == PixelSubdetector::PixelEndcap;
-			if(!isPixelHit) continue;
+			if(!TrajAnalyzer::subdetidIsOnPixel(subdetid)) continue;
 			SiPixelRecHit::ClusterRef const& clusterRef = pixhit -> cluster();
 			if(!clusterRef.isNonnull()) continue;
-			// // Position measurements
+			// Position measurements
 			TrajectoryStateCombiner  trajStateComb;
 			TrajectoryStateOnSurface trajStateOnSurface = trajStateComb(measurement.forwardPredictedState(), measurement.backwardPredictedState());
 			// LocalPoint localPosition = trajStateOnSurface.localPosition();
@@ -175,7 +173,7 @@ void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssocia
 		}
 	}
 }
-catch(const std::exception& e) {std::cerr << error_prompt << e.what() << std::endl;}
+catch(const std::exception& e) { std::cerr << error_prompt << e.what() << std::endl; }
 
 SiPixelCluster SplitClusterAnalyzer::findClosestCluster(const edm::Handle<edmNew::DetSetVector<SiPixelCluster>>& clusterCollection, const uint32_t& rawId, const float& lx, const float& ly)
 {

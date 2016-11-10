@@ -6,6 +6,7 @@
 #include "../../../interface/CommonActors.h"
 #include "../../../interface/HelperFunctionsCommon.h"
 #include "../../../interface/CanvasExtras.h"
+#include "../interface/TestsCommon.h"
 
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
 
@@ -27,9 +28,6 @@
 #include <memory>
 #include <exception>
 #include <functional>
-
-void printUsage(int& argc, char** argv, bool killProcess);
-void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePlots);
 
 int main(int argc, char** argv) try
 {
@@ -107,34 +105,4 @@ catch(const std::exception& e)
 {
 	std::cout << error_prompt << "Exception thrown: " << e.what() << std::endl;
 	return -1;
-}
-
-void printUsage(int& argc, char** argv, bool killProcess)
-{
-	std::cout << "Usage: " << argv[0] << " <Ntuple path> <optional: --savePlots>" << std::endl;
-	if(killProcess) exit(-1);
-}
-
-void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePlots)
-{
-	if(argc != 2 && argc != 3)
-	{
-		printUsage(argc, argv, true);
-	}
-	inputFileName = argv[1];
-	if(argc == 3)
-	{
-		if(std::string(argv[2]) == std::string("--savePlots"))
-		{
-			savePlots = 1;
-		}
-		else
-		{
-			printUsage(argc, argv, true);
-		}
-	}
-	else
-	{
-		savePlots = 0;
-	}
 }

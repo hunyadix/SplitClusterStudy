@@ -6,6 +6,7 @@
 #include "../../../interface/CommonActors.h"
 #include "../../../interface/HelperFunctionsCommon.h"
 #include "../../../interface/CanvasExtras.h"
+#include "../interface/TestsCommon.h"
 
 #include "../../../TimerForBenchmarking/interface/TimerColored.h"
 #include "../interface/ClusterPairFunctions.h"
@@ -30,19 +31,6 @@
 #include <functional>
 #include <complex>
 #include <algorithm>
-
-struct ClusterStats
-{
-	int   startCol = NOVAL_I;
-	int   endCol   = NOVAL_I;
-	float startRow = NOVAL_F;
-	float endRow   = NOVAL_F;
-	float dir      = NOVAL_F;
-};
-
-void printUsage(int& argc, char** argv, bool killProcess);
-void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePlots);
-std::map<int, std::vector<Cluster>> getClusterCollectionSortedByEvtnum(TTree* clusterTree, EventData& eventField, Cluster& clusterField);
 
 int main(int argc, char** argv) try
 {
@@ -145,51 +133,3 @@ catch(const std::exception& e)
 	return -1;
 }
 
-void printUsage(int& argc, char** argv, bool killProcess)
-{
-	std::cout << "Usage: " << argv[0] << " <Ntuple path> <optional: --savePlots>" << std::endl;
-	if(killProcess) exit(-1);
-}
-
-void processArgs(int& argc, char** argv, std::string& inputFileName, int& savePlots)
-{
-	if(argc != 2 && argc != 3)
-	{
-		printUsage(argc, argv, true);
-	}
-	inputFileName = argv[1];
-	if(argc == 3)
-	{
-		if(std::string(argv[2]) == std::string("--savePlots"))
-		{
-			savePlots = 1;
-		}
-		else
-		{
-			printUsage(argc, argv, true);
-		}
-	}
-	else
-	{
-		savePlots = 0;
-	}
-}
-
-std::map<int, std::vector<Cluster>> getClusterCollectionSortedByEvtnum(TTree* clusterTree, EventData& eventField, Cluster& clusterField)
-{
-	std::map<int, std::vector<Cluster>> eventClustersMap;
-	Int_t totalNumEntries = clusterTree -> GetEntries();
-	for(Int_t entryIndex = 0; entryIndex < totalNumEntries; ++entryIndex) 
-	{
-		clusterTree -> GetEntry(entryIndex);
-		int eventNum = eventField.evt;
-		auto eventClustersIt = eventClustersMap.find(eventNum);
-		// If key does not exist yet: add key
-		if(eventClustersIt == eventClustersMap.end())
-		{
-			eventClustersIt = eventClustersMap.emplace(eventField.evt, std::vector<Cluster>()).first;
-		}
-		eventClustersIt -> second.push_back(clusterField);
-	}
-	return eventClustersMap;
-}
