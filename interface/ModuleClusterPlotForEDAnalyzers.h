@@ -71,24 +71,19 @@ ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const in
 
 void ModuleClusterPlot::markerToRowColModifierArrays(const int& markerState, std::vector<int>& colModifiers, std::vector<int>& rowModifiers)
 {
-	static const auto checkInsertIndexPair = [&colModifiers, &rowModifiers] (const int& pixelIsMarked, const int& col, const int& row)
-	{
-		if(pixelIsMarked)
-		{
-			colModifiers.push_back(col);
-			rowModifiers.push_back(row);
-		}
-	};
 	colModifiers.clear();
 	rowModifiers.clear();
-	checkInsertIndexPair(markerState & (1 << 0), -1, -1);
-	checkInsertIndexPair(markerState & (1 << 1), -1,  0);
-	checkInsertIndexPair(markerState & (1 << 2), -1, +1);
-	checkInsertIndexPair(markerState & (1 << 3),  0, -1);
-	checkInsertIndexPair(markerState & (1 << 4),  0, +1);
-	checkInsertIndexPair(markerState & (1 << 5), +1, -1);
-	checkInsertIndexPair(markerState & (1 << 6), +1,  0);
-	checkInsertIndexPair(markerState & (1 << 7), +1, +1);
+	for(int colModifier = -1; colModifier <= 1; colModifier++)
+	{
+		for(int rowModifier = -1; rowModifier <= 1; rowModifier++)
+		{
+			if(colModifier == 0 && rowModifier == 0) continue;
+			int bit = colModifier + 1 + (rowModifier + 1) * 3 - int(rowModifier > 0 || (colModifier > 0 && rowModifier == 0));
+			if((markerState & (1 << bit)) == 0) continue;
+			colModifiers.push_back(colModifier);
+			rowModifiers.push_back(rowModifier);
+		}
+	}
 }
 
 void ModuleClusterPlot::fillDigi(const PixelDigi& pixel)

@@ -117,7 +117,11 @@ void SplitClusterAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	eventTree -> Fill();
 	// updateEventPlots(digiCollection, digiFlagsCollection, clusterCollection, trackerTopology, fedErrors);
 	// saveReadyEventPlots();
-	std::cout << "Number of digi collection entries: " << CMSSWPluginTools::getNumDigiCollectionEntries(digiCollection) << std::endl;
+	
+	std::cout << "Digis: " << CMSSWPluginTools::getNumDigiCollectionEntries(digiCollection) << std::endl;
+	// CMSSWPluginTools::printDigiCollectionInfo(digiCollection);
+	std::cout << "Markers: " << CMSSWPluginTools::getNumDigiCollectionEntries(digiFlagsCollection) << std::endl;
+	// CMSSWPluginTools::printDigiCollectionInfo(digiFlagsCollection);
 	ModuleClusterPlot::fillAll(digiCollection, digiFlagsCollection, trackerTopology, eventCounter);
 	ModuleClusterPlot::saveAllFinished(eventCounter);
 	++eventCounter;
@@ -149,7 +153,6 @@ void SplitClusterAnalyzer::handleTrajectories(const edm::Handle<TrajTrackAssocia
 			DetId detId = recHit -> geographicalId();
 			uint32_t subdetid = (detId.subdetId());
 			// Looking for pixel hits
-			bool isPixelHit = false;
 			if(!TrajAnalyzer::subdetidIsOnPixel(subdetid)) continue;
 			SiPixelRecHit::ClusterRef const& clusterRef = pixhit -> cluster();
 			if(!clusterRef.isNonnull()) continue;

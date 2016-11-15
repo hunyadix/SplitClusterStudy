@@ -14,6 +14,15 @@ namespace ClusterPairFunctions
 		}
 	}
 
+	int isClusterTagged(const Cluster& cluster)
+	{
+		for(const auto& pixelTag: cluster.pixelsMarker)
+		{
+			if(pixelTag != 0) return 1;
+		}
+		return 0;
+	}
+
 	int isClusterTaggedInColumn(const Cluster& clusterField, int col)
 	{
 		for(int i: range(clusterField.pixelsCol.size()))
@@ -125,7 +134,7 @@ namespace ClusterPairFunctions
 		return pairAnglesPlot;
 	}
 
-	std::vector<std::shared_ptr<Cluster>> getClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length) 
+	SharedPtrCollectionType getClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length) 
 	{
 		return(fmap(
 			filter(clusterCollection, [&length] (const Cluster& cluster) {
@@ -137,32 +146,41 @@ namespace ClusterPairFunctions
 	}
 
 	// Healthy: not tagged, unhealthy: tagged
-	std::vector<std::shared_ptr<Cluster>> getHealthyClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length)
+	SharedPtrCollectionType getHealthyClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length)
 	{
 		return filter(getClustersWithLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
 		{
-			// return !isClusterTagged(clusterPtr);
-			return true;
+			return !isClusterTagged(*clusterPtr);
 		});
 	}
 
-	std::vector<std::shared_ptr<Cluster>> getUnhealthyClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length)
+	SharedPtrCollectionType getUnhealthyClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length)
 	{
 		return filter(getClustersWithLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
 		{
-			// return isClusterTagged(*clusterPtr);
-			return false;
+			return isClusterTagged(*clusterPtr);
 		});
+	}
+
+	PairCollectionType getRealPairsWithLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	{
+		const auto mergingLengthFilter = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength; };
+		const auto isEndTaggedFilter   = [] (const PairType& pair) { return areClustersEndTaggedPair(*(pair.first), *(pair.second)); };
+		return PairCollectionType(filter(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter), isEndTaggedFilter));
+	}
+
+	PairCollectionType getFakePairsWithLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	{
+		const auto mergingLengthFilter  = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength; };
+		const auto isNotEndTaggedFilter = [] (const PairType& pair) { return !areClustersEndTaggedPair(*(pair.first), *(pair.second)); };
+		return PairCollectionType(filter(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter), isNotEndTaggedFilter));
 	}
 
 	// Merging length: Y length of the cluster pairs after merging. It is basically the lengths of the 
 	// clusters added together plus two (for the dcol loss)
 	PairCollectionType getClusterPairsWithMergingLength(const std::vector<Cluster>& clusterCollection, const int& mergedLength) 
 	{
-		return PairCollectionType(filter(
-			getClusterPairCollection(clusterCollection), [&mergedLength] (PairType pair) 
-			{
-				return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength;
-			}));
+		const auto mergingLengthFilter = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength; };
+		return PairCollectionType(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter));
 	}
 } // ClusterPairFunctions

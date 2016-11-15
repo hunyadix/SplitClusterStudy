@@ -35,7 +35,7 @@ int main(int argc, char** argv) try
 	unsigned int numEventsToMerge = 1;
 	int savePlots                 = 0;
 	processArgs(argc, argv, inputFileName, numEventsToMerge, savePlots);
-	std::cout << process_prompt << "PlotEventClusters started..." << std::endl;
+	std::cout << process_prompt << argv[0] << " started..." << std::endl;
 	TimerColored timer(timer_prompt);
 	TApplication* theApp = new TApplication("App", &argc, argv);
 	TFile* inputFile = TFile::Open(inputFileName.c_str(), "READ");
@@ -68,6 +68,8 @@ int main(int argc, char** argv) try
 	std::map<int, std::vector<Cluster>> eventClustersMap(getClusterCollectionSortedByEvtnum(clusterTree, eventField, clusterField));
 	timer.printSeconds("Loop done. Took about: ", " second(s).");
 	// Histogram definitions
+	const auto& digisType                          = ModuleClusterPlot::Type::digis;
+	const auto& digisFromMarkersType               = ModuleClusterPlot::Type::digisFromMarkers;
 	const auto& digisFromMarkersWithNeighboursType = ModuleClusterPlot::Type::digisFromMarkersWithNeighbours;
 	std::vector<std::shared_ptr<ModuleClusterPlot>> moduleClusterPlots;
 	const auto defineStandardPlots = [&moduleClusterPlots] (const ModuleClusterPlot::Type& type, const int& layer, const int& module, const int& ladder)
@@ -79,7 +81,11 @@ int main(int argc, char** argv) try
 		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 1));
 		moduleClusterPlots.push_back(std::make_shared<ModuleClusterPlot>(type, layer, module, ladder, 0, 9));
 	};
+	defineStandardPlots(digisType, 1, 1, 2);
+	defineStandardPlots(digisFromMarkersType, 1, 1, 2);
 	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 1, 2);
+	defineStandardPlots(digisType, 1, 4, 6);
+	defineStandardPlots(digisFromMarkersType, 1, 4, 6);
 	defineStandardPlots(digisFromMarkersWithNeighboursType, 1, 4, 6);
 	// Primary loop
 	timer.restart("Measuring the time required to create the event plots...");
