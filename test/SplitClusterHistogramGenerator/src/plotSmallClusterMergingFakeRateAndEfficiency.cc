@@ -44,7 +44,7 @@ int main(int argc, char** argv) try
 	gStyle -> SetPalette(1);
 	TimerColored timer(timer_prompt);
 	TApplication* theApp = new TApplication("App", &argc, argv);
-	TFile* inputFile = TFile::Open("/data_ssd_120gb/hunyadi/CMSSW/SplitClusterStudy/CMSSW_8_0_18/src/TestSplitClusterStudy/Ntuple_scs.root", "READ");
+	TFile* inputFile = TFile::Open(inputFileName.c_str(), "READ");
 	TTree* clusterTree = (TTree*)(inputFile -> Get("clustTree"));
 	TTreeTools::treeCheck(clusterTree, "Tree missing.", true);
 	Cluster  clusterField;
@@ -87,50 +87,61 @@ int main(int argc, char** argv) try
 		const std::vector<Cluster>& clusterCollection = eventNumClusterCollectionPair.second;
 		// Healthy
 		{
-			const CollectionType healthyFourLongClusters = ClusterPairFunctions::getHealthyClustersWithLength(clusterCollection, 4);
-			const CollectionType healthyFiveLongClusters = ClusterPairFunctions::getHealthyClustersWithLength(clusterCollection, 5);
-			const CollectionType healthySixLongClusters  = ClusterPairFunctions::getHealthyClustersWithLength(clusterCollection, 6);
+			const CollectionType healthyFourLongClusters = ClusterPairFunctions::getHealthyClustersWithYLength(clusterCollection, 4);
+			const CollectionType healthyFiveLongClusters = ClusterPairFunctions::getHealthyClustersWithYLength(clusterCollection, 5);
+			const CollectionType healthySixLongClusters  = ClusterPairFunctions::getHealthyClustersWithYLength(clusterCollection, 6);
 			CollectionType healthySmallClusters;
 			std::copy(healthyFourLongClusters.begin(), healthyFourLongClusters.end(), std::back_inserter(healthySmallClusters));
 			std::copy(healthyFiveLongClusters.begin(), healthyFiveLongClusters.end(), std::back_inserter(healthySmallClusters));
 			std::copy(healthySixLongClusters .begin(), healthySixLongClusters .end(), std::back_inserter(healthySmallClusters));
-			std::cout << "Healthy small clusters: " << healthySmallClusters.size() << std::endl;
+			// std::cout << "Healthy small clusters: " << healthySmallClusters.size() << std::endl;
 			healthyUnhealthySmallClusters_H.AddBinContent(0, healthySmallClusters.size());
 		}
 		// Unhealthy
 		{
-			const CollectionType unhealthyFourLongClusters = ClusterPairFunctions::getUnhealthyClustersWithLength(clusterCollection, 4);
-			const CollectionType unhealthyFiveLongClusters = ClusterPairFunctions::getUnhealthyClustersWithLength(clusterCollection, 5);
-			const CollectionType unhealthySixLongClusters  = ClusterPairFunctions::getUnhealthyClustersWithLength(clusterCollection, 6);
+			const CollectionType unhealthyFourLongClusters = ClusterPairFunctions::getUnhealthyClustersWithYLength(clusterCollection, 4);
+			const CollectionType unhealthyFiveLongClusters = ClusterPairFunctions::getUnhealthyClustersWithYLength(clusterCollection, 5);
+			const CollectionType unhealthySixLongClusters  = ClusterPairFunctions::getUnhealthyClustersWithYLength(clusterCollection, 6);
 			CollectionType unhealthySmallClusters;
 			std::copy(unhealthyFourLongClusters.begin(), unhealthyFourLongClusters.end(), std::back_inserter(unhealthySmallClusters));
 			std::copy(unhealthyFiveLongClusters.begin(), unhealthyFiveLongClusters.end(), std::back_inserter(unhealthySmallClusters));
 			std::copy(unhealthySixLongClusters .begin(), unhealthySixLongClusters .end(), std::back_inserter(unhealthySmallClusters));
-			std::cout << "Unhealthy small clusters: " << unhealthySmallClusters.size() << std::endl;
+			// std::cout << "Unhealthy small clusters: " << unhealthySmallClusters.size() << std::endl;
 			healthyUnhealthySmallClusters_H.AddBinContent(1, unhealthySmallClusters.size());
 		}
 		// Real pairs
 		{
-			const PairCollectionType fourLongRealPairs = ClusterPairFunctions::getRealPairsWithLength(clusterCollection, 4);
-			const PairCollectionType fiveLongRealPairs = ClusterPairFunctions::getRealPairsWithLength(clusterCollection, 5);
-			const PairCollectionType sixLongRealPairs  = ClusterPairFunctions::getRealPairsWithLength(clusterCollection, 6);
+			const PairCollectionType fourLongRealPairs = ClusterPairFunctions::getRealPairsWithYLength(clusterCollection, 4);
+			const PairCollectionType fiveLongRealPairs = ClusterPairFunctions::getRealPairsWithYLength(clusterCollection, 5);
+			const PairCollectionType sixLongRealPairs  = ClusterPairFunctions::getRealPairsWithYLength(clusterCollection, 6);
 			PairCollectionType smallRealPairs;
 			std::copy(fourLongRealPairs.begin(), fourLongRealPairs.end(), std::back_inserter(smallRealPairs));
 			std::copy(fiveLongRealPairs.begin(), fiveLongRealPairs.end(), std::back_inserter(smallRealPairs));
 			std::copy(sixLongRealPairs .begin(), sixLongRealPairs .end(), std::back_inserter(smallRealPairs));
-			std::cout << "Small real cluster pairs: " << smallRealPairs.size() << std::endl;
+			// std::cout << "Small real cluster pairs: " << smallRealPairs.size() << std::endl;
 			sixLongClustersFakeRate_H.AddBinContent(0, smallRealPairs.size());
 		}
 		// Fake pairs
 		{
-			const PairCollectionType fourLongFakePairs = ClusterPairFunctions::getFakePairsWithLength(clusterCollection, 4);
-			const PairCollectionType fiveLongFakePairs = ClusterPairFunctions::getFakePairsWithLength(clusterCollection, 5);
-			const PairCollectionType sixLongFakePairs  = ClusterPairFunctions::getFakePairsWithLength(clusterCollection, 6);
+			const PairCollectionType fourLongFakePairs = ClusterPairFunctions::getFakePairsWithYLength(clusterCollection, 4);
+			const PairCollectionType fiveLongFakePairs = ClusterPairFunctions::getFakePairsWithYLength(clusterCollection, 5);
+			const PairCollectionType sixLongFakePairs  = ClusterPairFunctions::getFakePairsWithYLength(clusterCollection, 6);
 			PairCollectionType smallFakePairs;
 			std::copy(fourLongFakePairs.begin(), fourLongFakePairs.end(), std::back_inserter(smallFakePairs));
 			std::copy(fiveLongFakePairs.begin(), fiveLongFakePairs.end(), std::back_inserter(smallFakePairs));
 			std::copy(sixLongFakePairs .begin(), sixLongFakePairs .end(), std::back_inserter(smallFakePairs));
-			std::cout << "Small fake cluster pairs: " << smallFakePairs.size() << std::endl;
+			// std::cout << "Small fake cluster pairs: " << smallFakePairs.size() << std::endl;
+			for(const auto pair: smallFakePairs)
+			{
+				std::cout << "***\n";
+				std::cout << "Event:    " << eventNum                    << "\n"; 
+				std::cout << "Layer:    " << pair.first -> mod_on.layer  << "\n"; 
+				std::cout << "Module:   " << pair.first -> mod_on.module << "\n"; 
+				std::cout << "Ladder:   " << pair.first -> mod_on.ladder << "\n"; 
+				std::cout << "Coord. 1: "      << pair.first  -> x << ", " << pair.first  -> y << "\n"; 
+				std::cout << "Coord. 2: "      << pair.second -> x << ", " << pair.second -> y << "\n"; 
+				std::cout << "***" << std::endl;
+			}
 			sixLongClustersFakeRate_H.AddBinContent(1, smallFakePairs.size());
 		}
 		++eventNum;

@@ -41,6 +41,10 @@ References/*
 *.todo
 jegyzet.txt
 jegyzet.md
+recipe.txt
+
+# Extras
+Extras/*
 
 # Sublime text files
 *.sublime-*

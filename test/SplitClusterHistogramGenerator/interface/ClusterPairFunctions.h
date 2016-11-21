@@ -30,21 +30,36 @@ namespace ClusterPairFunctions
 	std::vector<float>     getClusterPairAngles(const std::vector<Cluster>&  clusterCollection);
 	std::vector<float>     getClusterPairAngles(      std::vector<Cluster>&  clusterCollection) = delete; // Only bind this to constant collections
 	std::vector<float>     getClusterPairAngles(      std::vector<Cluster>&& clusterCollection) = delete; // Only bind this to constant collections
-	SharedPtrCollectionType getClustersWithLength(const std::vector<Cluster>&  clusterCollection, const int& length);
-	SharedPtrCollectionType getClustersWithLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
-	SharedPtrCollectionType getClustersWithLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
-	SharedPtrCollectionType getHealthyClustersWithLength(const std::vector<Cluster>&  clusterCollection, const int& length);
-	SharedPtrCollectionType getHealthyClustersWithLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
-	SharedPtrCollectionType getHealthyClustersWithLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
-	SharedPtrCollectionType getUnhealthyClustersWithLength(const std::vector<Cluster>&  clusterCollection, const int& length);
-	SharedPtrCollectionType getUnhealthyClustersWithLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
-	SharedPtrCollectionType getUnhealthyClustersWithLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
-	PairCollectionType      getRealPairsWithLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength);
-	PairCollectionType      getRealPairsWithLength(      std::vector<Cluster>&  clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
-	PairCollectionType      getRealPairsWithLength(      std::vector<Cluster>&& clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
-	PairCollectionType      getFakePairsWithLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength);
-	PairCollectionType      getFakePairsWithLength(      std::vector<Cluster>&  clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
-	PairCollectionType      getFakePairsWithLength(      std::vector<Cluster>&& clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getClustersWithXLength(const std::vector<Cluster>&  clusterCollection, const int& length);
+	SharedPtrCollectionType getClustersWithXLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getClustersWithXLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getClustersWithYLength(const std::vector<Cluster>&  clusterCollection, const int& length);
+	SharedPtrCollectionType getClustersWithYLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getClustersWithYLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getHealthyClustersWithXLength(const std::vector<Cluster>&  clusterCollection, const int& length);
+	SharedPtrCollectionType getHealthyClustersWithXLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getHealthyClustersWithXLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getHealthyClustersWithYLength(const std::vector<Cluster>&  clusterCollection, const int& length);
+	SharedPtrCollectionType getHealthyClustersWithYLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getHealthyClustersWithYLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getUnhealthyClustersWithXLength(const std::vector<Cluster>&  clusterCollection, const int& length);
+	SharedPtrCollectionType getUnhealthyClustersWithXLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getUnhealthyClustersWithXLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getUnhealthyClustersWithYLength(const std::vector<Cluster>&  clusterCollection, const int& length);
+	SharedPtrCollectionType getUnhealthyClustersWithYLength(      std::vector<Cluster>&  clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	SharedPtrCollectionType getUnhealthyClustersWithYLength(      std::vector<Cluster>&& clusterCollection, const int& length) = delete; // Only bind this to constant collections
+	PairCollectionType      getRealPairsWithXLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength);
+	PairCollectionType      getRealPairsWithXLength(      std::vector<Cluster>&  clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getRealPairsWithXLength(      std::vector<Cluster>&& clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getRealPairsWithYLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength);
+	PairCollectionType      getRealPairsWithYLength(      std::vector<Cluster>&  clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getRealPairsWithYLength(      std::vector<Cluster>&& clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getFakePairsWithXLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength);
+	PairCollectionType      getFakePairsWithXLength(      std::vector<Cluster>&  clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getFakePairsWithXLength(      std::vector<Cluster>&& clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getFakePairsWithYLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength);
+	PairCollectionType      getFakePairsWithYLength(      std::vector<Cluster>&  clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
+	PairCollectionType      getFakePairsWithYLength(      std::vector<Cluster>&& clusterCollection, const int& mergedLength) = delete; // Only bind this to constant collections
 	TH1D                    getClusterPairAngles(const std::vector<Cluster>&  clusterCollection, const std::string& histoName, const std::string& histoTitle);
 	TH1D                    getClusterPairAngles(      std::vector<Cluster>&  clusterCollection, const std::string& histoName, const std::string& histoTitle) = delete; // Only bind this to constant collections
 	TH1D                    getClusterPairAngles(      std::vector<Cluster>&& clusterCollection, const std::string& histoName, const std::string& histoTitle) = delete; // Only bind this to constant collections

@@ -26,6 +26,7 @@ class ModuleClusterPlot
 			digisFromMarkersWithNeighbours,
 			pairs,
 			pairsWithMarkers,
+			fakePairsWithMarkers,
 			pairsWithNeighbours,
 			pairsWithAngleLabels,
 			pairsWithAngleColorCodes,
@@ -33,19 +34,22 @@ class ModuleClusterPlot
 			pairsWithIndividualAngleColors,
 		};
 	private:
-		static constexpr std::array<const char*, 10> histogramTypePrefixes = 
+		static constexpr std::array<const char*, 11> histogramTypePrefixes = 
 		{{ 
 			"Digis",
 			"Marked digis",
 			"Ntuple markers with neighbours",
 			"Cluster pairs",
 			"Cluster pairs with marker positions",
+			"Fake cluster pairs with marker positions",
 			"Cluster pairs with neighbours",
 			"Cluster pairs with angle labels",
 			"Cluster pairs with angle color codes",
 			"Cluster pairs with individual angle labels",
 			"Cluster pairs with individual angle color codes"
 		}};
+		static constexpr float CANVAS_X_DIMENSION    = 400;
+		static constexpr float CANVAS_Y_DIMENSION    = 300;
 		static constexpr float BASE_DIGI_FILL_VALUE    = 0.5f;
 		static constexpr float MISSING_NEIGHBOUR_VALUE = 1000.0f;
 		static constexpr float NORMAL_PALETTE_MINIMUM  = 0.5f;

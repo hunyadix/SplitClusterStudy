@@ -83,6 +83,11 @@ PLOTSMALLCLUFAKEMERGEFF_A = ./bin/plotSmallClusterMergingFakeRateAndEfficiency$(
 OBJS     += $(PLOTSMALLCLUFAKEMERGEFF_O)
 PROGRAMS += $(PLOTSMALLCLUFAKEMERGEFF_A)
 
+CREATECLUSTSIZEPAIRFREQVALPLOTS_S = ./src/createClusterSizePairFrequencyValidationPlots.$(SrcSuf)
+CREATECLUSTSIZEPAIRFREQVALPLOTS_O = ./obj/createClusterSizePairFrequencyValidationPlots.$(ObjSuf)
+CREATECLUSTSIZEPAIRFREQVALPLOTS_A = ./bin/createClusterSizePairFrequencyValidationPlots$(ExeSuf)
+OBJS     += $(CREATECLUSTSIZEPAIRFREQVALPLOTS_O)
+PROGRAMS += $(CREATECLUSTSIZEPAIRFREQVALPLOTS_A)
 
 all: $(PROGRAMS)
 
@@ -124,6 +129,13 @@ $(PLOTEVENTCLUSTERSBYDIRECTION_A): $(PLOTEVENTCLUSTERSBYDIRECTION_O) $(CONSOLECO
 	@echo "...$@ is ready to use."
 
 $(PLOTSMALLCLUFAKEMERGEFF_A): $(PLOTSMALLCLUFAKEMERGEFF_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O) $(CLUSTERPAIRFUNTCITONS_O)
+	@printf "Compiling done, linking...\n"
+	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
+	$(MT_EXE)
+	@echo "Succesful make..."
+	@echo "...$@ is ready to use."
+
+$(CREATECLUSTSIZEPAIRFREQVALPLOTS_A): $(CREATECLUSTSIZEPAIRFREQVALPLOTS_O) $(CONSOLECOLORS_O) $(CONSOLEACTOR_O) $(COMMONACTORS_O) $(TIMER_O) $(TIMERCOL_O) $(TTREETOOLS_O) $(CLUSTERDATATREE_O) $(CANVASEXTRAS_O) $(MODULECLUSTERPLOT_O) $(CLUSTERPAIRFUNTCITONS_O)
 	@printf "Compiling done, linking...\n"
 	@$(LD) $(LDFLAGS) -Wall -Wshadow $^ $(LIBS) $(OutPutOpt)$@
 	$(MT_EXE)
@@ -211,6 +223,11 @@ $(PLOTEVENTCLUSTERSBYDIRECTION_O): $(PLOTEVENTCLUSTERSBYDIRECTION_S)
 
 $(PLOTSMALLCLUFAKEMERGEFF_O): $(PLOTSMALLCLUFAKEMERGEFF_S)  
 	@printf "Compiling test: \"plotSmallClusterMergingFakeRateAndEfficiency\"...\n"
+	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
+	@printf "Done.\n"
+
+$(CREATECLUSTSIZEPAIRFREQVALPLOTS_O): $(CREATECLUSTSIZEPAIRFREQVALPLOTS_S)  
+	@printf "Compiling test: \"createClusterSizePairFrequencyValidationPlots\"...\n"
 	@$(CXX) $(CXXFLAGS) $(LIBS) -c $< $(OutPutOpt)$@
 	@printf "Done.\n"
 

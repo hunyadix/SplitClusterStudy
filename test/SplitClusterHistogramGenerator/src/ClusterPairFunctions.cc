@@ -2,16 +2,32 @@
 
 namespace ClusterPairFunctions
 {
-	void calcPairEndsAndOrderLeftRight_(Cluster const* lhs, Cluster const* rhs, int& lhsColMin, int& lhsColMax, int& rhsColMin, int& rhsColMax)
+	void calcPairEndsAndOrderLeftRight_(Cluster const*& lhs, Cluster const*& rhs, int& lhsColMin, int& lhsColMax, int& rhsColMin, int& rhsColMax)
 	{
 		std::tie(lhsColMin, lhsColMax) = deref_minmax_element(lhs -> pixelsCol.begin(), lhs -> pixelsCol.end());
 		std::tie(rhsColMin, rhsColMax) = deref_minmax_element(rhs -> pixelsCol.begin(), rhs -> pixelsCol.end());
 		if(rhsColMin < lhsColMin)
 		{
+			// std::cout << "Before swap: " << lhs << " " << rhs << std::endl;
+			std::cout << "SWAP!!!" << std::endl;
 			std::swap(lhs, rhs);
 			std::swap(lhsColMin, rhsColMin);
 			std::swap(lhsColMax, rhsColMax);
 		}
+	}
+
+	int calcPairXWidth_(const PairType& pair)
+	{
+		int min1, min2, max1, max2;
+		std::tie(min1, max1) = deref_minmax_element(pair.first  -> pixelsRow.begin(), pair.first  -> pixelsRow.end());
+		std::tie(min2, max2) = deref_minmax_element(pair.second -> pixelsRow.begin(), pair.second -> pixelsRow.end());
+		// if(max1 > min2 && max2 > min1)
+		if(!areClustersPair(*pair.first, *pair.second))
+		{
+			std::cout << "BAD PAIRS!!!" << std::endl;
+			std::cout << "(" << min1 << ", " << max1 << "), (" << min2 << ", " << max2 << ")" << std::endl;
+		}
+		return std::max(max1, max2) - std::min(min1, min2);
 	}
 
 	int isClusterTagged(const Cluster& cluster)
@@ -40,6 +56,11 @@ namespace ClusterPairFunctions
 		int lhsColMin, lhsColMax, rhsColMin, rhsColMax;
 		calcPairEndsAndOrderLeftRight_(lhs, rhs, lhsColMin, lhsColMax, rhsColMin, rhsColMax);
 		if(lhsColMax % 2 != 1 || lhsColMax + 3 != rhsColMin) return 0;
+		if(lhsColMax > rhsColMin && rhsColMax > lhsColMin)
+		{
+			std::cout << "+++BAD PAIRS!!!" << std::endl;
+			std::cout << "(" << lhsColMin << ", " << lhsColMax << "), (" << rhsColMin << ", " << rhsColMax << ")" << std::endl;
+		}
 		return 1;
 	}
 
@@ -134,44 +155,92 @@ namespace ClusterPairFunctions
 		return pairAnglesPlot;
 	}
 
-	SharedPtrCollectionType getClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length) 
+	SharedPtrCollectionType getClustersWithXLength(const std::vector<Cluster>& clusterCollection, const int& length) 
 	{
 		return(fmap(
-			filter(clusterCollection, [&length] (const Cluster& cluster) {
+			filter(clusterCollection, [&length] (const Cluster& cluster) 
+			{
+				return cluster.sizeX == length;
+			}), 
+			[] (Cluster& cluster) 
+			{
+				return std::make_shared<Cluster>(cluster);
+			}));
+	}
+
+	SharedPtrCollectionType getClustersWithYLength(const std::vector<Cluster>& clusterCollection, const int& length) 
+	{
+		return(fmap(
+			filter(clusterCollection, [&length] (const Cluster& cluster) 
+			{
 				return cluster.sizeY == length;
 			}), 
-			[] (Cluster& cluster) {
+			[] (Cluster& cluster) 
+			{
 				return std::make_shared<Cluster>(cluster);
 			}));
 	}
 
 	// Healthy: not tagged, unhealthy: tagged
-	SharedPtrCollectionType getHealthyClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length)
+	SharedPtrCollectionType getHealthyClustersWithXLength(const std::vector<Cluster>& clusterCollection, const int& length)
 	{
-		return filter(getClustersWithLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
+		return filter(getClustersWithXLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
+		{
+			return !isClusterTagged(*clusterPtr);
+		});
+	}
+	
+	// Healthy: not tagged, unhealthy: tagged
+	SharedPtrCollectionType getHealthyClustersWithYLength(const std::vector<Cluster>& clusterCollection, const int& length)
+	{
+		return filter(getClustersWithYLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
 		{
 			return !isClusterTagged(*clusterPtr);
 		});
 	}
 
-	SharedPtrCollectionType getUnhealthyClustersWithLength(const std::vector<Cluster>& clusterCollection, const int& length)
+	// Healthy: not tagged, unhealthy: tagged
+	SharedPtrCollectionType getUnhealthyClustersWithXLength(const std::vector<Cluster>& clusterCollection, const int& length)
 	{
-		return filter(getClustersWithLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
+		return filter(getClustersWithXLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
 		{
 			return isClusterTagged(*clusterPtr);
 		});
 	}
 
-	PairCollectionType getRealPairsWithLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	// Healthy: not tagged, unhealthy: tagged
+	SharedPtrCollectionType getUnhealthyClustersWithYLength(const std::vector<Cluster>& clusterCollection, const int& length)
 	{
-		const auto mergingLengthFilter = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength; };
+		return filter(getClustersWithYLength(clusterCollection, length), [] (const std::shared_ptr<Cluster>& clusterPtr) 
+		{
+			return isClusterTagged(*clusterPtr);
+		});
+	}
+
+	PairCollectionType getRealPairsWithXLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	{
+		const auto mergingLengthFilter  = [&mergedLength] (const PairType& pair) { return calcPairXWidth_(pair) == mergedLength; };
 		const auto isEndTaggedFilter   = [] (const PairType& pair) { return areClustersEndTaggedPair(*(pair.first), *(pair.second)); };
 		return PairCollectionType(filter(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter), isEndTaggedFilter));
 	}
 
-	PairCollectionType getFakePairsWithLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	PairCollectionType getRealPairsWithYLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
 	{
-		const auto mergingLengthFilter  = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength; };
+		const auto mergingLengthFilter = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY + pair.second -> sizeY + 2 == mergedLength; };
+		const auto isEndTaggedFilter   = [] (const PairType& pair) { return areClustersEndTaggedPair(*(pair.first), *(pair.second)); };
+		return PairCollectionType(filter(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter), isEndTaggedFilter));
+	}
+
+	PairCollectionType getFakePairsWithXLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	{
+		const auto mergingLengthFilter  = [&mergedLength] (const PairType& pair) { return calcPairXWidth_(pair) == mergedLength; };
+		const auto isNotEndTaggedFilter = [] (const PairType& pair) { return !areClustersEndTaggedPair(*(pair.first), *(pair.second)); };
+		return PairCollectionType(filter(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter), isNotEndTaggedFilter));
+	}
+
+	PairCollectionType getFakePairsWithYLength(const std::vector<Cluster>&  clusterCollection, const int& mergedLength)
+	{
+		const auto mergingLengthFilter  = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY + pair.second -> sizeY + 2 == mergedLength; };
 		const auto isNotEndTaggedFilter = [] (const PairType& pair) { return !areClustersEndTaggedPair(*(pair.first), *(pair.second)); };
 		return PairCollectionType(filter(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter), isNotEndTaggedFilter));
 	}
@@ -180,7 +249,7 @@ namespace ClusterPairFunctions
 	// clusters added together plus two (for the dcol loss)
 	PairCollectionType getClusterPairsWithMergingLength(const std::vector<Cluster>& clusterCollection, const int& mergedLength) 
 	{
-		const auto mergingLengthFilter = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY - pair.second -> sizeY + 2 == mergedLength; };
+		const auto mergingLengthFilter = [&mergedLength] (const PairType& pair) { return pair.first -> sizeY + pair.second -> sizeY + 2 == mergedLength; };
 		return PairCollectionType(filter(getClusterPairCollection(clusterCollection), mergingLengthFilter));
 	}
 } // ClusterPairFunctions

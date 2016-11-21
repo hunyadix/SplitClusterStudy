@@ -1,6 +1,6 @@
 #include "../interface/ModuleClusterPlot.h"
 
-constexpr std::array<const char*, 10> ModuleClusterPlot::histogramTypePrefixes;
+constexpr std::array<const char*, 11> ModuleClusterPlot::histogramTypePrefixes;
 std::vector<ModuleClusterPlot*> ModuleClusterPlot::moduleClusterPlotCollection;
 
 ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const int& moduleArg, const int& ladderArg, const int& startEventArg, const int& endEventArg):
@@ -9,7 +9,7 @@ ModuleClusterPlot::ModuleClusterPlot(Type typeArg, const int& layerArg, const in
 		(std::string(histogramTypePrefixes[typeArg]) + " on layer " + std::to_string(layerArg) + ", module " + std::to_string(moduleArg) + ", ladder " + std::to_string(ladderArg) + ";module pix. (col);ladder pix. (row)").c_str(),
 		416, 0, 416,
 		160, 0, 160),
-	canvas(histogram.GetName(), (histogram.GetTitle() + std::string(" ") + std::to_string(startEventArg) + " " + std::to_string(endEventArg)).c_str(), 50, 50, 400, 300),
+	canvas(histogram.GetName(), (histogram.GetTitle() + std::string(" ") + std::to_string(startEventArg) + " " + std::to_string(endEventArg)).c_str(), 50, 50, CANVAS_X_DIMENSION, CANVAS_Y_DIMENSION),
 	type(typeArg),
 	layer(layerArg),
 	module(moduleArg),
@@ -69,15 +69,16 @@ void ModuleClusterPlot::fillDigisFromCluster(const Cluster& cluster, const float
 				break;
 			case digisFromMarkers:
 			case pairsWithMarkers:
+			case fakePairsWithMarkers:
 				if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
 				else                 histogram.SetBinContent(col, row, markerState);
 				break;
-			case digisFromMarkersWithNeighbours:
 			case pairsWithNeighbours:
-				// if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-				// else                 histogram.SetBinContent(col, row, markerState);
-				histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
-				fillMissingPixels(col, row, markerState, MISSING_NEIGHBOUR_VALUE);
+			case digisFromMarkersWithNeighbours:
+				if(markerState == 0) histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				else                 histogram.SetBinContent(col, row, markerState);
+				// histogram.SetBinContent(col, row, BASE_DIGI_FILL_VALUE);
+				// fillMissingPixels(col, row, markerState, MISSING_NEIGHBOUR_VALUE);
 				break;
 			case pairsWithAngleColorCodes:
 			case pairsWithIndividualAngleColors:
@@ -138,6 +139,7 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 		return 
 			(plotToCheck -> type == pairs                         ) || 
 			(plotToCheck -> type == pairsWithMarkers              ) || 
+			(plotToCheck -> type == fakePairsWithMarkers          ) || 
 			(plotToCheck -> type == pairsWithNeighbours           ) || 
 			(plotToCheck -> type == pairsWithAngleLabels          ) ||
 			(plotToCheck -> type == pairsWithAngleColorCodes      ) ||
@@ -167,6 +169,11 @@ void ModuleClusterPlot::fillAllPairs(const std::vector<Cluster>& clusterCollecti
 				float relativeAngle = 0.0f;
 				float angle1        = 0.0f;
 				float angle2        = 0.0f;
+				// Filter for fake pairs when necessary
+				if(plotDefinitionPtr -> type == fakePairsWithMarkers)
+				{
+					if(ClusterPairFunctions::areClustersEndTaggedPair(*firstClusterIt, *secondClusterIt)) continue;
+				}
 				// Calculate relative angle when necessary
 				if(plotDefinitionPtr -> type == pairsWithAngleColorCodes || plotDefinitionPtr -> type == pairsWithAngleLabels)
 				{
