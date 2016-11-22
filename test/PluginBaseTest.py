@@ -21,9 +21,34 @@ process.MessageLogger = cms.Service("MessageLogger",
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 process.source = cms.Source("PoolSource",
-	fileNames = cms.untracked.vstring('file:./GENSIMRECO.root'),
+	# fileNames = cms.untracked.vstring('file:./GENSIMRECO.root'),
+	fileNames = cms.untracked.vstring(
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_1.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_10.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_11.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_12.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_13.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_14.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_15.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_16.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_17.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_18.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_19.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_2.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_20.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_21.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_22.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_23.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_24.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_25.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_3.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_4.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_5.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_7.root",
+		"file:/data/gridout/ahunyadi/MinBias/GEN_SIM/Run2_CMSSW80X/MinBias_80X_mcRun2_DynIneff_90_GEN_SIM_RAWTODIGI_evt100000/161122_093253/0000/GENSIMRECO_8.root"),
 	secondaryFileNames = cms.untracked.vstring()
 )
+
 
 # process.load("Configuration.StandardSequences.Reconstruction_cff")
 # process.load("RecoVertex.BeamSpotProducer.BeamSpot_cff")

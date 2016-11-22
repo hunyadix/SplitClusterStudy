@@ -133,6 +133,7 @@ int main(int argc, char** argv) try
 			clusterYSizesLayer1HighEta_H.Fill(cluster.sizeY);
 			const float& alpha = cluster.alpha;
 			const float& beta  = cluster.beta;
+			if(alpha == NOVAL_F || beta == NOVAL_F) continue;
 			const float  theta = atan(sqrt(1.0 / (1.0 / (tan(alpha) * tan(alpha)) + 1.0 / (tan(beta) * tan(beta))))); // Imported from TimingStudy
 			const float  phi   = atan2(tan(beta), tan(alpha));                                                        // Imported from TimingStudy
 			// Inc. angles
